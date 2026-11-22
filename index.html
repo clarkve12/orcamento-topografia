@@ -144,7 +144,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
   <div class="top">
     <div>
       <img class="logo" src="assets/logo-escuro.jpg" alt="SANTEX — Geotecnologia & Engenharia de Precisão">
-      <div class="sub" id="hdrSub">Sistema de orçamentos</div>
+      <div class="sub" id="hdrSub">Sistema de Orçamentos</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button id="bInstall" class="btn small" style="display:none;background:#4fd5fe;color:#002955">⬇ Instalar app</button><div id="syncNote">Carregando dados…</div></div>
   </div>
@@ -887,7 +887,7 @@ function renderCfg(){
   $("#bAddSvc").addEventListener("click",()=>{ cfg.servicos.push({id:"s"+Date.now(), nome:"Novo serviço", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:4, escrUnid:0, equip:["rtk1"], marcos:false, desc:""}); afterCfgEdit(true); });
 }
 function afterCfgEdit(rerender){
-  $("#hdrSub").textContent="Sistema de orçamentos · RT "+(cfg.empresa.responsavel||"");
+  $("#hdrSub").textContent="Sistema de Orçamentos";
   if(rerender) renderCfg();
   renderSvcList(); recalc();
   $("#bCfgSave").textContent="Salvar configurações •";
@@ -1218,7 +1218,7 @@ function renderFuel(){
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
 function tab(t){ setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
-function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de orçamentos · RT "+(cfg.empresa.responsavel||""); }
+function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de Orçamentos"; }
 
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 bindForm();
