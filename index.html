@@ -874,7 +874,7 @@ function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o);}
 function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++)a=a[ks[i]];a[ks.at(-1)]=v;}
 function renderCfg(){
   const c=cfg;
-  let h=`<div class="card"><h2>Empresa e Base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir base" no mapa do orçamento.</p>
+  let h=`<div class="card"><h2>Empresa e Base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir Base" no mapa do orçamento.</p>
    <div class="row">${field("empresa.nome","Nome na Proposta","","text")}</div>
    <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da Base","","text")}${field("empresa.baseCoord","Coordenada da Base","cole do Google Maps","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
@@ -949,7 +949,7 @@ function afterCfgEdit(rerender){ renderRTSelect();
   $("#hdrSub").textContent="Sistema de Orçamentos";
   if(rerender) renderCfg();
   renderSvcList(); recalc();
-  $("#bCfgSave").textContent="Salvar configurações •";
+  $("#bCfgSave").textContent="Salvar Configurações •";
 }
 
 /* =====================================================================
@@ -1107,13 +1107,13 @@ function initMap(){
   $("#mUndo").addEventListener("click",()=>{ if(!q.poligono.length) return; q.poligono.pop(); polyChanged(); });
   $("#mClear").addEventListener("click",function(){
     if(!q.poligono.length) return;
-    if(this.dataset.c){ q.poligono=[]; this.dataset.c=""; this.textContent="Limpar área"; polyChanged(); setDrawing(true); }
-    else { this.dataset.c="1"; this.textContent="Confirmar limpar?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar área";},3000); }
+    if(this.dataset.c){ q.poligono=[]; this.dataset.c=""; this.textContent="Limpar Área"; polyChanged(); setDrawing(true); }
+    else { this.dataset.c="1"; this.textContent="Confirmar Limpeza?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar Área";},3000); }
   });
   $("#mGps").addEventListener("click",useGps);
   $("#mKml").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importKml(f); e.target.value=""; });
   $("#mBase").addEventListener("click",function(){
-    if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a base? Clique de novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
+    if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a Base? Clique de Novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
     this.dataset.c=""; pickingBase=!pickingBase; if(pickingBase) setDrawing(false);
     $("#map").classList.toggle("picking",pickingBase); updateBaseBtn();
     mapMsg(pickingBase? "🏠 <b>Clique no mapa no local de onde você sempre sai</b> (ou use “Minha posição” estando lá).":"");
@@ -1123,8 +1123,8 @@ function initMap(){
   drawBase(); mapReload(true);
   if(!parseCoord(cfg.empresa.baseCoord)) mapMsg("Primeiro passo: clique em <b>🏠 Definir base</b> e marque no mapa o local de onde você sai.");
 }
-function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base definida" : "🏠 Definir base"); }
-function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / continuar área":"✏️ Desenhar área");
+function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base Definida" : "🏠 Definir Base"); }
+function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir Área" : (q.poligono.length? "✏️ Editar / Continuar Área":"✏️ Desenhar Área");
   if(map) $("#map").classList.toggle("picking",on||pickingBase);
   if(on){ pickingBase=false; updateBaseBtn(); mapMsg("Clique no mapa para marcar cada vértice da área. Arraste os pontos amarelos para ajustar. Clique em <b>✔ Concluir</b> quando terminar."); }
   else if(!pickingBase) mapMsg(q.poligono.length>=3? "Área definida. Arraste os vértices para ajustar, se precisar.":""); }
@@ -1286,8 +1286,8 @@ $("#bSave").addEventListener("click",saveQuote);
 $("#bPdf").addEventListener("click",doPdf);
 $("#bTxt").addEventListener("click",openText);
 $("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); mapReload(false); toast("Formulário limpo"); });
-$("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar configurações"; });
-$("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar padrões";},3000);} });
+$("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar Configurações"; });
+$("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar Padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar Restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar Padrões";},3000);} });
 $("#mClose").addEventListener("click",()=>$("#modal").classList.remove("on"));
 $("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); });
 $("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("#mText").textContent); toast("Copiado"); }catch(e){ const rng=document.createRange(); rng.selectNodeContents($("#mText")); const s=getSelection(); s.removeAllRanges(); s.addRange(rng); toast("Selecionado — use Ctrl+C"); } });
