@@ -326,7 +326,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
    ===================================================================== */
 const DEFAULT_CFG = {
   empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
-  combustivel:{posto:"Posto Ingazeira", cidade:"Águas Vermelhas - MG", tipo:"Diesel S10", preco:6.95, atualizadoEm:""},
+  combustivel:{posto:"Posto Ingazeira", cidade:"Águas Vermelhas - MG", tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
   veiculo:{kmUrbano:3, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
   equipe:{horaTecnico:90, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
   equipamentos:[
@@ -336,7 +336,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  versao:2,
+  versao:3,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -388,7 +388,8 @@ function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");
 function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old) o[k]=nv; };
     ch(c.equipe,"diariaAjudante",180,150); ch(c.equipe,"hospedagem",150,120); ch(c.combustivel,"preco",6.29,6.95);
     (c.equipamentos||[]).forEach(e=>{ if((e.id==="rtk1"||e.id==="rtk2")&&e.valor===45000) e.valor=30000; if(e.id==="drone"&&e.valor===20000) e.valor=25000; });
-    c.versao=2; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
+    c.versao=2; }
+  if(c&&c.versao<3){ const f=c.combustivel||(c.combustivel={}); if(!f.tipo||/diesel/i.test(f.tipo)){ f.tipo="Gasolina comum"; f.preco=7.39; f.atualizadoEm="2026-11-21T22:03:00-03:00"; } c.versao=3; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
   if(def && typeof def==="object"){ const out={}; for(const k in def) out[k]= (obj && k in obj)? merge(def[k],obj[k]) : clone(def[k]); if(obj) for(const k in obj) if(!(k in out)) out[k]=obj[k]; return out; }
@@ -810,7 +811,7 @@ function renderCfg(){
    <div class="row">${field("empresa.nome","Nome na proposta","","text")}${field("empresa.responsavel","Responsável técnico","","text")}${field("empresa.registro","Registro profissional","CREA/CFT nº","text")}</div>
    <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
-   ${field("combustivel.posto","Posto","","text")}${field("combustivel.cidade","Cidade","","text")}${field("combustivel.tipo","Combustível","Diesel S10, Gasolina…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
+   ${field("combustivel.posto","Posto","","text")}${field("combustivel.cidade","Cidade","","text")}${field("combustivel.tipo","Combustível","Gasolina, Diesel S10…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
   h+=`<div class="card"><h2>Veículo</h2><div class="row">
    ${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
    ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
