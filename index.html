@@ -738,7 +738,7 @@ function recalc(){
   s("Horas de viagem extras", ce.tecExtras);
   g("Equipe de campo", ce.tecCampo+ce.ajud+ce.alim+ce.hosp);
   s(`Técnico (${fmt(ce.dias)} dias)`, ce.tecCampo);
-  s(`Ajudante${r.ajud!==1?"s":""} (${r.ajud}× ${ce.dc} diárias)`, ce.ajud);
+  s(r.ajud>0?`Ajudante${r.ajud>1?"s":""}: ${r.ajud>1?r.ajud+" × ":""}${ce.dc} diária${ce.dc>1?"s":""} de campo × ${brl0(nz(cfg.equipe.diariaAjudante))}`:"Ajudante", ce.ajud);
   s(`Alimentação (${r.pessoas} pessoas)`, ce.alim);
   s(`Hospedagem (${ce.noites} noites)`, ce.hosp);
   g("Equipamentos", ce.equip);
@@ -818,8 +818,8 @@ function renderCfg(){
    ${field("veiculo.modelo","Veículo","","text")}${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
    ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
    ${field("veiculo.fatorRota","Fator linha reta → estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade média asfalto","km/h")}${field("veiculo.velTerra","Velocidade média terra","km/h")}</div></div>`;
-  h+=`<div class="card"><h2>Equipe</h2><p class="hint">O valor da sua hora entra como custo (seu pró-labore). O lucro vem por cima, pela margem.</p><div class="row">
-   ${field("equipe.horaTecnico","Hora do técnico responsável","R$/h")}${field("equipe.horasDia","Horas por dia de campo","h")}${field("equipe.diariaAjudante","Diária do ajudante","R$ com encargos")}
+  h+=`<div class="card"><h2>Equipe</h2><p class="hint">O ajudante recebe uma diária por dia de campo (dia de viagem com trabalho conta como diária cheia); processamento e escritório ficam só com o responsável técnico, pela hora técnica. Referência da diária: servente autônomo em MG R$ 233/dia já com alimentação e transporte (out/2026); no interior do Norte de Minas, descontando alimentação (paga à parte aqui) e transporte (no carro), fica em torno de R$ 130 a 180 — padrão R$ 150. O valor da sua hora entra como custo (pró-labore); o lucro vem pela margem.</p><div class="row">
+   ${field("equipe.horaTecnico","Hora do técnico responsável","R$/h")}${field("equipe.horasDia","Horas por dia de campo","h")}${field("equipe.diariaAjudante","Diária do ajudante","R$/dia de campo (só campo)")}
    ${field("equipe.alimentacao","Alimentação","R$/pessoa/dia")}${field("equipe.hospedagem","Hospedagem","R$/pessoa/noite")}${field("equipe.ajudantesPadrao","Ajudantes por padrão","","number","1")}</div></div>`;
   h+=`<div class="card"><h2>Equipamentos</h2><p class="hint">Custo por dia de uso = (valor ÷ vida útil + manutenção anual) ÷ dias de uso por ano.</p><div class="hwrap"><table class="cfg-table"><tr><th>Equipamento</th><th>Valor (R$)</th><th>Vida útil (anos)</th><th>Dias de uso/ano</th><th>Manutenção/ano (R$)</th><th>Custo/dia</th></tr>`;
   c.equipamentos.forEach((e,i)=>{ h+=`<tr><td><input data-c="equipamentos.${i}.nome" type="text" value="${esc(e.nome)}"></td><td><input data-c="equipamentos.${i}.valor" type="number" value="${esc(e.valor)}"></td><td><input data-c="equipamentos.${i}.vidaAnos" type="number" step="0.5" value="${esc(e.vidaAnos)}"></td><td><input data-c="equipamentos.${i}.diasAno" type="number" value="${esc(e.diasAno)}"></td><td><input data-c="equipamentos.${i}.manutAno" type="number" value="${esc(e.manutAno)}"></td><td class="mono">${brl(equipCustoDia(e))}</td></tr>`; });
