@@ -17,6 +17,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -404,7 +405,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
    CONFIGURAÇÃO PADRÃO
    ===================================================================== */
 const DEFAULT_CFG = {
-  empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361", cnpj:"", endereco:"", foro:"Águas Vermelhas - MG"},
+  empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361", cnpj:"", endereco:"", foro:"Águas Vermelhas - MG", pixTipo:"", pixChave:"", pixNome:"", pixCidade:""},
   revisaoAnual:2026,
   combustivel:{tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
   veiculo:{modelo:"VW Gol G5 Rallye 1.6 2012 (gasolina)", kmUrbano:3, consumoAsf:11.5, consumoTerra:8, manutKm:0.30, deprecKm:0.15, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
@@ -416,7 +417,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  financeiro:{fechamento:31, vencimento:7, socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}]},
+  financeiro:{fechamento:31, vencimento:7, followupDias:5, saldoAtual:"", socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}]},
   responsaveis:[
     {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em Agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
     {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro Civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
@@ -768,7 +769,7 @@ function quoteRecord(){
   return {criadoEm: q.criadoEm || new Date().toISOString(), atualizadoEm:new Date().toISOString(),
     numero: q.numero || gerarNumero(), cliente:q.cliente, imovel:q.imovel, municipio:q.municipio, tipo:q.tipo,
     servicos: r.sel.map(s=>s.def.nome).join("; "), valor:r.final, custoDireto:r.custoDireto, diasEstimados:r.cen.escolhido.dias,
-    status: q.status||"Rascunho", diasReais: q.diasReais||"", rev: nz(q.rev), clienteId: q.clienteId||null, q: clone(q)};
+    status: q.status||"Rascunho", diasReais: q.diasReais||"", rev: nz(q.rev), despPrevistas: (()=>{ const e=r.cen.escolhido; return {comb:e.comb,ajud:e.ajud,alim:e.alim,hosp:e.hosp,ped:e.ped,art:r.art,marcos:r.marcos,taxas:r.taxasIncl,outras:r.outras,dias:e.dias}; })(), clienteId: q.clienteId||null, q: clone(q)};
 }
 function gerarNumero(){ const y=new Date().getFullYear(); const n=quotes.map(x=>String(x.numero||"").match(/^(\d+)\/(\d{4})$/)).filter(m=>m&&+m[2]===y).map(m=>+m[1]); return String((n.length?Math.max(...n):0)+1).padStart(3,"0")+"/"+y; }
 const numLabel=(n,rev)=>(n||"")+(nz(rev)>0?` – rev. ${rev}`:"");
@@ -962,7 +963,7 @@ function renderHist(){
   t.innerHTML=h;
   t.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id=tr.dataset.id;
-    tr.querySelector(".hs").addEventListener("change",e=>updateQuoteField(id,{status:e.target.value}));
+    tr.querySelector(".hs").addEventListener("change",e=>{ const v=e.target.value; const patch={status:v}; if(v==="Enviado") patch.enviadoEm=new Date().toISOString(); updateQuoteField(id,patch); if(v==="Perdido"&&window.finMotivoPerda) window.finMotivoPerda(id); });
     tr.querySelector(".hd").addEventListener("change",e=>updateQuoteField(id,{diasReais:e.target.value}));
     tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); if(typeof q.poligono==="string"){ try{ q.poligono=JSON.parse(q.poligono); }catch(e){ q.poligono=[]; } } q.id=id; q.numero=x.numero; q.rev=nz(x.rev); q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); setTimeout(()=>{ if(map) map.invalidateSize(); mapReload(true); },50); });
     tr.querySelector(".hsv").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; if(x.servicoId&&window._fin&&window._fin.FIN.servicos.some(s=>s.id===x.servicoId)){ tab("servicos"); setTimeout(()=>window.finAbrirServico&&window.finAbrirServico(x.servicoId),50); return; } if(window.finNovoServicoDeOrcamento){ tab("servicos"); window.finNovoServicoDeOrcamento(Object.assign({id},x)); } });
@@ -1005,7 +1006,11 @@ function renderCfg(){
   h+=`</table></div><br></div>`;
   h+=`<div class="card"><h2>Financeiro</h2><p class="hint">Fatura do cartão (vencimento das compras parceladas) e divisão do lucro entre os sócios.</p><div class="row">
    ${field("financeiro.fechamento","Dia de fechamento da fatura","use 31 para o último dia do mês","number","1")}${field("financeiro.vencimento","Dia de vencimento da fatura","","number","1")}</div><div class="row">
-   ${(c.financeiro.socios||[]).map((x,i)=>field("financeiro.socios."+i+".nome","Sócio "+(i+1),"","text")+field("financeiro.socios."+i+".pct","Participação (%)","","number","1")).join("")}</div></div>`;
+   ${(c.financeiro.socios||[]).map((x,i)=>field("financeiro.socios."+i+".nome","Sócio "+(i+1),"","text")+field("financeiro.socios."+i+".pct","Participação (%)","","number","1")).join("")}</div>
+   <div class="row">${field("financeiro.followupDias","Cobrar resposta de orçamento após","dias sem contato","number","1")}</div></div>`;
+  h+=`<div class="card"><h2>Pix para recebimentos</h2><p class="hint">Gera o QR code e o "copia e cola" na proposta, nas cobranças e no serviço. O valor cai direto na conta da chave; confira o primeiro pagamento antes de usar com clientes.</p><div class="row">
+   <label>Tipo da chave<select data-c="empresa.pixTipo">${["","CPF / CNPJ","Telefone","E-mail","Aleatória"].map(o=>`<option value="${o}" ${(c.empresa.pixTipo||"")===o?"selected":""}>${o||"Detectar automaticamente"}</option>`).join("")}</select></label>
+   ${field("empresa.pixChave","Chave Pix","CPF/CNPJ, telefone, e-mail ou aleatória","text")}${field("empresa.pixNome","Nome do recebedor","como aparece no banco (até 25 letras)","text")}${field("empresa.pixCidade","Cidade do recebedor","até 15 letras","text")}</div></div>`;
   h+=`<div class="card"><h2>Materiais</h2><div class="row">${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}</div></div>`;
   h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
    ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
@@ -1098,6 +1103,7 @@ function proposalText(){
   if(p.loc) t+=`Localização: ${p.loc}\n`;
   t+=`\n*Serviços:*\n`+r.sel.map(s=>`• ${s.def.nome}`).join("\n");
   t+=`\n\n*Valor total: ${brl(r.final)}*\n${p.cond}\n`;
+  const pxt=pixDaProposta(); if(pxt) t+=`\n*Pix — ${pxt.rotulo.toLowerCase()} (${brl(pxt.valor)})*, copia e cola:\n${pxt.payload}\n`;
   t+=`Prazo estimado: ${p.diasUteis} dias úteis após aprovação e acesso ao imóvel.\n`;
   t+=`\n*Incluso:* ${p.incl.join("; ")}.\n*Não incluso:* ${p.nao.join("; ")}.\n`;
   if(q.obs) t+=`\nObs.: ${q.obs}\n`;
@@ -1147,6 +1153,17 @@ function buildPdf(){
   doc.setFontSize(17); doc.text(brl(r.final),W-M-6,y+13,{align:"right"});
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(...muted); doc.text(doc.splitTextToSize(p.cond,105),M+6,y+14);
   y+=28; doc.setTextColor(...ink); doc.setFontSize(10);
+  const px=pixDaProposta();
+  if(px && typeof qrcode==="function"){
+    if(y>235){ doc.addPage(); y=20; }
+    sec("Pagamento via Pix");
+    window.pdfQr(doc,px.payload,M,y-1,30);
+    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text(`${px.rotulo}: ${brl(px.valor)}`,M+35,y+3);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(...muted);
+    doc.text(doc.splitTextToSize("Aponte a câmera do app do banco para o QR code ou use o código copia e cola abaixo. Chave: "+(cfg.empresa.pixChave||"")+" — "+(cfg.empresa.pixNome||""),W-2*M-35),M+35,y+8);
+    doc.setFont("courier","normal"); doc.setFontSize(6.5); doc.text(doc.splitTextToSize(px.payload,W-2*M-35),M+35,y+17);
+    doc.setFont("helvetica","normal"); doc.setTextColor(...ink); doc.setFontSize(10); y+=37;
+  }
   sec("Prazo");
   para(`Estimativa de ${p.diasUteis} dias úteis após a aprovação, o pagamento da entrada e a liberação do acesso ao imóvel. Prazos de análise de cartório e órgãos públicos (INCRA/SIGEF, prefeitura) não dependem da contratada.`); y+=3;
   sec("Está incluso"); p.incl.forEach(i=>para("• "+i)); y+=3;
@@ -1159,19 +1176,28 @@ function buildPdf(){
   const np=doc.getNumberOfPages(); for(let i=1;i<=np;i++){ doc.setPage(i); doc.setFillColor(...green); doc.rect(0,290,W,7,"F"); doc.setFontSize(7.5); doc.setTextColor(255); doc.text("SANTEX — Geotecnologia & Engenharia de Precisão",M,294.5); doc.text(`Página ${i} de ${np}`,W-M,294.5,{align:"right"}); }
   return doc;
 }
+function pixDaProposta(){
+  if(!window.pixPayload) return null; const r=compute(q,cfg); if(!(r.final>0)) return null;
+  const ent=Math.min(Math.max(nz(q.entrada),0),100); const valor = ent>0&&ent<100 ? Math.round(r.final*ent)/100 : r.final;
+  const txid="ORC"+String(q.numero||gerarNumero()).replace(/\D/g,"")+(nz(q.rev)?"R"+nz(q.rev):"");
+  const payload=window.pixPayload(valor,txid); return payload?{valor,payload,rotulo:ent>0&&ent<100?"A entrada":"O pagamento"}:null;
+}
 function nomePdfProposta(){ return `Proposta ${numLabel(q.numero||gerarNumero(),q.rev).replace(/\//g,"-")} - ${(q.cliente||"cliente").replace(/[\\/:*?"<>|]/g,"")}.pdf`; }
 async function enviarWhats(){
   const r=compute(q,cfg); if(!r.sel.length){ toast("Selecione ao menos um serviço"); return; }
   if(!q.numero) q.numero=gerarNumero();
   const nome=String(q.cliente||"").trim().split(/\s+/)[0];
   const msg=`Olá${nome?", "+nome:""}! Segue a proposta nº ${numLabel(q.numero,q.rev)} da ${(cfg.empresa.nome||"SANTEX").split(" — ")[0]} para ${r.sel.map(s=>s.def.nome.toLowerCase().replace(/\b(sigef|incra|reurb|car|mdt|gnss|rtk)\b/gi,m=>m.toUpperCase())).join(", ")}${q.imovel?" — "+q.imovel:""}. Valor total: ${brl(r.final)}. Fico à disposição para qualquer dúvida.`;
+  const pxp=pixDaProposta(); const msgFull = msg + (pxp?`\n\nPix para ${pxp.rotulo.toLowerCase()} (${brl(pxp.valor)}) — copia e cola:\n${pxp.payload}`:"");
+  if(!q.id && (q.cliente||q.imovel)) await saveQuote();
+  if(q.id){ const x=quotes.find(o=>o.id===q.id); if(!x||!x.status||x.status==="Rascunho") updateQuoteField(q.id,{status:"Enviado",enviadoEm:new Date().toISOString()}); }
   let blob=null; const name=nomePdfProposta(); try{ if(window.jspdf) blob=buildPdf().output("blob"); }catch(e){}
   if(blob && navigator.canShare && /Android|iPhone|iPad/i.test(navigator.userAgent)){
-    try{ const f=new File([blob],name,{type:"application/pdf"}); if(navigator.canShare({files:[f]})){ await navigator.share({files:[f],text:msg}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+    try{ const f=new File([blob],name,{type:"application/pdf"}); if(navigator.canShare({files:[f]})){ await navigator.share({files:[f],text:msgFull}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
   }
   if(blob){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); }
   let d=String(q.contato||"").replace(/\D/g,""); if(d.length>=10&&d.length<=11) d="55"+d; if(d.length<12) d="";
-  window.open("https://wa.me/"+d+"?text="+encodeURIComponent(msg),"_blank","noopener");
+  window.open("https://wa.me/"+d+"?text="+encodeURIComponent(msgFull),"_blank","noopener");
   toast(blob?"PDF baixado — anexe na conversa do WhatsApp":"Abrindo o WhatsApp");
 }
 const RELEVO_CLS=[[3,"plano",1],[8,"suave ondulado",1.2],[20,"ondulado",1.45],[45,"forte ondulado",2.3],[1e9,"montanhoso",4]];

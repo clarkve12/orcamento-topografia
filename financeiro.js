@@ -34,7 +34,7 @@ const inPeriod=(s,ini,fim)=>s&&s>=ini&&s<=fim;
 const R=v=>brl(v||0);
 
 /* ---------- configuração ---------- */
-function fcfg(){ const f=(cfg&&cfg.financeiro)||{}; return {fechamento:nz(f.fechamento)||31, vencimento:nz(f.vencimento)||7, socios:(f.socios&&f.socios.length?f.socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}])}; }
+function fcfg(){ const f=(cfg&&cfg.financeiro)||{}; return {fechamento:nz(f.fechamento)||31, vencimento:nz(f.vencimento)||7, followupDias:nz(f.followupDias)||5, saldoAtual:f.saldoAtual, socios:(f.socios&&f.socios.length?f.socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}])}; }
 
 /* ---------- cálculos (mesma lógica da planilha) ---------- */
 function calcServico(s){
@@ -204,7 +204,10 @@ function indicadores(){
     const orc=l.reduce((a,x)=>a+nz(x.valor),0), apv=ap.reduce((a,x)=>a+nz(x.valor),0);
     const apHa=ap.filter(x=>x.q&&nz(x.q.areaHa)>0); const ha=apHa.reduce((a,x)=>a+nz(x.q.areaHa),0), vha=apHa.reduce((a,x)=>a+nz(x.valor),0);
     const pp=pares.filter(x=>f(x.d)); const desv=pp.length?pp.reduce((a,x)=>a+(x.r-x.e)/x.e,0)/pp.length:null;
-    return {nome,n:l.length,env:env.length,ap:ap.length,orc,apv,taxa:env.length?ap.length/env.length:null,ticket:ap.length?apv/ap.length:null,rha:ha>0?vha/ha:null,ha,desv,nd:pp.length};
+    const perd=l.filter(x=>x.status==="Perdido"); const mot={}; perd.forEach(x=>{ const m=x.motivoPerda||"Sem motivo"; mot[m]=(mot[m]||0)+1; });
+    const svp=FIN.servicos.filter(s=>!s.cancelado&&f(s.data||"")&&(nz(s.diasReais)>0||["Escritório","Enviado ao SIGEF","Certificado","Cartório","Concluído"].includes(s.etapa))).map(s=>({p:previstoDe(s),r:FIN.despServ.filter(d=>d.servicoId===s.id).reduce((a,d)=>a+nz(d.valor),0)})).filter(o=>o.p&&o.r>0);
+    const prevT=svp.reduce((a,o)=>a+PREV_CAT.reduce((b,c)=>b+nz(o.p[c[0]]),0),0), realT=svp.reduce((a,o)=>a+o.r,0);
+    return {nome,n:l.length,env:env.length,ap:ap.length,orc,apv,taxa:env.length?ap.length/env.length:null,ticket:ap.length?apv/ap.length:null,rha:ha>0?vha/ha:null,ha,desv,nd:pp.length,perdas:perd.length,mot,despDesv:prevT>0?(realT-prevT)/prevT:null,nsv:svp.length};
   });
 }
 function renderPainel(){
@@ -226,11 +229,15 @@ function renderPainel(){
     <div class="fgrid">
       <div><h3 class="fh">Contas a pagar vencidas</h3>${venc.length?`<table class="ft"><tr><th>Descrição</th><th>Vencimento</th><th>Parcelas</th><th class="n">Valor</th></tr>${venc.map(x=>`<tr><td>${esc(x.g.descricao)}</td><td>${fmtD(x.prox)}</td><td>${x.atrasadas}</td><td class="n">${R(x.valorAtraso)}</td></tr>`).join("")}</table>`:'<p class="hint">Nenhuma conta vencida.</p>'}</div>
       <div><h3 class="fh">Próximos vencimentos (30 dias)</h3>${prox.length?`<table class="ft"><tr><th>Descrição</th><th>Vencimento</th><th class="n">Valor</th><th>Faltam</th></tr>${prox.map(x=>`<tr><td>${esc(x.g.descricao)}</td><td>${fmtD(x.prox)}</td><td class="n">${R(x.g.valorParcela)}</td><td>${daysBetween(hojeStr(),x.prox)} dias</td></tr>`).join("")}</table>`:'<p class="hint">Nenhum vencimento nos próximos 30 dias.</p>'}</div>
-      <div><h3 class="fh">A receber de clientes</h3>${areceber.length?`<table class="ft"><tr><th>Cód.</th><th>Contratante</th><th class="n">A receber</th><th>Vencimento</th></tr>${areceber.map(x=>`<tr class="click" data-sv="${x.s.id}"><td>${esc(x.s.codigo)}</td><td>${esc(x.s.contratante)}</td><td class="n">${R(x.aReceber)}</td><td>${x.atrasado>0?tag("Atraso "+R(x.atrasado),"bad"):x.proxVenc?fmtD(x.proxVenc):`<small>há ${daysBetween(x.s.data,hojeStr())} dias</small>`}</td></tr>`).join("")}</table>`:'<p class="hint">Nada a receber.</p>'}</div>
+      <div><h3 class="fh">A receber de clientes</h3>${areceber.length?`<table class="ft"><tr><th>Cód.</th><th>Contratante</th><th class="n">A receber</th><th>Vencimento</th><th></th></tr>${areceber.map(x=>`<tr class="click" data-sv="${x.s.id}"><td>${esc(x.s.codigo)}</td><td>${esc(x.s.contratante)}</td><td class="n">${R(x.aReceber)}</td><td>${x.atrasado>0?tag("Atraso "+R(x.atrasado),"bad"):x.proxVenc?fmtD(x.proxVenc):`<small>há ${daysBetween(x.s.data,hojeStr())} dias</small>`}</td><td><button class="btn ghost small" data-cobrar="${x.s.id}">Cobrar</button></td></tr>`).join("")}</table>`:'<p class="hint">Nada a receber.</p>'}</div>
     </div></div>
   <div class="card"><h2>Serviços em andamento</h2>
     <div class="actions" style="margin-bottom:10px">${ETAPAS.slice(0,-1).map(e=>{ const n=and.filter(s=>s.etapa===e).length; return n?tag(e+": "+n):""; }).join(" ")||'<span class="hint">Nenhum serviço em andamento.</span>'}</div>
-    ${and.length?`<div class="hwrap"><table class="ft"><tr><th>Cód.</th><th>Local</th><th>Contratante</th><th>Etapa</th><th>Na etapa há</th><th>Entrega prevista</th></tr>${and.map(s=>`<tr class="click" data-sv="${s.id}"><td><b>${esc(s.codigo)}</b></td><td>${esc(s.local)}<br><small>${esc(s.cidade||"")}</small></td><td><small>${esc(s.contratante||"")}</small></td><td>${esc(s.etapa)}</td><td>${daysBetween(ultEt(s),hojeStr())} dias</td><td>${s.entrega?(s.entrega<hojeStr()?tag(fmtD(s.entrega)+" — atrasado","bad"):fmtD(s.entrega)):"—"}</td></tr>`).join("")}</table></div>`:""}<br></div>
+    ${and.length?`<div class="hwrap"><table class="ft"><tr><th>Cód.</th><th>Local</th><th>Contratante</th><th>Etapa</th><th>Pendências</th><th>Na etapa há</th><th>Entrega prevista</th></tr>${and.map(s=>{ const pd=pendencias(s); return `<tr class="click" data-sv="${s.id}"><td><b>${esc(s.codigo)}</b></td><td>${esc(s.local)}<br><small>${esc(s.cidade||"")}</small></td><td><small>${esc(s.contratante||"")}</small></td><td>${esc(s.etapa)}</td><td><small>${pd.dOk<pd.dTot?`<span class="neg">docs ${pd.dOk}/${pd.dTot}</span>`:`docs ok`}${pd.aTot?` · ${pd.aOk<pd.aTot?`<span class="neg">anuências ${pd.aOk}/${pd.aTot}</span>`:`anuências ok`}`:""}</small></td><td>${daysBetween(ultEt(s),hojeStr())} dias</td><td>${s.entrega?(s.entrega<hojeStr()?tag(fmtD(s.entrega)+" — atrasado","bad"):fmtD(s.entrega)):"—"}</td></tr>`; }).join("")}</table></div>`:""}<br></div>
+  ${(()=>{ const ag=aguardando(), lim=fcfg().followupDias; return `<div class="card"><h2>Orçamentos aguardando resposta</h2>
+    ${ag.length?`<div class="hwrap"><table class="ft"><tr><th>Nº</th><th>Cliente / Imóvel</th><th class="n">Valor</th><th>Enviado há</th><th>Último contato</th><th></th></tr>${ag.map(a=>`<tr><td>${esc(a.x.numero||"")}${nz(a.x.rev)?" – rev. "+a.x.rev:""}</td><td><b>${esc(a.x.cliente||"—")}</b><br><small>${esc(a.x.imovel||"")}</small></td><td class="n">${R(nz(a.x.valor))}</td><td>${a.desdeEnvio} dias</td><td>${a.dias>=lim?tag("há "+a.dias+" dias — cobrar","warn"):"há "+a.dias+" dias"}${nz(a.x.followups)?`<br><small>${nz(a.x.followups)} cobrança(s)</small>`:""}</td><td style="white-space:nowrap"><button class="btn small" data-fup="${a.x.id}">Cobrar resposta</button> <button class="btn ghost small" data-fap="${a.x.id}">Aprovado</button> <button class="btn ghost small" data-fpe="${a.x.id}">Perdido</button></td></tr>`).join("")}</table></div>`:'<p class="hint">Nenhum orçamento enviado esperando resposta. Ao usar "Enviar no WhatsApp", o orçamento entra aqui sozinho.</p>'}
+    <p class="hint">Destaque depois de ${lim} dias sem contato (ajuste em Configurações → Financeiro).</p></div>`; })()}
+  ${htmlFluxo()}
   <div class="card"><h2>Indicadores comerciais</h2>
     <div class="hwrap"><table class="ft"><tr><th></th>${ind.map(i=>`<th class="n">${i.nome}</th>`).join("")}</tr>
     <tr><td>Orçamentos feitos</td>${ind.map(i=>`<td class="n">${i.n}</td>`).join("")}</tr>
@@ -239,6 +246,8 @@ function renderPainel(){
     <tr><td>Taxa de aprovação<br><small>aprovados ÷ enviados</small></td>${ind.map(i=>`<td class="n">${pc(i.taxa)}</td>`).join("")}</tr>
     <tr><td>Ticket médio aprovado</td>${ind.map(i=>`<td class="n">${i.ticket==null?"—":R(i.ticket)}</td>`).join("")}</tr>
     <tr><td>R$/ha praticado<br><small>aprovados com área</small></td>${ind.map(i=>`<td class="n">${i.rha==null?"—":R(i.rha)+"/ha"}<br><small>${i.ha?fmt(i.ha,1)+" ha":""}</small></td>`).join("")}</tr>
+    <tr><td>Perdidos e motivos</td>${ind.map(i=>`<td class="n">${i.perdas}${i.perdas?`<br><small>${Object.entries(i.mot).map(([m,n])=>esc(m)+" "+n).join(" · ")}</small>`:""}</td>`).join("")}</tr>
+    <tr><td>Despesas reais × previstas<br><small>serviços vindos de orçamento</small></td>${ind.map(i=>`<td class="n">${i.despDesv==null?"—":`<span class="${Math.abs(i.despDesv)>0.15?"neg":""}">${i.despDesv>0?"+":""}${fmt(i.despDesv*100,0)}%</span> <small>(${i.nsv})</small>`}</td>`).join("")}</tr>
     <tr><td>Dias reais × estimados<br><small>média dos serviços com dias reais</small></td>${ind.map(i=>`<td class="n">${i.desv==null?"—":`<span class="${Math.abs(i.desv)>0.2?"neg":""}">${i.desv>0?"+":""}${fmt(i.desv*100,0)}%</span> <small>(${i.nd})</small>`}</td>`).join("")}</tr></table></div>
     <p class="hint">Dias reais acima do estimado indicam produtividade ou dificuldade subestimadas no catálogo; taxa de aprovação muito alta pode indicar preço baixo.</p></div>
   <div class="card"><h2>Divisão entre sócios (lucro realizado)</h2>
@@ -251,6 +260,11 @@ function renderPainel(){
     <tr class="tot"><td>Total</td>${["faturado","recebido","aReceber","dServ","dGer","lucro"].map(k=>`<td class="n">${R(mm.reduce((a,m)=>a+m[k],0))}</td>`).join("")}${fcfg().socios.map((s,i)=>`<td class="n">${R(mm.reduce((a,m)=>a+m.partes[i],0))}</td>`).join("")}</tr></table></div><br></div>`;
   el.querySelectorAll("[data-sv]").forEach(tr=>tr.addEventListener("click",()=>{ tab("servicos"); abrirServico(tr.dataset.sv); }));
   const ac=el.querySelector("#anualCfg"); if(ac) ac.onclick=()=>tab("cfg");
+  el.querySelectorAll("[data-cobrar]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); cobrarWhats(b.dataset.cobrar); }));
+  el.querySelectorAll("[data-fup]").forEach(b=>b.onclick=()=>cobrarResposta(b.dataset.fup));
+  el.querySelectorAll("[data-fap]").forEach(b=>b.onclick=()=>{ updateQuoteField(b.dataset.fap,{status:"Aprovado"}); toast("Marcado como aprovado — crie o serviço em Orçamentos (→ Serviço)"); });
+  el.querySelectorAll("[data-fpe]").forEach(b=>b.onclick=()=>{ updateQuoteField(b.dataset.fpe,{status:"Perdido"}); window.finMotivoPerda(b.dataset.fpe); });
+  const fx=el.querySelector("#fxSaldo"); if(fx) fx.onchange=()=>{ cfg.financeiro=cfg.financeiro||{}; cfg.financeiro.saldoAtual=fx.value===""?"":nz(fx.value); if(typeof saveCfg==="function") saveCfg(); renderPainel(); };
   const ao=el.querySelector("#anualOk"); if(ao) ao.onclick=()=>{ cfg.revisaoAnual=anoAt; if(typeof saveCfg==="function") saveCfg(); renderPainel(); };
 }
 
@@ -285,7 +299,7 @@ function abrirServico(id, pre){
   const parc=(s.parcelas||[]).slice().sort((a,b)=>(a.venc||"").localeCompare(b.venc||""));
   const extra = id ? `
     <div class="actions" style="margin:4px 0 2px"><button class="btn ghost small" id="svContrato">📄 Gerar contrato</button>${(()=>{ const cl=clienteDoServico(s); const l=cl&&waLink(cl.telefone); return l?`<a class="btn ghost small" href="${l}" target="_blank" rel="noopener">WhatsApp do cliente</a>`:""; })()}</div>
-    <div class="sub-card"><h3 class="fh">Parcelas a receber <span class="pill ${c.atrasado>0?"bad":""}">${c.atrasado>0?"Atrasado "+R(c.atrasado):c.proxVenc?"Próximo vencimento "+fmtD(c.proxVenc):"Sem parcelas previstas"}</span></h3>
+    <div class="sub-card"><h3 class="fh">Parcelas a receber ${c.aReceber>0?`<button class="btn small" id="svCobrar" title="Abre o WhatsApp do cliente com a cobrança e o Pix">Cobrar pelo WhatsApp</button><button class="btn ghost small" id="svPix">Pix</button>`:""}${s.ultimaCobranca?`<small class="hint">última cobrança ${fmtD(s.ultimaCobranca)}</small>`:""} <span class="pill ${c.atrasado>0?"bad":""}">${c.atrasado>0?"Atrasado "+R(c.atrasado):c.proxVenc?"Próximo vencimento "+fmtD(c.proxVenc):"Sem parcelas previstas"}</span></h3>
       ${parc.length?`<table class="ft"><tr><th>Vencimento</th><th class="n">Valor</th><th>Situação</th><th></th></tr>${(()=>{ let acc=0; return parc.map(p=>{ acc+=nz(p.valor); const pago=c.recebido>=acc-0.005; const venc=!pago&&p.venc<hojeStr(); return `<tr><td>${fmtD(p.venc)}</td><td class="n">${R(p.valor)}</td><td>${pago?tag("Paga"):venc?tag("Vencida","bad"):tag("A vencer","warn")}</td><td><button class="btn danger small" data-delparc="${esc(p.venc)}|${nz(p.valor)}">×</button></td></tr>`; }).join(""); })()}</table>`:'<p class="hint">Cadastre as parcelas combinadas com o cliente para acompanhar atrasos. Os pagamentos lançados abaixo vão quitando as parcelas em ordem.</p>'}
       <div class="row" style="margin-top:8px"><label>Vencimento<input type="date" id="pcVenc" value="${hojeStr()}"></label><label>Valor (R$)<input type="number" step="0.01" id="pcValor" placeholder="${fmt(Math.max(c.valor-parc.reduce((a,p)=>a+nz(p.valor),0),0),2)}"></label></div>
       <button class="btn ghost small" id="pcAdd">+ Parcela</button> ${parc.length?"":`<button class="btn ghost small" id="pc5050">50% agora + 50% em 30 dias</button>`}</div>
@@ -296,6 +310,9 @@ function abrirServico(id, pre){
     <div class="sub-card"><h3 class="fh">Prestadores neste serviço</h3>
       ${ativos.length?`<div class="row"><label>Prestador<select id="ppPre">${ativos.map(p=>`<option value="${p.id}">${esc(p.nome)} — ${esc(p.funcao||"")}</option>`).join("")}</select></label><label>Diárias<input type="number" step="0.5" min="0" id="ppDias" value="${nz(s.diasReais)||1}"></label><label>Valor (R$)<input type="number" step="0.01" id="ppValor" placeholder="diária × dias"></label><label>Data<input type="date" id="ppData" value="${hojeStr()}"></label></div>
       <button class="btn ghost small" id="ppAdd">+ Lançar pagamento ao prestador</button>`:'<p class="hint">Cadastre os prestadores (auxiliar, piloto…) na aba Cadastros para lançar as diárias aqui.</p>'}</div>
+    ${htmlDocs(s)}
+    ${htmlArquivos(s)}
+    ${htmlPrevisto(s)}
     <div class="sub-card"><h3 class="fh">Despesas do serviço <span class="pill">${R(c.despesas)}</span></h3>
       ${desp.length?`<table class="ft">${desp.map(d=>`<tr><td>${fmtD(d.data)}</td><td>${esc(d.despesa)}${d.prestadorId?`<br><small>${esc(preNome(d.prestadorId))}${nz(d.dias)?" · "+fmt(nz(d.dias),1)+" diária(s)":""}</small>`:""}</td><td class="n">${R(d.valor)}</td><td><small>${esc(d.prestadorId?"":(d.obs||""))}</small></td><td style="white-space:nowrap">${d.prestadorId?`<button class="btn ghost small" data-recpre="${d.id}">Recibo</button> `:""}<button class="btn danger small" data-deldesp="${d.id}">×</button></td></tr>`).join("")}</table>`:'<p class="hint">Nenhuma despesa lançada.</p>'}
       <div class="row" style="margin-top:8px"><label>Data<input type="date" id="dsData" value="${hojeStr()}"></label><label>Despesa<select id="dsCat">${CAT_DESP_SERV.map(o=>`<option>${esc(o)}</option>`).join("")}</select></label><label>Valor (R$)<input type="number" step="0.01" id="dsValor"></label></div>
@@ -320,6 +337,9 @@ function abrirServico(id, pre){
   const rec=s.recebimentos||[];
   const setS=patch=>salvar("servicos",Object.assign({},s,patch),id);
   document.getElementById("svContrato").onclick=()=>formContrato(id);
+  const bc=document.getElementById("svCobrar"); if(bc) bc.onclick=()=>cobrarWhats(id);
+  const bp=document.getElementById("svPix"); if(bp) bp.onclick=()=>{ const cb=cobranca(s); if(cb) mostrarPix(cb.valor,(s.codigo||"")+"P"+String(cb.venc||"").replace(/\D/g,"").slice(2),"Pix — serviço "+s.codigo,cb.venc?(cb.atrasada?"em aberto desde ":"vence em ")+fmtD(cb.venc):"saldo do serviço"); };
+  ligarDocs(s,id,setS,reabrir); ligarArquivos(s,setS,reabrir);
   document.getElementById("pcAdd").onclick=()=>{ const v=nz(document.getElementById("pcValor").value)||Math.max(c.valor-parc.reduce((a,p)=>a+nz(p.valor),0),0); const d=document.getElementById("pcVenc").value; if(!(v>0)||!d) return toast("Informe vencimento e valor"); setS({parcelas:parc.concat([{venc:d,valor:Math.round(v*100)/100}])}); toast("Parcela incluída"); reabrir(); };
   const p50=document.getElementById("pc5050"); if(p50) p50.onclick=()=>{ const a=Math.round(c.valor/2*100)/100; setS({parcelas:[{venc:hojeStr(),valor:a},{venc:addDays(hojeStr(),30),valor:Math.round((c.valor-a)*100)/100}]}); toast("Parcelas incluídas"); reabrir(); };
   document.querySelectorAll("[data-delparc]").forEach(b=>b.onclick=()=>{ const [vv,val]=b.dataset.delparc.split("|"); let done=false; setS({parcelas:parc.filter(p=>{ if(!done&&p.venc===vv&&nz(p.valor)===+val){ done=true; return false; } return true; })}); reabrir(); });
@@ -339,7 +359,7 @@ window.finNovoServicoDeOrcamento=function(x){
   const parcelas=[]; const hj=hojeStr();
   if(valor>0){ const vE=Math.round(valor*ent)/100; if(vE>0) parcelas.push({venc:hj,valor:vE}); const saldo=Math.round((valor-vE)*100)/100;
     if(saldo>0){ const pv=Math.round(saldo/np*100)/100; for(let i=1;i<=np;i++) parcelas.push({venc:addDays(hj,30*i),valor:i===np?Math.round((saldo-pv*(np-1))*100)/100:pv}); } }
-  abrirServico(null,{_orcId:x.id,_tel:x.contato||qq.contato||"",orcamentoNumero:(x.numero||"")+(nz(x.rev)?" – rev. "+x.rev:""),data:hj,local:x.imovel||qq.imovel||"",cidade:m?m[1]:mun,uf:m?m[2].toUpperCase():"MG",contratante:x.cliente||"",tipo:MAP_CATALOGO[sel[0]]||"Outros",valor,etapa:"A agendar",diasEstimados:nz(x.diasEstimados),parcelas,obs:x.servicos?("Orçamento: "+x.servicos):""});
+  abrirServico(null,{_orcId:x.id,_tel:x.contato||qq.contato||"",orcamentoNumero:(x.numero||"")+(nz(x.rev)?" – rev. "+x.rev:""),data:hj,local:x.imovel||qq.imovel||"",cidade:m?m[1]:mun,uf:m?m[2].toUpperCase():"MG",contratante:x.cliente||"",tipo:MAP_CATALOGO[sel[0]]||"Outros",valor,etapa:"A agendar",diasEstimados:nz(x.diasEstimados),parcelas,confrontantesPrev:nz(qq.confrontantes),despPrevistas:x.despPrevistas||prevDoOrcamento(fromCloudQ(qq))||null,obs:x.servicos?("Orçamento: "+x.servicos):""});
 };
 
 function renderDespesas(){
@@ -710,6 +730,179 @@ window.finExportar=function(){ const o={}; Object.keys(COLS).forEach(k=>{ o[k]=F
 window.finImportar=function(dados){ if(!dados||!fsRef) return 0; let n=0;
   Object.keys(COLS).forEach(k=>{ (dados[k]||[]).forEach(x=>{ if(!x||!x.id||FIN[k].some(y=>y.id===x.id)) return; salvar(k,x,x.id); n++; }); }); return n; };
 
+
+/* ---------- Pix: BR Code estático (padrão do Banco Central) ---------- */
+function crc16(s){ let c=0xFFFF; for(let i=0;i<s.length;i++){ c^=s.charCodeAt(i)<<8; for(let j=0;j<8;j++) c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF; } return c.toString(16).toUpperCase().padStart(4,"0"); }
+const tlv=(id,v)=>id+String(v.length).padStart(2,"0")+v;
+const ascii=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+function pixChave(){
+  const e=(cfg&&cfg.empresa)||{}; let k=String(e.pixChave||"").trim(); if(!k) return null; const t=e.pixTipo||"";
+  if(t==="E-mail"||(!t&&k.includes("@"))) return k.toLowerCase();
+  if(t==="Aleatória"||(!t&&/^[0-9a-f-]{32,36}$/i.test(k))) return k.toLowerCase();
+  const d=soDig(k);
+  if(t==="Telefone"||(!t&&/^\+/.test(k))) return "+"+(d.length<=11?"55"+d:d);
+  return d; // CPF / CNPJ
+}
+function pixPayload(valor,txid){
+  const chave=pixChave(); if(!chave) return null; const e=cfg.empresa||{};
+  const nome=(ascii(e.pixNome||String(e.nome||"SANTEX").split(" — ")[0]).toUpperCase().slice(0,25).trim())||"SANTEX";
+  const cid=(ascii(e.pixCidade||String(e.cidadeBase||"").replace(/\s*-\s*[A-Z]{2}$/,"")).toUpperCase().slice(0,15).trim())||"BRASIL";
+  let p=tlv("00","01")+tlv("26",tlv("00","br.gov.bcb.pix")+tlv("01",chave))+tlv("52","0000")+tlv("53","986");
+  if(valor>0) p+=tlv("54",(Math.round(valor*100)/100).toFixed(2));
+  p+=tlv("58","BR")+tlv("59",nome)+tlv("60",cid)+tlv("62",tlv("05",String(txid||"").replace(/[^A-Za-z0-9]/g,"").slice(0,25)||"***"));
+  p+="6304"; return p+crc16(p);
+}
+function qrMatriz(txt){ if(typeof qrcode!=="function") return null; const q=qrcode(0,"M"); q.addData(txt); q.make(); const n=q.getModuleCount(); return {n,dark:(r,c)=>q.isDark(r,c)}; }
+function qrSvg(txt,px){ const m=qrMatriz(txt); if(!m) return ""; let d=""; for(let r=0;r<m.n;r++) for(let c=0;c<m.n;c++) if(m.dark(r,c)) d+=`M${c+4},${r+4}h1v1h-1z`; return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${m.n+8} ${m.n+8}" width="${px}" height="${px}" shape-rendering="crispEdges" style="background:#fff;border-radius:6px"><path d="${d}" fill="#000"/></svg>`; }
+function pdfQr(doc,txt,x,y,size){ const m=qrMatriz(txt); if(!m) return false; const cell=size/(m.n+2); doc.setFillColor(255,255,255); doc.rect(x,y,size,size,"F"); doc.setFillColor(0,0,0); for(let r=0;r<m.n;r++) for(let c=0;c<m.n;c++) if(m.dark(r,c)) doc.rect(x+(c+1)*cell,y+(r+1)*cell,cell+0.02,cell+0.02,"F"); return true; }
+function mostrarPix(valor,txid,titulo,descr){
+  const p=pixPayload(valor,txid); if(!p){ toast("Cadastre a chave Pix em Configurações → Financeiro"); return; }
+  ensureModal(); document.getElementById("fmTitle").textContent=titulo||"Pix";
+  document.getElementById("fmBody").innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start"><div>${qrSvg(p,200)||'<p class="hint">QR code indisponível sem internet; use o copia e cola.</p>'}</div>
+    <div style="flex:1;min-width:220px"><p style="margin:0 0 6px"><b>${R(valor)}</b>${descr?` — ${esc(descr)}`:""}</p><p class="hint">Chave: ${esc(cfg.empresa.pixChave)} · ${esc(cfg.empresa.pixNome||"")}</p>
+    <label>Pix copia e cola<textarea id="pixCC" readonly rows="4" style="font-family:monospace;font-size:11.5px">${esc(p)}</textarea></label>
+    <button class="btn small" id="pixCopiar">Copiar código</button></div></div>`;
+  const del=document.getElementById("fmDel"); del.style.display="none"; const sv=document.getElementById("fmSave"); sv.textContent="Fechar"; sv.onclick=fecharForm;
+  document.getElementById("pixCopiar").onclick=async()=>{ try{ await navigator.clipboard.writeText(p); toast("Código Pix copiado"); }catch(e){ const t=document.getElementById("pixCC"); t.select(); document.execCommand("copy"); toast("Código Pix copiado"); } };
+  document.getElementById("fmodal").classList.add("on");
+}
+window.pixPayload=pixPayload; window.pdfQr=pdfQr;
+
+/* ---------- parcelas: quanto falta de cada uma ---------- */
+function parcelasAbertas(s){ // [{venc,valor,resto}] na ordem, já descontando o recebido
+  if(s.cancelado) return []; const rec=(s.recebimentos||[]).reduce((a,r)=>a+nz(r.valor),0); let acc=0;
+  return (s.parcelas||[]).slice().sort((a,b)=>(a.venc||"").localeCompare(b.venc||"")).map(p=>{ const ini=acc; acc+=nz(p.valor); const resto=Math.min(Math.max(acc-Math.max(rec,ini),0),nz(p.valor)); return {venc:p.venc,valor:nz(p.valor),resto:Math.round(resto*100)/100}; }).filter(p=>p.resto>0.004);
+}
+function cobranca(s){ // o que cobrar agora: vencidas somadas ou a próxima
+  const ab=parcelasAbertas(s); const hj=hojeStr(); const venc=ab.filter(p=>p.venc<hj);
+  if(venc.length) return {valor:venc.reduce((a,p)=>a+p.resto,0),venc:venc[0].venc,atrasada:true};
+  if(ab.length) return {valor:ab[0].resto,venc:ab[0].venc,atrasada:false};
+  const c=calcServico(s); return c.aReceber>0?{valor:c.aReceber,venc:null,atrasada:false}:null;
+}
+function cobrarWhats(sid){
+  const s=FIN.servicos.find(x=>x.id===sid); if(!s) return; const cb=cobranca(s); if(!cb) return toast("Nada a cobrar neste serviço");
+  const cl=clienteDoServico(s)||{}; const nome=String(s.contratante||cl.nome||"").trim().split(/\s+/)[0];
+  const txid=(s.codigo||"")+"P"+String(cb.venc||"").replace(/\D/g,"").slice(2);
+  const pix=pixPayload(cb.valor,txid);
+  const msg=`Olá${nome?", "+nome:""}! Tudo bem? Passando para lembrar ${cb.atrasada?"do valor em aberto":"da parcela"} de ${R(cb.valor)} referente ao serviço de ${lc1(s.tipo||"topografia")} — ${s.local||""} (${s.codigo})${cb.venc?(cb.atrasada?`, vencido desde ${fmtD(cb.venc)}`:`, com vencimento em ${fmtD(cb.venc)}`):""}.`+(pix?`\n\nPara pagar via Pix, use o código copia e cola abaixo:\n\n${pix}`:"")+`\n\nQualquer dúvida estou à disposição. ${String((cfg.empresa||{}).nome||"SANTEX").split(" — ")[0]}`;
+  const l=waLink(cl.telefone,msg); if(!l){ toast("Cadastre o telefone do cliente para cobrar pelo WhatsApp"); return; }
+  window.open(l,"_blank","noopener");
+  salvar("servicos",Object.assign({},s,{ultimaCobranca:hojeStr()}),s.id);
+}
+
+/* ---------- documentos e anuências ---------- */
+const DOCS_RURAL=["Matrícula ou escritura atualizada","CCIR (último exercício)","ITR / CND do imóvel","CAR (recibo de inscrição)","Documentos pessoais dos proprietários (RG, CPF, certidão de casamento)","Plantas e memoriais anteriores (se houver)"];
+const DOCS_URB=["Matrícula ou escritura atualizada","IPTU / Cadastro municipal","Documentos pessoais dos proprietários (RG, CPF, certidão de casamento)","Projeto ou planta anterior (se houver)"];
+const ehRural=s=>/georref|rural|usucapi|retifica|desmembr|sigef|incra|\bcar\b|demarca/i.test(s.tipo||"");
+const docsDe=s=>Array.isArray(s.docs)?s.docs:(ehRural(s)?DOCS_RURAL:DOCS_URB).map(n=>({nome:n,ok:false}));
+const SIT_CONF=["Pendente","Contatado","Assinada","Recusou"];
+function pendencias(s){ const d=docsDe(s), cf=s.confrontantes||[]; return {dOk:d.filter(x=>x.ok).length,dTot:d.length,aOk:cf.filter(x=>x.situacao==="Assinada").length,aTot:Math.max(cf.length,nz(s.confrontantesPrev))}; }
+function htmlDocs(s){
+  const d=docsDe(s), cf=s.confrontantes||[], pd=pendencias(s);
+  return `<div class="sub-card"><h3 class="fh">Documentos do cliente <span class="pill ${pd.dOk<pd.dTot?"warn":""}" id="docCont">${pd.dOk}/${pd.dTot}</span></h3>
+    ${d.map((x,i)=>`<label style="flex-direction:row;align-items:center;gap:8px;font-weight:500;margin:3px 0"><input type="checkbox" style="width:auto" data-doc="${i}" ${x.ok?"checked":""}> <span style="flex:1">${esc(x.nome)}</span><button class="btn danger small" data-docx="${i}" title="Remover">×</button></label>`).join("")}
+    <div class="row" style="margin-top:6px"><label>Outro documento<input id="docNovo" placeholder="Ex.: certidão de óbito, procuração…"></label></div><button class="btn ghost small" id="docAdd">+ Documento</button></div>
+  <div class="sub-card"><h3 class="fh">Confrontantes e anuências <span class="pill ${pd.aOk<pd.aTot?"warn":""}">${pd.aOk}/${pd.aTot} assinadas</span></h3>
+    ${nz(s.confrontantesPrev)&&cf.length<nz(s.confrontantesPrev)?`<p class="hint">O orçamento previa ${nz(s.confrontantesPrev)} confrontantes; ${cf.length} cadastrado(s).</p>`:""}
+    ${cf.length?`<table class="ft"><tr><th>Confrontante</th><th>Telefone</th><th>Situação</th><th></th></tr>${cf.map((x,i)=>{ const l=waLink(x.telefone,`Olá${x.nome?", "+String(x.nome).split(" ")[0]:""}! Aqui é da ${String((cfg.empresa||{}).nome||"SANTEX").split(" — ")[0]}, responsável técnica pelo levantamento do imóvel ${s.local||""}${s.cidade?", em "+s.cidade:""}, vizinho ao seu. Precisamos da sua assinatura na declaração de reconhecimento de limites (anuência). Podemos combinar um horário que seja bom para você?`); return `<tr><td>${esc(x.nome)}${x.obs?`<br><small>${esc(x.obs)}</small>`:""}</td><td><small>${esc(x.telefone||"")}</small></td><td><select data-cfs="${i}" style="min-width:110px">${SIT_CONF.map(o=>`<option ${o===(x.situacao||"Pendente")?"selected":""}>${o}</option>`).join("")}</select></td><td style="white-space:nowrap">${l?`<a class="btn ghost small" href="${l}" target="_blank" rel="noopener">WhatsApp</a> `:""}<button class="btn danger small" data-cfx="${i}">×</button></td></tr>`; }).join("")}</table>`:'<p class="hint">Nenhum confrontante cadastrado.</p>'}
+    <div class="row" style="margin-top:6px"><label>Nome<input id="cfNome" placeholder="Nome do confrontante"></label><label>Telefone<input id="cfTel" placeholder="(00) 00000-0000"></label><label>Lado / obs.<input id="cfObs" placeholder="Ex.: divisa norte, Faz. Boa Vista"></label></div>
+    <button class="btn ghost small" id="cfAdd">+ Confrontante</button></div>`;
+}
+function ligarDocs(s,id,setS,reabrir){
+  const d=docsDe(s).map(x=>Object.assign({},x)), cf=(s.confrontantes||[]).map(x=>Object.assign({},x));
+  document.querySelectorAll("[data-doc]").forEach(b=>b.onchange=()=>{ d[+b.dataset.doc].ok=b.checked; s.docs=d; setS({docs:d}); const k=document.getElementById("docCont"); if(k) k.textContent=d.filter(x=>x.ok).length+"/"+d.length; });
+  document.querySelectorAll("[data-docx]").forEach(b=>b.onclick=e=>{ e.preventDefault(); d.splice(+b.dataset.docx,1); setS({docs:d}); reabrir(); });
+  document.getElementById("docAdd").onclick=()=>{ const v=document.getElementById("docNovo").value.trim(); if(!v) return; d.push({nome:v,ok:false}); setS({docs:d}); reabrir(); };
+  document.querySelectorAll("[data-cfs]").forEach(b=>b.onchange=()=>{ cf[+b.dataset.cfs].situacao=b.value; if(b.value==="Assinada") cf[+b.dataset.cfs].assinadaEm=hojeStr(); setS({confrontantes:cf}); reabrir(); });
+  document.querySelectorAll("[data-cfx]").forEach(b=>b.onclick=()=>{ cf.splice(+b.dataset.cfx,1); setS({confrontantes:cf}); reabrir(); });
+  document.getElementById("cfAdd").onclick=()=>{ const n=document.getElementById("cfNome").value.trim(); if(!n) return toast("Informe o nome do confrontante"); cf.push({nome:n,telefone:document.getElementById("cfTel").value.trim(),obs:document.getElementById("cfObs").value.trim(),situacao:"Pendente"}); setS({confrontantes:cf}); reabrir(); };
+}
+
+/* ---------- previsto (orçamento) × realizado ---------- */
+const PREV_CAT=[["comb","Combustível",d=>d==="Combustível"],["ajud","Ajudante / Diárias",d=>/^ajudante/i.test(d)],["alim","Alimentação",d=>d==="Alimentação"],["hosp","Hospedagem",d=>d==="Hospedagem"],["ped","Pedágio",d=>d==="Pedágio"],["art","ART / TRT",d=>d==="ART"||d==="TRT"],["marcos","Marcos e material",d=>/^material/i.test(d)],["taxas","Cartório / Taxas",d=>/^cart[oó]rio/i.test(d)],["outras","Outras despesas",null]];
+function prevDoOrcamento(qq){ // a partir de compute() do orçamento
+  try{ const r=compute(qq,cfg), e=r.cen.escolhido; return {comb:e.comb,ajud:e.ajud,alim:e.alim,hosp:e.hosp,ped:e.ped,art:r.art,marcos:r.marcos,taxas:r.taxasIncl,outras:r.outras,dias:e.dias}; }catch(err){ return null; }
+}
+window.finPrevDoOrcamento=prevDoOrcamento;
+function previstoDe(s){
+  if(s.despPrevistas) return s.despPrevistas;
+  const x=(typeof quotes!=="undefined"?quotes:[]).find(o=>o.servicoId===s.id); if(!x) return null;
+  return x.despPrevistas || (x.q?prevDoOrcamento(fromCloudQ(x.q)):null);
+}
+const fromCloudQ=qq=>{ const o=Object.assign({},qq); if(typeof o.poligono==="string"){ try{ o.poligono=JSON.parse(o.poligono); }catch(e){ o.poligono=[]; } } return o; };
+function htmlPrevisto(s){
+  const p=previstoDe(s); if(!p) return "";
+  const ds=FIN.despServ.filter(d=>d.servicoId===s.id);
+  const linhas=PREV_CAT.map(([k,nome,f])=>({k,nome,f,prev:nz(p[k])}));
+  const real=linhas.map(l=>l.f?ds.filter(d=>l.f(d.despesa||"")).reduce((a,d)=>a+nz(d.valor),0):0);
+  const somaCat=real.reduce((a,b)=>a+b,0), tot=ds.reduce((a,d)=>a+nz(d.valor),0); real[real.length-1]=tot-somaCat;
+  const tp=linhas.reduce((a,l)=>a+l.prev,0);
+  const pct=(r,pv)=>pv>0?`${r>pv?"+":""}${fmt((r-pv)/pv*100,0)}%`:"—";
+  return `<div class="sub-card"><h3 class="fh">Previsto no orçamento × realizado <span class="pill ${tot>tp*1.1?"bad":""}">${R(tot)} de ${R(tp)} previstos</span></h3>
+    <table class="ft"><tr><th>Despesa</th><th class="n">Prevista</th><th class="n">Realizada</th><th class="n">Diferença</th></tr>
+    ${linhas.map((l,i)=>(l.prev>0||real[i]>0)?`<tr><td>${l.nome}</td><td class="n">${R(l.prev)}</td><td class="n">${R(real[i])}</td><td class="n ${real[i]>l.prev*1.1&&real[i]-l.prev>20?"neg":""}">${pct(real[i],l.prev)}</td></tr>`:"").join("")}
+    <tr class="tot"><td>Total</td><td class="n">${R(tp)}</td><td class="n">${R(tot)}</td><td class="n">${pct(tot,tp)}</td></tr>
+    ${nz(p.dias)?`<tr><td>Dias de campo</td><td class="n">${fmt(nz(p.dias),1)}</td><td class="n">${nz(s.diasReais)?fmt(nz(s.diasReais),1):"—"}</td><td class="n">${nz(s.diasReais)?pct(nz(s.diasReais),nz(p.dias)):""}</td></tr>`:""}</table>
+    <p class="hint" style="margin:6px 0 0">Só despesas em dinheiro (combustível, diárias, alimentação…). A hora técnica e o desgaste do carro ficam no preço, não aparecem aqui.</p></div>`;
+}
+
+/* ---------- follow-up de orçamentos ---------- */
+const MOTIVOS_PERDA=["Preço","Prazo","Fechou com outro profissional","Desistiu / adiou o serviço","Sem resposta","Outro"];
+window.finMotivoPerda=function(id){
+  abrirForm("Motivo da perda",[{k:"motivoPerda",label:"Motivo",type:"select",options:MOTIVOS_PERDA},{k:"motivoObs",label:"Observação",hint:"ex.: valor do concorrente"}],{},o=>{ if(typeof updateQuoteField==="function") updateQuoteField(id,{motivoPerda:o.motivoPerda,motivoObs:o.motivoObs}); toast("Motivo registrado"); });
+};
+function diasDesde(iso){ return iso?daysBetween(String(iso).slice(0,10),hojeStr()):0; }
+function aguardando(){
+  return (typeof quotes!=="undefined"?quotes:[]).filter(x=>x.status==="Enviado").map(x=>({x,dias:diasDesde(x.followupEm||x.enviadoEm||x.atualizadoEm||x.criadoEm),desdeEnvio:diasDesde(x.enviadoEm||x.atualizadoEm||x.criadoEm)})).sort((a,b)=>b.dias-a.dias);
+}
+function cobrarResposta(id){
+  const x=quotes.find(o=>o.id===id); if(!x) return; const cl=(x.clienteId&&FIN.clientes.find(c=>c.id===x.clienteId))||clientePorNome(x.cliente)||{};
+  const tel=cl.telefone||x.contato||(x.q&&x.q.contato); const nome=String(x.cliente||"").trim().split(/\s+/)[0];
+  const msg=`Olá${nome?", "+nome:""}! Tudo bem? Conseguiu avaliar a proposta nº ${x.numero}${nz(x.rev)?" – rev. "+x.rev:""} que enviamos${x.imovel?" para "+x.imovel:""}? Fico à disposição para tirar dúvidas ou ajustar o que for preciso.`;
+  const l=waLink(tel,msg); if(!l) return toast("Sem telefone neste orçamento"); window.open(l,"_blank","noopener");
+  if(typeof updateQuoteField==="function") updateQuoteField(id,{followupEm:new Date().toISOString(),followups:nz(x.followups)+1});
+}
+
+/* ---------- fluxo de caixa (próximas 13 semanas) ---------- */
+function fluxoCaixa(){
+  const hj=hojeStr(); const sem=[]; for(let k=0;k<13;k++){ const ini=addDays(hj,7*k), fim=addDays(hj,7*k+6); sem.push({ini,fim,ent:0,sai:0,itE:[],itS:[]}); }
+  const atraso={ent:0,sai:0}; let semData=0; const lim=sem[12].fim;
+  const pos=d=>{ if(d<hj) return -1; if(d>lim) return 99; return Math.floor(daysBetween(hj,d)/7); };
+  FIN.servicos.forEach(s=>{ if(s.cancelado) return; const ab=parcelasAbertas(s); const c=calcServico(s);
+    const prevTot=(s.parcelas||[]).reduce((a,p)=>a+nz(p.valor),0); if(!(s.parcelas||[]).length) semData+=c.aReceber; else semData+=Math.max(c.valor-Math.max(prevTot,c.recebido),0);
+    ab.forEach(p=>{ const k=pos(p.venc); if(k<0) atraso.ent+=p.resto; else if(k<13){ sem[k].ent+=p.resto; sem[k].itE.push(`${s.codigo} ${R(p.resto)}`); } }); });
+  FIN.despGer.forEach(g=>{ const c=calcGeral(g,hj); for(let i=c.pg;i<c.np;i++){ const d=addMonths(c.v1,i); const k=pos(d); if(k<0) atraso.sai+=nz(g.valorParcela); else if(k<13){ sem[k].sai+=nz(g.valorParcela); sem[k].itS.push(`${g.descricao} ${R(g.valorParcela)}`); } else break; } });
+  return {sem,atraso,semData};
+}
+function htmlFluxo(){
+  const f=fluxoCaixa(); const fc=fcfg(); const saldo0=nz(fc.saldoAtual); let acc=saldo0+f.atraso.ent-f.atraso.sai;
+  const maxV=Math.max(1,...f.sem.map(w=>Math.max(w.ent,w.sai)));
+  return `<div class="card"><h2>Fluxo de caixa — próximas 13 semanas</h2>
+    <div class="row" style="max-width:420px"><label>Saldo em conta hoje (opcional)<small>para o acumulado partir do saldo real</small><input type="number" step="0.01" id="fxSaldo" value="${fc.saldoAtual===""||fc.saldoAtual==null?"":esc(fc.saldoAtual)}" placeholder="0,00"></label></div>
+    <div class="hwrap"><table class="ft"><tr><th>Semana</th><th class="n">Entradas previstas</th><th class="n">Saídas previstas</th><th class="n">Resultado</th><th class="n">Acumulado</th><th>Detalhe</th></tr>
+    ${(f.atraso.ent||f.atraso.sai)?`<tr><td><b>Em atraso</b></td><td class="n">${R(f.atraso.ent)}</td><td class="n">${R(f.atraso.sai)}</td><td class="n">${R(f.atraso.ent-f.atraso.sai)}</td><td class="n">${R(acc)}</td><td><small>clientes e contas já vencidos</small></td></tr>`:""}
+    ${f.sem.map(w=>{ acc+=w.ent-w.sai; return `<tr><td>${fmtD(w.ini).slice(0,5)} a ${fmtD(w.fim).slice(0,5)}</td><td class="n">${w.ent?R(w.ent):"—"}</td><td class="n">${w.sai?R(w.sai):"—"}</td><td class="n ${w.ent-w.sai<0?"neg":""}">${(w.ent||w.sai)?R(w.ent-w.sai):"—"}</td><td class="n ${acc<0?"neg":""}"><b>${R(acc)}</b></td><td><small>${esc(w.itE.concat(w.itS).join(" · "))}</small></td></tr>`; }).join("")}
+    </table></div>
+    <p class="hint">Entradas: parcelas previstas dos serviços. Saídas: parcelas das compras (cartão, boleto). ${f.semData>0?`Há ainda <b>${R(f.semData)}</b> a receber sem data combinada (serviços sem parcelas cadastradas).`:""} Combustível e diárias de serviços futuros não entram, porque ainda não foram lançados.</p></div>`;
+}
+
+
+/* ---------- arquivos do serviço (links do Google Drive etc.) ---------- */
+const TIPOS_ARQ=["Pasta do serviço","KML / Poligonal","Memorial descritivo","Planta","ART / TRT","Certificação SIGEF","Matrícula / Documentos","Fotos","Dados brutos (GNSS / Drone)","Outro"];
+function htmlArquivos(s){
+  const a=s.arquivos||[];
+  return `<div class="sub-card"><h3 class="fh">Arquivos do serviço <span class="pill">${a.length}</span></h3>
+    ${a.length?`<table class="ft">${a.map((x,i)=>`<tr><td><small>${esc(x.tipo)}</small></td><td><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.nome||x.url)}</a></td><td><button class="btn danger small" data-arqx="${i}">×</button></td></tr>`).join("")}</table>`:'<p class="hint">Cole os links do Google Drive (ou de outro lugar) dos arquivos deste serviço: pasta, KML, memorial, planta, ART/TRT, certificação.</p>'}
+    <div class="row" style="margin-top:6px"><label>Tipo<select id="arqTipo">${TIPOS_ARQ.map(o=>`<option>${o}</option>`).join("")}</select></label><label>Nome<input id="arqNome" placeholder="opcional"></label><label>Link<input id="arqUrl" placeholder="https://drive.google.com/…"></label></div>
+    <button class="btn ghost small" id="arqAdd">+ Link</button></div>`;
+}
+function ligarArquivos(s,setS,reabrir){
+  const a=(s.arquivos||[]).map(x=>Object.assign({},x));
+  document.getElementById("arqAdd").onclick=()=>{ let u=document.getElementById("arqUrl").value.trim(); if(!u) return toast("Cole o link do arquivo"); if(!/^https?:\/\//i.test(u)) u="https://"+u;
+    try{ new URL(u); }catch(e){ return toast("Link inválido"); }
+    a.push({tipo:document.getElementById("arqTipo").value,nome:document.getElementById("arqNome").value.trim(),url:u}); setS({arquivos:a}); reabrir(); };
+  document.querySelectorAll("[data-arqx]").forEach(b=>b.onclick=()=>{ a.splice(+b.dataset.arqx,1); setS({arquivos:a}); reabrir(); });
+}
 window.finAbrirServico=abrirServico;
-window._fin={extenso,indicadores,calcServico2:calcServico,FIN,resumo,mesAMes,calcGeral,calcServico,dre,parcelasNoPeriodo,primeiroVenc,setRel:(t,m,y)=>{relTipo=t;relMes=m;relAno=y;},pdfRelatorio};
+window._fin={crc16,pixPayload,fluxoCaixa,parcelasAbertas,cobranca,aguardando,previstoDe,extenso,indicadores,calcServico2:calcServico,FIN,resumo,mesAMes,calcGeral,calcServico,dre,parcelasNoPeriodo,primeiroVenc,setRel:(t,m,y)=>{relTipo=t;relMes=m;relAno=y;},pdfRelatorio};
 })();
