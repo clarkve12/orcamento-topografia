@@ -3,26 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Orçamento de Topografia — Clessiano Antunes</title>
+<title>SANTEX — Orçamentos</title>
+<link rel="icon" href="assets/icone.png">
+<meta name="theme-color" content="#002955">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1f2a24; --muted:#66706a; --line:#e2ddd0;
-  --brand:#2f5d46; --brand-2:#3f7a5c; --brand-soft:#e3eee6; --accent:#b8742a; --accent-soft:#f6ead9;
-  --danger:#a8432f; --radius:12px;
+  --bg:#eef2f7; --panel:#ffffff; --ink:#0e1f36; --muted:#5b6b82; --line:#d8e0eb;
+  --brand:#002955; --brand-2:#0b4a8b; --brand-soft:#e4f3fb; --accent:#1ba6d8; --accent-soft:#dff4fc; --cyan:#4fd5fe;
+  --warn:#9a5b00; --warn-soft:#fff2d9; --danger:#b3261e; --radius:12px;
   --mono:'JetBrains Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
-header{background:var(--brand);color:#fff;padding:18px 22px 0}
+header{background:#002955;color:#fff;padding:14px 22px 0}
+header .logo{height:58px;display:block}
+@media(max-width:600px){header .logo{height:44px}}
 header .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
 header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
-header .sub{opacity:.8;font-size:13px}
+header .sub{opacity:.85;font-size:13px;color:var(--cyan);font-weight:600;margin-top:2px}
 #syncNote{font-size:12px;opacity:.85}
 nav{display:flex;gap:4px;max-width:1280px;margin:14px auto 0}
-nav button{background:transparent;border:0;color:#d8e6dc;font:inherit;font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
+nav button{background:transparent;border:0;color:#b9cde3;font:inherit;font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
 nav button.on{background:var(--bg);color:var(--brand)}
 main{max-width:1280px;margin:0 auto;padding:20px}
 .view{display:none}.view.on{display:block}
@@ -33,9 +40,9 @@ main{max-width:1280px;margin:0 auto;padding:20px}
 .card h2 .n{background:var(--brand);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px}
 .card .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;margin-bottom:12px}
-label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:#3d4842}
+label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:#2c3e57}
 label small{font-weight:500;color:var(--muted)}
-input,select,textarea{font:inherit;font-size:14px;padding:8px 10px;border:1px solid #cfc9ba;border-radius:8px;background:#fff;color:var(--ink);width:100%}
+input,select,textarea{font:inherit;font-size:14px;padding:8px 10px;border:1px solid #c5d1e0;border-radius:8px;background:#fff;color:var(--ink);width:100%}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline-offset:-1px;border-color:transparent}
 textarea{min-height:64px;resize:vertical}
 .btn{font:inherit;font-weight:700;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:var(--brand);color:#fff}
@@ -46,9 +53,9 @@ textarea{min-height:64px;resize:vertical}
 .btn.danger{background:transparent;color:var(--danger);border:1px solid #e3c2b9}
 a.btn{text-decoration:none;display:inline-block}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand)}
-.pill.warn{background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
 .info{background:var(--brand-soft);border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px}
-.info.warn{background:var(--accent-soft)}
+.info.warn{background:var(--warn-soft);color:#5a3a00}
 .svc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#fff}
 .svc.on{border-color:var(--brand-2);background:#f6faf7}
 .svc .nm{font-weight:700;font-size:14px}
@@ -63,15 +70,15 @@ a.btn{text-decoration:none;display:inline-block}
 /* summary */
 .sum{position:sticky;top:14px}
 .sum .card{padding:16px}
-.total{background:var(--brand);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:12px}
+.total{background:linear-gradient(135deg,#002955,#0b4a8b);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:12px}
 .total .lbl{font-size:12px;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-.total .v{font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.total .v{color:var(--cyan);font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .total .s{font-size:13px;opacity:.9}
 table.bd{width:100%;border-collapse:collapse;font-size:13px}
 table.bd td{padding:5px 0;border-bottom:1px dashed var(--line);vertical-align:top}
 table.bd td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px}
 table.bd tr.g td{font-weight:800;border-bottom:1px solid var(--line);padding-top:10px}
-table.bd tr.sub td:first-child{padding-left:12px;color:#4d5852}
+table.bd tr.sub td:first-child{padding-left:12px;color:#44546b}
 table.bd tr.tot td{font-weight:800;border-bottom:0;padding-top:8px}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
@@ -81,7 +88,7 @@ table.bd tr.tot td{font-weight:800;border-bottom:0;padding-top:8px}
 .mono{font-family:var(--mono);font-size:12.5px}
 /* history */
 table.hist{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:13.5px}
-table.hist th{text-align:left;background:#efeadf;padding:9px 10px;font-size:12px;color:#4d5852}
+table.hist th{text-align:left;background:#e8eef6;padding:9px 10px;font-size:12px;color:#44546b}
 table.hist td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:middle}
 table.hist td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.hist select{width:auto;padding:4px 6px;font-size:13px}
@@ -99,6 +106,24 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
   .mobilebar{display:flex;position:sticky;bottom:0;z-index:20;background:var(--brand);color:#fff;padding:10px 16px;justify-content:space-between;align-items:center;font-weight:800;border-radius:12px 12px 0 0}
   .sum{position:static}
 }
+.mapbox{margin:4px 0 14px}
+.maptools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.maptools input#mapSearch{flex:1 1 200px;min-width:160px}
+.maptools .filebtn{display:inline-block;flex-direction:row;font-size:13px;color:var(--brand);cursor:pointer}
+#map{height:430px;border-radius:10px;border:1px solid var(--line);z-index:1}
+@media(max-width:600px){#map{height:340px}}
+#map.picking{cursor:crosshair}
+.vtx{background:#ffd34d;border:2px solid #10233f;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.vtx.first{background:#fff}
+.basepin{font-size:24px;line-height:24px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.geo{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:8px}
+.geo div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--muted);font-weight:600}
+.geo b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.fuel{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--brand-soft);border-radius:9px;padding:10px 12px;margin-bottom:12px;font-size:13.5px}
+.fuel input{width:100px}
+.fuel .age{font-size:12.5px;color:var(--muted)}
+.fuel .age.old{color:var(--danger);font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(20,28,24,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
 .modal.on{display:flex}
 .modal .box{background:var(--panel);border-radius:14px;max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:18px}
@@ -109,8 +134,8 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 <header>
   <div class="top">
     <div>
-      <h1>Orçamento de Topografia</h1>
-      <div class="sub" id="hdrSub">Clessiano Antunes — Responsável técnico</div>
+      <img class="logo" src="assets/logo-escuro.jpg" alt="SANTEX — Geotecnologia & Engenharia de Precisão">
+      <div class="sub" id="hdrSub">Sistema de orçamentos</div>
     </div>
     <div id="syncNote">Carregando dados…</div>
   </div>
@@ -142,8 +167,22 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
             <select data-k="tipo"><option value="rural">Rural</option><option value="urbano">Urbano</option></select>
           </label>
         </div>
+        <div class="mapbox">
+          <div class="maptools">
+            <input id="mapSearch" placeholder="Buscar cidade ou local… (Enter)">
+            <button class="btn small" id="mDraw">✏️ Desenhar área</button>
+            <button class="btn ghost small" id="mUndo">↶ Desfazer ponto</button>
+            <button class="btn ghost small" id="mClear">Limpar área</button>
+            <button class="btn ghost small" id="mGps">📡 Minha posição</button>
+            <label class="btn ghost small filebtn">📂 Importar KML/KMZ<input type="file" id="mKml" accept=".kml,.kmz" hidden></label>
+            <button class="btn ghost small" id="mBase">🏠 Definir base</button>
+          </div>
+          <div id="map"></div>
+          <div id="mapMsg" class="hint" style="margin:6px 0 0"></div>
+          <div class="geo" id="geoBox"></div>
+        </div>
         <div class="row">
-          <label>Localização (GPS)<small>Cole coordenada, link do Google Maps ou graus/min/seg</small>
+          <label>Localização (GPS)<small>preenchida pelo mapa, ou cole coordenada / link do Google Maps</small>
             <input data-k="coord" placeholder="-15.7801, -47.9292  ou  15°46'48&quot;S 47°55'45&quot;W"></label>
         </div>
         <div id="coordOk" class="hint" style="margin-top:-6px"></div>
@@ -169,10 +208,13 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 
       <div class="card">
         <h2><span class="n">3</span>Deslocamento e logística</h2>
+        <div class="fuel" id="fuelBox">⛽ <b id="fuelLbl"></b>
+          <input id="fuelPrice" type="number" min="0" step="0.01"> R$/litro
+          <span class="age" id="fuelAge"></span></div>
         <div id="distInfo" class="info"></div>
         <div class="row">
-          <label>Km em asfalto<small>somente ida</small><input data-k="kmAsf" type="number" min="0" step="1" placeholder="auto"></label>
-          <label>Km em estrada de terra<small>somente ida</small><input data-k="kmTerra" type="number" min="0" step="1" placeholder="0"></label>
+          <label>Km em asfalto<small>só ida — vazio usa a rota</small><input data-k="kmAsf" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Km em estrada de terra<small>só ida — vazio usa a rota</small><input data-k="kmTerra" type="number" min="0" step="1" placeholder="auto"></label>
           <label>Pedágios<small>ida e volta, R$</small><input data-k="pedagio" type="number" min="0" step="0.01" placeholder="0"></label>
         </div>
         <div class="row">
@@ -181,7 +223,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
           <label>Dias de campo (ajuste manual)<small>deixe vazio para calcular</small><input data-k="diasManual" type="number" min="0" step="0.5" placeholder="auto"></label>
         </div>
         <div style="margin-bottom:14px">
-          <div style="font-size:12.5px;font-weight:600;color:#3d4842;margin-bottom:6px">Estratégia de campo</div>
+          <div style="font-size:12.5px;font-weight:600;color:#2c3e57;margin-bottom:6px">Estratégia de campo</div>
           <div class="seg" id="modoSeg">
             <button data-m="auto">Automático (mais barato)</button>
             <button data-m="diario">Ir e voltar todo dia</button>
@@ -277,8 +319,9 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
    CONFIGURAÇÃO PADRÃO
    ===================================================================== */
 const DEFAULT_CFG = {
-  empresa:{nome:"Clessiano Antunes — Topografia e Georreferenciamento", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"", baseCoord:""},
-  veiculo:{precoComb:6.29, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
+  empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:""},
+  combustivel:{posto:"Posto Ingazeira", cidade:"Águas Vermelhas - MG", tipo:"Diesel S10", preco:6.29, atualizadoEm:""},
+  veiculo:{kmUrbano:3, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
   equipe:{horaTecnico:90, horasDia:9, diariaAjudante:180, alimentacao:60, hospedagem:150, ajudantesPadrao:1},
   equipamentos:[
     {id:"rtk1", nome:"RTK 1 (base)",  valor:45000, vidaAnos:5, diasAno:150, manutAno:1500},
@@ -319,7 +362,7 @@ function blankQuote(){
   return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.25",
     servicos:{}, kmAsf:"", kmTerra:"", pedagio:"", viagensExtras:"", ajudantes:"", diasManual:"", modo:"auto",
     marcos:"", outras:"", outrasDesc:"", incluirArt:"sim", taxas:"", taxasModo:"cliente",
-    entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:""};
+    entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[]};
 }
 
 /* =====================================================================
@@ -335,7 +378,7 @@ const clone = o=>JSON.parse(JSON.stringify(o));
 const half = x=>Math.ceil(x*2-1e-9)/2;
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2600);}
-function migrate(c){ if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
+function migrate(c){ if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
   if(def && typeof def==="object"){ const out={}; for(const k in def) out[k]= (obj && k in obj)? merge(def[k],obj[k]) : clone(def[k]); if(obj) for(const k in obj) if(!(k in out)) out[k]=obj[k]; return out; }
@@ -411,10 +454,12 @@ function compute(q,c){
   // ---- distância
   const base=parseCoord(c.empresa.baseCoord), dest=parseCoord(q.coord);
   let reta=null, estRodov=null; if(base&&dest){ reta=haversineKm(base,dest); estRodov=reta*nz(c.veiculo.fatorRota||1.3); }
-  const asfIn=num(q.kmAsf), terra=nz(q.kmTerra);
-  const asf = !isNaN(asfIn) ? asfIn : (estRodov!=null ? Math.max(estRodov-terra,0) : 0);
-  const kmEstimado = isNaN(asfIn) && estRodov!=null;
-  r.dist={base,dest,reta,estRodov,asf,terra,kmEstimado};
+  const asfIn=num(q.kmAsf), terraIn=num(q.kmTerra);
+  const rota = (typeof ROTA!=="undefined" && ROTA && dest && ROTA.key===rotaKey(base,dest)) ? ROTA : null;
+  let terra = !isNaN(terraIn) ? terraIn : (rota ? rota.terra+rota.offroad : 0);
+  let asf = !isNaN(asfIn) ? asfIn : (rota ? rota.asf : (estRodov!=null ? Math.max(estRodov-terra,0) : 0));
+  const kmEstimado = isNaN(asfIn) && !rota && estRodov!=null;
+  r.dist={base,dest,reta,estRodov,asf,terra,kmEstimado,rota};
   const v=c.veiculo;
   const tIda = asf/Math.max(nz(v.velAsf),10) + terra/Math.max(nz(v.velTerra),5);
   r.tIda=tIda;
@@ -423,7 +468,8 @@ function compute(q,c){
   const extras=nz(q.viagensExtras);
   // custo de uma viagem de ida e volta (veículo)
   const mk=nz(v.manutKm)+nz(v.deprecKm);
-  const combRT = 2*(asf*nz(v.precoComb)/Math.max(nz(v.consumoAsf),1) + terra*nz(v.precoComb)/Math.max(nz(v.consumoTerra),1));
+  const pc=nz((c.combustivel||{}).preco); r.precoComb=pc;
+  const combRT = 2*(asf*pc/Math.max(nz(v.consumoAsf),1) + terra*pc/Math.max(nz(v.consumoTerra),1));
   const desgRT = 2*(asf*mk + terra*mk*nz(v.fatorDesgasteTerra||1));
   const equipDia=[...equipIds].map(id=>c.equipamentos.find(e=>e.id===id)).filter(Boolean).map(e=>({nome:e.nome, dia:equipCustoDia(e)}));
   const equipDiaTot=equipDia.reduce((a,b)=>a+b.dia,0);
@@ -514,7 +560,7 @@ async function initStorage(){
   const timer=setTimeout(()=>{$("#syncNote").textContent="Sem conexão com o banco — dados podem estar desatualizados";},10000);
   db.doc("config/main").onSnapshot(snap=>{
     clearTimeout(timer);
-    if(snap.exists){ const d=snap.data(); if(d && d.cfg){ cfg=migrate(merge(DEFAULT_CFG, d.cfg)); renderCfg(); renderSvcList(); recalc(); } }
+    if(snap.exists){ const d=snap.data(); if(d && d.cfg){ cfg=migrate(merge(DEFAULT_CFG, d.cfg)); renderCfg(); renderSvcList(); recalc(); if(typeof drawBase==="function"&&map){ drawBase(); scheduleRoute(); } } }
     $("#syncNote").textContent="Dados sincronizados na nuvem";
   }, e=>{clearTimeout(timer); $("#syncNote").textContent="Banco indisponível — salvando neste navegador"; usingDb=false;});
   db.collection("orcamentos").orderBy("criadoEm","desc").limit(500).onSnapshot(snap=>{
@@ -566,7 +612,7 @@ async function deleteQuote(id){
 function bindForm(){
   document.querySelectorAll("#form [data-k]").forEach(el=>{
     const k=el.dataset.k;
-    el.addEventListener("input",()=>{ q[k]=el.value; onChange(); });
+    el.addEventListener("input",()=>{ q[k]=el.value; onChange(); if(k==="coord"&&typeof scheduleRoute==="function") scheduleRoute(); });
     el.addEventListener("change",()=>{ q[k]=el.value; onChange(); });
   });
   document.querySelectorAll("#modoSeg button").forEach(b=>b.addEventListener("click",()=>{ q.modo=b.dataset.m; onChange(); }));
@@ -612,9 +658,15 @@ function recalc(){
       ${r.dist.kmEstimado?'<span class="pill warn">usando estimativa</span> ':''}Para mais precisão, <a href="${url}" target="_blank" rel="noopener">abra a rota no Google Maps</a> e digite os km reais abaixo, separando o trecho de terra.`;
   } else if(!r.dist.base){ di="Sem coordenada da base: digite os km de ida abaixo."; }
   else { di="Cole a localização do imóvel no item 1 para estimar a distância, ou digite os km abaixo."; }
+  const ro=r.dist.rota;
+  if(ro){ di=`<b>Rota calculada</b> a partir da base: <b>${fmt(ro.asf,0)} km de asfalto</b> + <b>${fmt(ro.terra,0)} km de estrada de terra</b>${ro.offroad>0.2?` + <b>${fmt(ro.offroad,1)} km</b> até a área por caminho sem estrada mapeada`:""} (só ida).<br>
+      Confira a divisão asfalto/terra: se estiver diferente da realidade, digite os km abaixo. ${r.dist.base&&r.dist.dest?`<a href="https://www.google.com/maps/dir/?api=1&origin=${llStr(r.dist.base)}&destination=${llStr(r.dist.dest)}&travelmode=driving" target="_blank" rel="noopener">Comparar no Google Maps</a>`:""}`; }
+  else if(ROTA_STATUS) di=ROTA_STATUS+"<br>"+di;
   di+=`<br>Tempo estimado de viagem: <b>${fmt(r.tIda)} h</b> por trecho.`;
   $("#distInfo").innerHTML=di;
-  $("#form [data-k=kmAsf]").placeholder = r.dist.estRodov!=null? fmt(Math.max(r.dist.estRodov-r.dist.terra,0),0)+" (estimado)":"km";
+  $("#form [data-k=kmAsf]").placeholder = ro? fmt(ro.asf,0)+" (rota)" : r.dist.estRodov!=null? fmt(Math.max(r.dist.estRodov-r.dist.terra,0),0)+" (estimado)":"km";
+  $("#form [data-k=kmTerra]").placeholder = ro? fmt(ro.terra+ro.offroad,0)+" (rota)" : "0";
+  renderFuel(); renderGeo();
   $("#form [data-k=marcos]").placeholder = String(r.marcosQ||0)+" (auto)";
   $("#form [data-k=ajudantes]").placeholder = String(cfg.equipe.ajudantesPadrao);
   $("#form [data-k=viagensExtras]").placeholder = "0";
@@ -637,7 +689,7 @@ function recalc(){
   const s=(t,v)=>{ if(Math.abs(v)>0.004) L.push(`<tr class="sub"><td>${t}</td><td>${brl(v)}</td></tr>`); };
   const km1=r.dist.asf+r.dist.terra;
   g("Deslocamento", ce.comb+ce.desg+ce.ped+ce.tecExtras);
-  s(`Combustível (${ce.viagens}× ${fmt(km1*2,0)} km)`, ce.comb);
+  s(`Combustível (${ce.viagens}× ${fmt(km1*2,0)} km a ${brl(r.precoComb)}/L)`, ce.comb);
   s("Desgaste e depreciação do carro", ce.desg);
   s("Pedágios", ce.ped);
   s("Horas de viagem extras", ce.tecExtras);
@@ -697,7 +749,7 @@ function renderHist(){
     const id=tr.dataset.id;
     tr.querySelector(".hs").addEventListener("change",e=>updateQuoteField(id,{status:e.target.value}));
     tr.querySelector(".hd").addEventListener("change",e=>updateQuoteField(id,{diasReais:e.target.value}));
-    tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); q.id=id; q.numero=x.numero; q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); });
+    tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); q.id=id; q.numero=x.numero; q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); setTimeout(()=>{ if(map) map.invalidateSize(); mapReload(true); },50); });
     const bx=tr.querySelector(".hx");
     bx.addEventListener("click",()=>{ if(bx.dataset.c){ deleteQuote(id); } else { bx.dataset.c="1"; bx.textContent="Confirmar?"; setTimeout(()=>{bx.dataset.c="";bx.textContent="Excluir";},3000);} });
   });
@@ -714,11 +766,13 @@ function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o);}
 function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++)a=a[ks[i]];a[ks.at(-1)]=v;}
 function renderCfg(){
   const c=cfg;
-  let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A coordenada da base é o ponto de saída do carro para calcular as rotas.</p>
+  let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir base" no mapa do orçamento.</p>
    <div class="row">${field("empresa.nome","Nome na proposta","","text")}${field("empresa.responsavel","Responsável técnico","","text")}${field("empresa.registro","Registro profissional","CREA/CFT nº","text")}</div>
    <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
+  h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
+   ${field("combustivel.posto","Posto","","text")}${field("combustivel.cidade","Cidade","","text")}${field("combustivel.tipo","Combustível","Diesel S10, Gasolina…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
   h+=`<div class="card"><h2>Veículo</h2><div class="row">
-   ${field("veiculo.precoComb","Combustível","R$/litro")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
+   ${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
    ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
    ${field("veiculo.fatorRota","Fator linha reta → estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade média asfalto","km/h")}${field("veiculo.velTerra","Velocidade média terra","km/h")}</div></div>`;
   h+=`<div class="card"><h2>Equipe</h2><p class="hint">O valor da sua hora entra como custo (seu pró-labore). O lucro vem por cima, pela margem.</p><div class="row">
@@ -748,13 +802,14 @@ function renderCfg(){
     <td>${ck("rtk1")}</td><td>${ck("rtk2")}</td><td>${ck("drone")}</td>
     <td><input type="checkbox" data-mk="${i}" ${s.marcos?"checked":""} style="width:18px;height:18px"></td>
     <td><button class="btn danger small" data-del="${i}">×</button></td></tr>
-    <tr><td colspan="12" style="padding-bottom:10px"><input data-c="servicos.${i}.desc" type="text" value="${esc(s.desc)}" placeholder="Descrição que aparece na proposta" style="font-size:12.5px;color:#4d5852"></td></tr>`;
+    <tr><td colspan="12" style="padding-bottom:10px"><input data-c="servicos.${i}.desc" type="text" value="${esc(s.desc)}" placeholder="Descrição que aparece na proposta" style="font-size:12.5px;color:#44546b"></td></tr>`;
   });
   h+=`</table></div><div class="actions" style="margin:10px 0 14px"><button class="btn ghost small" id="bAddSvc">+ Adicionar serviço</button></div></div>`;
   $("#cfgForm").innerHTML=h;
   $("#cfgForm").querySelectorAll("[data-c]").forEach(el=>el.addEventListener("change",()=>{
     const p=el.dataset.c; const cur=getPath(cfg,p);
     setPath(cfg,p, el.type==="number" ? nz(el.value) : el.value);
+    if(p==="combustivel.preco") cfg.combustivel.atualizadoEm=new Date().toISOString();
     afterCfgEdit(p.startsWith("equipamentos"));
   }));
   $("#cfgForm").querySelectorAll("[data-eq]").forEach(el=>el.addEventListener("change",()=>{
@@ -765,7 +820,7 @@ function renderCfg(){
   $("#bAddSvc").addEventListener("click",()=>{ cfg.servicos.push({id:"s"+Date.now(), nome:"Novo serviço", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:4, escrUnid:0, equip:["rtk1"], marcos:false, desc:""}); afterCfgEdit(true); });
 }
 function afterCfgEdit(rerender){
-  $("#hdrSub").textContent=(cfg.empresa.responsavel||"")+" — Responsável técnico";
+  $("#hdrSub").textContent="Sistema de orçamentos · RT "+(cfg.empresa.responsavel||"");
   if(rerender) renderCfg();
   renderSvcList(); recalc();
   $("#bCfgSave").textContent="Salvar configurações •";
@@ -813,38 +868,56 @@ function proposalText(){
 function buildPdf(){
   const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4"});
   const p=proposalData(), r=p.r; const W=210, M=18; let y=0;
-  const green=[47,93,70];
-  doc.setFillColor(...green); doc.rect(0,0,W,30,"F");
-  doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(p.e.nome||"",M,13,{maxWidth:W-2*M});
-  doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
-  doc.text([p.e.responsavel+(p.e.registro?" — "+p.e.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  ")].filter(Boolean),M,20);
-  y=42; doc.setTextColor(31,42,36);
+  const green=[0,41,85], cyan=[27,166,216], ink=[14,31,54], muted=[91,107,130];
+  doc.setFillColor(0,41,85); doc.rect(0,0,W,30,"F");
+  doc.setFillColor(...cyan); doc.rect(0,30,W,1.2,"F");
+  if(LOGO_PDF){ doc.addImage(LOGO_PDF,"JPEG",M-3,4,68,68*289/900); }
+  else { doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(p.e.nome||"",M,15); }
+  doc.setTextColor(255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
+  doc.text(["RT: "+(p.e.responsavel||"")+(p.e.registro?" — "+p.e.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  "), cfg.empresa.cidadeBase||""].filter(Boolean),W-M,12,{align:"right"});
+  y=42; doc.setTextColor(...ink);
   doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text("PROPOSTA DE PRESTAÇÃO DE SERVIÇOS TOPOGRÁFICOS",M,y);
-  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(102,112,106);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...muted);
   doc.text(`Nº ${p.numero}   ·   Emitida em ${p.hoje}   ·   Válida até ${p.validade}`,M,y+6); y+=16;
-  const sec=(t)=>{ if(y>262){doc.addPage();y=20;} doc.setTextColor(...green); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); doc.text(t.toUpperCase(),M,y); doc.setDrawColor(226,221,208); doc.line(M,y+1.8,W-M,y+1.8); y+=7; doc.setTextColor(31,42,36); doc.setFont("helvetica","normal"); doc.setFontSize(10); };
-  const para=(t,ind=0)=>{ const ls=doc.splitTextToSize(t,W-2*M-ind); ls.forEach(l=>{ if(y>280){doc.addPage();y=20;} doc.text(l,M+ind,y); y+=5; }); };
-  const kv=(k,v)=>{ if(!v) return; doc.setFont("helvetica","bold"); doc.text(k,M,y); doc.setFont("helvetica","normal"); const ls=doc.splitTextToSize(v,W-2*M-38); doc.text(ls,M+38,y); y+=5*ls.length; };
+  const sec=(t)=>{ if(y>262){doc.addPage();y=20;} doc.setTextColor(...green); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); doc.text(t.toUpperCase(),M,y); doc.setDrawColor(...cyan); doc.setLineWidth(0.4); doc.line(M,y+1.8,W-M,y+1.8); doc.setLineWidth(0.2); y+=7; doc.setTextColor(...ink); doc.setFont("helvetica","normal"); doc.setFontSize(10); };
+  const para=(t,ind=0)=>{ const ls=doc.splitTextToSize(t,W-2*M-ind); ls.forEach(l=>{ if(y>282){doc.addPage();y=20;} doc.text(l,M+ind,y); y+=5; }); };
+  const pts=(q.poligono||[]); const temCroqui=pts.length>=3; const kvW=W-2*M-38-(temCroqui?62:0);
+  const kv=(k,v)=>{ if(!v) return; doc.setFont("helvetica","bold"); doc.text(k,M,y); doc.setFont("helvetica","normal"); const ls=doc.splitTextToSize(v,kvW); doc.text(ls,M+38,y); y+=5*ls.length; };
   sec("Cliente e imóvel");
-  kv("Cliente:",q.cliente||"—"); kv("Contato:",q.contato); kv("Imóvel:",q.imovel); kv("Município:",q.municipio); kv("Área aprox.:",p.area); kv("Localização:",p.loc); y+=4;
+  const y0=y;
+  kv("Cliente:",q.cliente||"—"); kv("Contato:",q.contato); kv("Imóvel:",q.imovel); kv("Município:",q.municipio); kv("Área aprox.:",p.area); kv("Perímetro:",nz(q.perimKm)>0?fmt(nz(q.perimKm),2)+" km":""); kv("Localização:",p.loc);
+  if(temCroqui){ // croqui da poligonal
+    const bx=W-M-58, by=y0-4, bw=58, bh=44; doc.setDrawColor(...muted); doc.setFillColor(244,248,252); doc.roundedRect(bx,by,bw,bh,2,2,"FD");
+    const lat0=pts.reduce((a,p)=>a+p[0],0)/pts.length, kx=111320*Math.cos(lat0*Math.PI/180), ky=110540;
+    const xy=pts.map(p=>[p[1]*kx,p[0]*ky]); const xs=xy.map(a=>a[0]), ys=xy.map(a=>a[1]);
+    const mnx=Math.min(...xs),mxx=Math.max(...xs),mny=Math.min(...ys),mxy=Math.max(...ys); const sc=Math.min((bw-10)/((mxx-mnx)||1),(bh-14)/((mxy-mny)||1));
+    const ox=bx+5+((bw-10)-(mxx-mnx)*sc)/2, oy=by+5+((bh-14)-(mxy-mny)*sc)/2;
+    const P=xy.map(a=>[ox+(a[0]-mnx)*sc, oy+(mxy-a[1])*sc]);
+    doc.setDrawColor(...green); doc.setFillColor(190,232,248); doc.setLineWidth(0.5);
+    const segs=P.slice(1).map((pt,i)=>[pt[0]-P[i][0],pt[1]-P[i][1]]); doc.lines(segs,P[0][0],P[0][1],[1,1],"FD",true); doc.setLineWidth(0.2);
+    doc.setFontSize(7.5); doc.setTextColor(...muted); doc.text("Croqui aproximado (norte para cima)",bx+3,by+bh-3); doc.setFontSize(10); doc.setTextColor(...ink);
+    y=Math.max(y,by+bh+2);
+  }
+  y+=4;
   sec("Serviços");
-  r.sel.forEach(s=>{ doc.setFont("helvetica","bold"); para("• "+s.def.nome); doc.setFont("helvetica","normal"); if(s.def.desc){ doc.setTextColor(77,88,82); para(s.def.desc,4); doc.setTextColor(31,42,36);} y+=1.5; });
+  r.sel.forEach(s=>{ doc.setFont("helvetica","bold"); para("• "+s.def.nome); doc.setFont("helvetica","normal"); if(s.def.desc){ doc.setTextColor(...muted); para(s.def.desc,4); doc.setTextColor(...ink);} y+=1.5; });
   y+=3;
   if(y>245){doc.addPage();y=20;}
-  doc.setFillColor(227,238,230); doc.roundedRect(M,y,W-2*M,20,3,3,"F");
+  doc.setFillColor(228,243,251); doc.roundedRect(M,y,W-2*M,20,3,3,"F"); doc.setFillColor(...cyan); doc.rect(M,y,1.5,20,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...green); doc.text("VALOR TOTAL DOS SERVIÇOS",M+6,y+8);
   doc.setFontSize(17); doc.text(brl(r.final),W-M-6,y+13,{align:"right"});
-  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(77,88,82); doc.text(doc.splitTextToSize(p.cond,105),M+6,y+14);
-  y+=28; doc.setTextColor(31,42,36); doc.setFontSize(10);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(...muted); doc.text(doc.splitTextToSize(p.cond,105),M+6,y+14);
+  y+=28; doc.setTextColor(...ink); doc.setFontSize(10);
   sec("Prazo");
   para(`Estimativa de ${p.diasUteis} dias úteis após a aprovação, o pagamento da entrada e a liberação do acesso ao imóvel. Prazos de análise de cartório e órgãos públicos (INCRA/SIGEF, prefeitura) não dependem da contratada.`); y+=3;
   sec("Está incluso"); p.incl.forEach(i=>para("• "+i)); y+=3;
   sec("Não está incluso"); p.nao.forEach(i=>para("• "+i)); y+=3;
   if(q.obs){ sec("Observações"); para(q.obs); y+=3; }
   if(y>250){doc.addPage();y=30;} else y=Math.max(y+14,255);
-  doc.setDrawColor(31,42,36); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
+  doc.setDrawColor(...ink); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
   doc.setFontSize(9); doc.text([p.e.responsavel||"", "Responsável técnico"+(p.e.registro?" — "+p.e.registro:"")],M,y+5);
   doc.text(["De acordo — "+(q.cliente||"Cliente"),"Data: ____/____/______"],W-M-75,y+5);
+  const np=doc.getNumberOfPages(); for(let i=1;i<=np;i++){ doc.setPage(i); doc.setFillColor(...green); doc.rect(0,290,W,7,"F"); doc.setFontSize(7.5); doc.setTextColor(255); doc.text("SANTEX — Geotecnologia & Engenharia de Precisão",M,294.5); doc.text(`Página ${i} de ${np}`,W-M,294.5,{align:"right"}); }
   return doc;
 }
 async function doPdf(){
@@ -860,20 +933,232 @@ async function doPdf(){
   // alternativa: abrir em nova aba
   try{ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); toast("PDF baixado"); }catch(e){ toast("Não foi possível baixar aqui — use o texto da proposta"); }
 }
+let LOGO_PDF=null;
+(async()=>{ try{ const r=await fetch("assets/logo-escuro.jpg"); if(!r.ok) return; const b=await r.blob(); LOGO_PDF=await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(b); }); }catch(e){} })();
 function openText(){ $("#mText").textContent=proposalText(); $("#modal").classList.add("on"); }
+
+/* =====================================================================
+   MAPA, POLIGONAL, BASE, ROTA E COMBUSTÍVEL
+   ===================================================================== */
+const MAP_CENTER=[-15.7469,-41.4597]; // Águas Vermelhas - MG
+let map=null, polyLayer=null, lineLayer=null, vtxLayer=null, baseMarker=null, routeLayer=null, gpsMarker=null;
+let drawing=false, pickingBase=false;
+let ROTA=null, ROTA_STATUS="", routeT=null, routeSeq=0;
+
+function rotaKey(b,d){ return b&&d ? [b.lat,b.lng,d.lat,d.lng].map(x=>x.toFixed(5)).join(",") : ""; }
+function mapMsg(t){ const m=$("#mapMsg"); if(m) m.innerHTML=t||""; }
+
+/* ---------- geometria ---------- */
+function geoAreaM2(pts){ // pts=[[lat,lng],...] — área geodésica aproximada (esfera)
+  if(!pts||pts.length<3) return 0; const R=6378137, d=Math.PI/180; let a=0;
+  for(let i=0;i<pts.length;i++){ const p1=pts[i], p2=pts[(i+1)%pts.length]; a+=((p2[1]-p1[1])*d)*(2+Math.sin(p1[0]*d)+Math.sin(p2[0]*d)); }
+  return Math.abs(a*R*R/2);
+}
+function geoPerimKm(pts){ if(!pts||pts.length<2) return 0; let s=0; const n=pts.length>=3?pts.length:pts.length-1;
+  for(let i=0;i<n;i++){ const a=pts[i], b=pts[(i+1)%pts.length]; s+=haversineKm({lat:a[0],lng:a[1]},{lat:b[0],lng:b[1]}); } return s; }
+function centroid(pts){ // centróide da área (cai no meio do polígono na maioria dos casos)
+  if(!pts.length) return null; if(pts.length<3) return {lat:pts.reduce((a,p)=>a+p[0],0)/pts.length, lng:pts.reduce((a,p)=>a+p[1],0)/pts.length};
+  let A=0,cx=0,cy=0; for(let i=0;i<pts.length;i++){ const [y1,x1]=pts[i], [y2,x2]=pts[(i+1)%pts.length]; const f=x1*y2-x2*y1; A+=f; cx+=(x1+x2)*f; cy+=(y1+y2)*f; }
+  if(Math.abs(A)<1e-12) return {lat:pts.reduce((a,p)=>a+p[0],0)/pts.length, lng:pts.reduce((a,p)=>a+p[1],0)/pts.length};
+  A/=2; return {lat:cy/(6*A), lng:cx/(6*A)};
+}
+
+/* ---------- inicialização ---------- */
+function initMap(){
+  if(!window.L){ mapMsg('<span style="color:var(--danger)">O mapa não carregou (sem internet?). Você ainda pode colar a coordenada e digitar os km.</span>'); return; }
+  map=L.map("map",{maxZoom:21,zoomControl:true}).setView(MAP_CENTER,11);
+  const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri, Maxar"});
+  const clar=L.tileLayer("https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri Clarity"});
+  const osm=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:21,maxNativeZoom:19,attribution:"© OpenStreetMap"});
+  const lbl=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19});
+  const roads=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19});
+  sat.addTo(map); lbl.addTo(map); roads.addTo(map);
+  L.control.layers({"Satélite":sat,"Satélite (Clarity)":clar,"Mapa de ruas":osm},{"Nomes e limites":lbl,"Estradas":roads},{position:"topright"}).addTo(map);
+  L.control.scale({imperial:false}).addTo(map);
+  vtxLayer=L.layerGroup().addTo(map);
+  map.on("click",onMapClick);
+  $("#mDraw").addEventListener("click",toggleDraw);
+  $("#mUndo").addEventListener("click",()=>{ if(!q.poligono.length) return; q.poligono.pop(); polyChanged(); });
+  $("#mClear").addEventListener("click",function(){
+    if(!q.poligono.length) return;
+    if(this.dataset.c){ q.poligono=[]; this.dataset.c=""; this.textContent="Limpar área"; polyChanged(); setDrawing(true); }
+    else { this.dataset.c="1"; this.textContent="Confirmar limpar?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar área";},3000); }
+  });
+  $("#mGps").addEventListener("click",useGps);
+  $("#mKml").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importKml(f); e.target.value=""; });
+  $("#mBase").addEventListener("click",function(){
+    if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a base? Clique de novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
+    this.dataset.c=""; pickingBase=!pickingBase; if(pickingBase) setDrawing(false);
+    $("#map").classList.toggle("picking",pickingBase); updateBaseBtn();
+    mapMsg(pickingBase? "🏠 <b>Clique no mapa no local de onde você sempre sai</b> (ou use “Minha posição” estando lá).":"");
+  });
+  $("#mapSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); searchPlace(e.target.value); } });
+  $("#fuelPrice").addEventListener("change",e=>{ const v=num(e.target.value); if(isNaN(v)||v<=0) return; cfg.combustivel.preco=v; cfg.combustivel.atualizadoEm=new Date().toISOString(); saveCfg(); renderCfg(); recalc(); });
+  drawBase(); mapReload(true);
+  if(!parseCoord(cfg.empresa.baseCoord)) mapMsg("Primeiro passo: clique em <b>🏠 Definir base</b> e marque no mapa o local de onde você sai.");
+}
+function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base definida" : "🏠 Definir base"); }
+function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / continuar área":"✏️ Desenhar área");
+  if(map) $("#map").classList.toggle("picking",on||pickingBase);
+  if(on){ pickingBase=false; updateBaseBtn(); mapMsg("Clique no mapa para marcar cada vértice da área. Arraste os pontos amarelos para ajustar. Clique em <b>✔ Concluir</b> quando terminar."); }
+  else if(!pickingBase) mapMsg(q.poligono.length>=3? "Área definida. Arraste os vértices para ajustar, se precisar.":""); }
+function toggleDraw(){ setDrawing(!drawing); }
+
+function onMapClick(e){
+  const ll=[+e.latlng.lat.toFixed(7), +e.latlng.lng.toFixed(7)];
+  if(pickingBase){ setBase(ll); return; }
+  if(drawing){ q.poligono.push(ll); polyChanged(); }
+}
+function setBase(ll){
+  cfg.empresa.baseCoord=ll[0].toFixed(6)+", "+ll[1].toFixed(6);
+  pickingBase=false; $("#map").classList.remove("picking"); updateBaseBtn(); drawBase(); saveCfg(); renderCfg();
+  mapMsg("🏠 Base salva. Ela será usada como ponto de partida em todos os orçamentos."); ROTA=null; scheduleRoute(); recalc();
+}
+function drawBase(){
+  if(!map) return; if(baseMarker){ map.removeLayer(baseMarker); baseMarker=null; }
+  const b=parseCoord(cfg.empresa.baseCoord); updateBaseBtn(); if(!b) return;
+  baseMarker=L.marker([b.lat,b.lng],{icon:L.divIcon({className:"basepin",html:"🏠",iconSize:[26,26],iconAnchor:[13,22]}),interactive:false,zIndexOffset:500}).addTo(map);
+}
+
+/* ---------- desenho da poligonal ---------- */
+function drawPoly(){
+  if(!map) return;
+  if(polyLayer){ map.removeLayer(polyLayer); polyLayer=null; } if(lineLayer){ map.removeLayer(lineLayer); lineLayer=null; }
+  vtxLayer.clearLayers(); const pts=q.poligono||[];
+  if(pts.length>=3) polyLayer=L.polygon(pts,{color:"#ffd34d",weight:3,fillColor:"#ffd34d",fillOpacity:.18,interactive:false}).addTo(map);
+  else if(pts.length===2) lineLayer=L.polyline(pts,{color:"#ffd34d",weight:3,dashArray:"6 6",interactive:false}).addTo(map);
+  pts.forEach((p,i)=>{
+    const m=L.marker(p,{draggable:true,icon:L.divIcon({className:"vtx"+(i===0?" first":""),iconSize:[14,14]}),zIndexOffset:1000}).addTo(vtxLayer);
+    m.on("drag",ev=>{ const l=ev.target.getLatLng(); pts[i]=[+l.lat.toFixed(7),+l.lng.toFixed(7)]; if(polyLayer) polyLayer.setLatLngs(pts); else if(lineLayer) lineLayer.setLatLngs(pts); });
+    m.on("dragend",()=>polyChanged(true));
+    m.on("click",()=>{ if(drawing && i===0 && pts.length>=3) setDrawing(false); });
+  });
+}
+function polyChanged(fromDrag){
+  if(!fromDrag) drawPoly();
+  const pts=q.poligono||[];
+  if(pts.length>=3){
+    const ha=geoAreaM2(pts)/10000, per=geoPerimKm(pts), c=centroid(pts);
+    q.areaHa=(Math.round(ha*100)/100).toString(); q.perimKm=(Math.round(per*1000)/1000).toString(); q.vertices=String(pts.length);
+    q.coord=c.lat.toFixed(6)+", "+c.lng.toFixed(6);
+    ["areaHa","perimKm","vertices","coord"].forEach(k=>{ const el=$(`#form [data-k=${k}]`); if(el) el.value=q[k]; });
+  }
+  if(fromDrag) drawPoly();
+  onChange(); scheduleRoute();
+}
+function renderGeo(){
+  const g=$("#geoBox"); if(!g) return; const pts=q.poligono||[];
+  if(pts.length<3){ g.innerHTML=""; return; }
+  const ha=geoAreaM2(pts)/10000;
+  g.innerHTML=`<div>Área desenhada<b>${fmt(ha,2)} ha</b></div><div>Em m²<b>${Math.round(ha*10000).toLocaleString("pt-BR")}</b></div><div>Perímetro<b>${fmt(geoPerimKm(pts),2)} km</b></div><div>Vértices<b>${pts.length}</b></div>`;
+}
+function mapReload(fit){
+  if(!map) return; setDrawing(false); drawPoly(); ROTA=null; if(routeLayer){ map.removeLayer(routeLayer); routeLayer=null; }
+  const pts=q.poligono||[], d=parseCoord(q.coord), b=parseCoord(cfg.empresa.baseCoord);
+  if(fit){ if(pts.length>=2) map.fitBounds(L.latLngBounds(pts).pad(0.25)); else if(d) map.setView([d.lat,d.lng],14); else if(b) map.setView([b.lat,b.lng],12); }
+  if(!pts.length && !d) setDrawing(true);
+  scheduleRoute();
+}
+
+/* ---------- busca, GPS, KML ---------- */
+async function searchPlace(t){
+  if(!t||!map) return; const c=parseCoord(t); if(c){ map.setView([c.lat,c.lng],16); return; }
+  mapMsg("Buscando…");
+  try{ const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&accept-language=pt-BR&q="+encodeURIComponent(t));
+    const j=await r.json(); if(!j.length){ mapMsg("Local não encontrado. Tente “cidade - UF”."); return; }
+    const x=j[0]; if(x.boundingbox){ const bb=x.boundingbox.map(Number); map.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]]); } else map.setView([+x.lat,+x.lon],14);
+    mapMsg("📍 "+esc(x.display_name));
+  }catch(e){ mapMsg("Não foi possível buscar agora (sem internet?)."); }
+}
+function useGps(){
+  if(!navigator.geolocation){ toast("GPS indisponível neste navegador"); return; }
+  toast("Obtendo posição do GPS…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    const ll=[+p.coords.latitude.toFixed(7), +p.coords.longitude.toFixed(7)]; const acc=Math.round(p.coords.accuracy);
+    if(!map) return; map.setView(ll,17);
+    if(gpsMarker) map.removeLayer(gpsMarker);
+    gpsMarker=L.circleMarker(ll,{radius:7,color:"#fff",weight:2,fillColor:"#2a7fff",fillOpacity:1}).addTo(map).bindTooltip(`Você está aqui (±${acc} m)`).openTooltip();
+    if(pickingBase){ setBase(ll); return; }
+    if(drawing){ q.poligono.push(ll); polyChanged(); toast(`Vértice adicionado pelo GPS (±${acc} m)`); return; }
+    if(!(q.poligono||[]).length){ q.coord=ll[0].toFixed(6)+", "+ll[1].toFixed(6); const el=$("#form [data-k=coord]"); if(el) el.value=q.coord; onChange(); scheduleRoute(); toast("Localização do imóvel definida pelo GPS"); }
+  },err=>toast(err.code===1?"Permita o acesso à localização no navegador":"Não foi possível obter o GPS"),{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
+async function importKml(file){
+  try{
+    let txt;
+    if(/\.kmz$/i.test(file.name)){
+      if(!window.JSZip){ toast("Leitor de KMZ não carregou"); return; }
+      const zip=await JSZip.loadAsync(file); const kf=Object.keys(zip.files).find(n=>/\.kml$/i.test(n)); if(!kf){ toast("KMZ sem arquivo KML dentro"); return; }
+      txt=await zip.files[kf].async("string");
+    } else txt=await file.text();
+    const xml=new DOMParser().parseFromString(txt,"application/xml");
+    const pick=(sel)=>{ const els=[...xml.getElementsByTagName("*")].filter(e=>e.localName===sel); return els; };
+    let coordsEl=null; const polys=pick("Polygon");
+    if(polys.length){ // pega o maior polígono
+      let best=null,bestA=-1; polys.forEach(pg=>{ const ob=[...pg.getElementsByTagName("*")].find(e=>e.localName==="outerBoundaryIs")||pg; const ce=[...ob.getElementsByTagName("*")].find(e=>e.localName==="coordinates"); if(!ce) return; const pts=parseKmlCoords(ce.textContent); const a=geoAreaM2(pts); if(a>bestA){bestA=a;best=pts;} });
+      if(best){ setPolyFromImport(best,file.name); return; }
+    }
+    const ls=pick("LineString").concat(pick("LinearRing")); if(ls.length){ const ce=[...ls[0].getElementsByTagName("*")].find(e=>e.localName==="coordinates"); if(ce){ setPolyFromImport(parseKmlCoords(ce.textContent),file.name); return; } }
+    const pt=pick("Point"); if(pt.length){ const ce=[...pt[0].getElementsByTagName("*")].find(e=>e.localName==="coordinates"); const p=parseKmlCoords(ce.textContent)[0]; q.coord=p[0].toFixed(6)+", "+p[1].toFixed(6); $("#form [data-k=coord]").value=q.coord; map.setView(p,15); onChange(); scheduleRoute(); toast("Ponto importado"); return; }
+    toast("Não encontrei polígono no arquivo");
+  }catch(e){ toast("Não consegui ler esse arquivo"); }
+}
+function parseKmlCoords(t){ const pts=t.trim().split(/\s+/).map(s=>s.split(",").map(Number)).filter(a=>a.length>=2&&isFinite(a[0])&&isFinite(a[1])).map(a=>[+a[1].toFixed(7),+a[0].toFixed(7)]);
+  if(pts.length>1){ const a=pts[0],b=pts[pts.length-1]; if(a[0]===b[0]&&a[1]===b[1]) pts.pop(); } return pts; }
+function setPolyFromImport(pts,name){ if(pts.length<3){ toast("Polígono com poucos pontos"); return; } q.poligono=pts; setDrawing(false); polyChanged(); map.fitBounds(L.latLngBounds(pts).pad(0.25)); toast(`Área importada de ${name}: ${pts.length} vértices`); }
+
+/* ---------- rota (OSRM) ---------- */
+function scheduleRoute(){ clearTimeout(routeT); routeT=setTimeout(calcRoute,700); }
+async function calcRoute(){
+  const b=parseCoord(cfg.empresa.baseCoord), d=parseCoord(q.coord);
+  if(!b||!d){ ROTA_STATUS=""; if(routeLayer&&map){ map.removeLayer(routeLayer); routeLayer=null; } recalc(); return; }
+  const key=rotaKey(b,d); if(ROTA&&ROTA.key===key){ drawRoute(); return; }
+  const seq=++routeSeq; ROTA_STATUS="⏳ Calculando a rota pelas estradas…"; recalc();
+  try{
+    const url=`https://router.project-osrm.org/route/v1/driving/${b.lng},${b.lat};${d.lng},${d.lat}?overview=full&geometries=geojson&steps=true`;
+    const r=await fetch(url); const j=await r.json(); if(seq!==routeSeq) return;
+    if(j.code!=="Ok"||!j.routes||!j.routes.length) throw new Error(j.code||"sem rota");
+    const rt=j.routes[0], steps=(rt.legs[0]||{}).steps||[];
+    const urbano=nz(cfg.veiculo.kmUrbano)*1000; let acc=0, asf=0, terra=0;
+    for(const st of steps){ const dist=st.distance||0; const paved = !!(st.ref&&String(st.ref).trim()) || acc<urbano; if(paved) asf+=dist; else terra+=dist; acc+=dist; }
+    const snapEnd=j.waypoints&&j.waypoints[1]; const off = snapEnd? (snapEnd.distance||0)*1.3/1000 : 0;
+    ROTA={key, asf:asf/1000, terra:terra/1000, offroad:off, total:rt.distance/1000, dur:rt.duration/3600,
+      geom:rt.geometry.coordinates.map(c=>[c[1],c[0]]), end: snapEnd? [snapEnd.location[1],snapEnd.location[0]]:null, dest:[d.lat,d.lng]};
+    ROTA_STATUS=""; drawRoute(); recalc();
+  }catch(e){ if(seq!==routeSeq) return; ROTA=null; ROTA_STATUS='<span style="color:var(--danger)">Não foi possível calcular a rota agora — usando estimativa em linha reta. Você pode digitar os km.</span> <a href="#" onclick="ROTA=null;calcRoute();return false">Tentar de novo</a>'; if(routeLayer&&map){map.removeLayer(routeLayer);routeLayer=null;} recalc(); }
+}
+function drawRoute(){
+  if(!map||!ROTA) return; if(routeLayer) map.removeLayer(routeLayer);
+  routeLayer=L.layerGroup().addTo(map);
+  L.polyline(ROTA.geom,{color:"#fff",weight:7,opacity:.8,interactive:false}).addTo(routeLayer);
+  L.polyline(ROTA.geom,{color:"#2a6df4",weight:4,interactive:false}).addTo(routeLayer);
+  if(ROTA.end && ROTA.offroad>0.05) L.polyline([ROTA.end,ROTA.dest],{color:"#e8590c",weight:3,dashArray:"5 7",interactive:false}).addTo(routeLayer);
+  if(!(q.poligono||[]).length) L.circleMarker(ROTA.dest,{radius:6,color:"#fff",weight:2,fillColor:"#e8590c",fillOpacity:1,interactive:false}).addTo(routeLayer);
+}
+
+/* ---------- combustível ---------- */
+function renderFuel(){
+  const c=cfg.combustivel||{}; const lbl=$("#fuelLbl"); if(!lbl) return;
+  lbl.textContent=`${c.tipo||"Combustível"} no ${c.posto||"posto"}${c.cidade?" ("+c.cidade+")":""}:`;
+  const inp=$("#fuelPrice"); if(document.activeElement!==inp) inp.value=nz(c.preco)?nz(c.preco).toFixed(2):"";
+  const a=$("#fuelAge"); if(!c.atualizadoEm){ a.textContent="preço ainda não confirmado — atualize com o valor de hoje"; a.className="age old"; return; }
+  const dias=Math.floor((Date.now()-new Date(c.atualizadoEm).getTime())/864e5);
+  a.textContent = dias<=0? "atualizado hoje" : `atualizado há ${dias} dia${dias>1?"s":""}${dias>7?" — confirme o preço atual":""}`;
+  a.className="age"+(dias>7?" old":"");
+}
 
 /* =====================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
-function tab(t){ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
-function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent=(cfg.empresa.responsavel||"")+" — Responsável técnico"; }
+function tab(t){ setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de orçamentos · RT "+(cfg.empresa.responsavel||""); }
 
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 bindForm();
 $("#bSave").addEventListener("click",saveQuote);
 $("#bPdf").addEventListener("click",doPdf);
 $("#bTxt").addEventListener("click",openText);
-$("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); toast("Formulário limpo"); });
+$("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); mapReload(false); toast("Formulário limpo"); });
 $("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar configurações"; });
 $("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar padrões";},3000);} });
 $("#mClose").addEventListener("click",()=>$("#modal").classList.remove("on"));
@@ -881,6 +1166,7 @@ $("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") $("#modal").
 $("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("#mText").textContent); toast("Copiado"); }catch(e){ const rng=document.createRange(); rng.selectNodeContents($("#mText")); const s=getSelection(); s.removeAllRanges(); s.addRange(rng); toast("Selecionado — use Ctrl+C"); } });
 
 initStorage();
+initMap();
 </script>
 </body>
 </html>
