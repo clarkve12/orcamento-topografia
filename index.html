@@ -317,6 +317,14 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
     <button class="btn" id="bCfgSave">Salvar Configurações</button>
     <button class="btn danger" id="bCfgReset">Restaurar Padrões</button>
   </div>
+  <div class="card" style="margin-bottom:40px"><h2>Backup dos Dados</h2>
+    <p class="hint">Os orçamentos e as configurações ficam salvos só neste aparelho. Exporte um backup de vez em quando (e guarde no Google Drive ou no WhatsApp). Para passar os dados para outro aparelho, exporte aqui e importe lá.</p>
+    <div class="actions" style="margin-bottom:12px">
+      <button class="btn" id="bExport">⬇ Exportar Backup</button>
+      <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Importar Backup<input type="file" id="bImport" accept=".json,application/json" hidden></label>
+    </div>
+    <div class="hint" id="bkpInfo"></div>
+  </div>
 </section>
 </main>
 
@@ -1230,7 +1238,7 @@ function renderFuel(){
 /* =====================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
-function tab(t){ setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function tab(t){ if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
 function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
 function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de Orçamentos"; }
 
@@ -1248,6 +1256,34 @@ $("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.w
 
 initStorage();
 initMap();
+
+/* ---------- backup ---------- */
+function backupInfo(){ const el=$("#bkpInfo"); if(!el) return; let last=null; try{ last=localStorage.getItem("topo_last_backup"); }catch(e){}
+  const n=quotes.length; el.innerHTML = `${n} orçamento${n!==1?"s":""} salvo${n!==1?"s":""} neste aparelho. ` + (last? `Último backup: ${new Date(last).toLocaleString("pt-BR")}.` : "<b>Nenhum backup feito ainda.</b>"); }
+$("#bExport").addEventListener("click",async()=>{
+  const data={app:"santex-orcamentos", versao:1, exportadoEm:new Date().toISOString(), cfg, quotes, rascunho:q};
+  const txt=JSON.stringify(data,null,1); const d=new Date(); const p2=n=>String(n).padStart(2,"0");
+  const name=`backup-santex-orcamentos-${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}.json`;
+  const blob=new Blob([txt],{type:"application/json"});
+  try{
+    if(navigator.canShare && /Android|iPhone|iPad/i.test(navigator.userAgent)){ const f=new File([blob],name,{type:"application/json"}); if(navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:"Backup SANTEX Orçamentos"}); throw "shared"; } }
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000);
+    toast("Backup baixado");
+  }catch(e){ if(e!=="shared"&&e&&e.name==="AbortError") return; if(e!=="shared"){ toast("Não foi possível exportar"); return; } }
+  try{ localStorage.setItem("topo_last_backup",new Date().toISOString()); }catch(e){} backupInfo();
+});
+$("#bImport").addEventListener("change",async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const txt = f.text ? await f.text() : await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsText(f); });
+    const d=JSON.parse(txt); if(!d||d.app!=="santex-orcamentos"||!d.cfg) throw 0;
+    const novos=(d.quotes||[]).filter(x=>!quotes.some(y=>y.id===x.id));
+    cfg=migrate(merge(DEFAULT_CFG,d.cfg)); quotes=quotes.concat(novos).sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""));
+    lsSet(LS_CFG,cfg); lsSet(LS_Q,quotes); renderAll(); drawBase(); backupInfo();
+    toast(`Backup importado: configurações e ${novos.length} orçamento${novos.length!==1?"s":""} novo${novos.length!==1?"s":""}`);
+  }catch(err){ toast("Arquivo de backup inválido"); }
+});
+backupInfo();
 /* ---------- app instalável (Chrome no PC e no Android) ---------- */
 let installEvt=null;
 window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); installEvt=e; const b=$("#bInstall"); if(b) b.style.display="inline-block"; });
