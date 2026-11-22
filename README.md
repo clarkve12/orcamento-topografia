@@ -1,4 +1,4 @@
-# SANTEX — Sistema de Orçamentos
+# SANTEX — Sistema de orçamentos
 
 Calculadora de orçamentos para serviços de topografia e georreferenciamento (rural e urbano).
 Responsável técnico: Clessiano Antunes (TRT/CFT).

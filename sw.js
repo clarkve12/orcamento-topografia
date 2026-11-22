@@ -2,7 +2,7 @@
    - App (página, logos, bibliotecas): busca na internet e guarda a última versão; sem internet, usa a guardada.
    - Imagens do mapa: guarda as que você já viu (até ~3.000) para abrir mais rápido e sem sinal.
    - Rota (OSRM) e busca de lugares precisam de internet e não são guardadas. */
-var SHELL = 'sx-app-v3';
+var SHELL = 'sx-app-v4';
 var TILES = 'sx-mapa-v1';
 var MAX_TILES = 3000;
 var SHELL_URLS = ['./', './index.html', './manifest.json',

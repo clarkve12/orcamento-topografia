@@ -155,7 +155,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 <div id="gate">
   <div class="gbox">
     <img src="assets/logo-escuro.jpg" alt="SANTEX — Geotecnologia & Engenharia de Precisão">
-    <div class="gsub">Sistema de Orçamentos</div>
+    <div class="gsub">Sistema de orçamentos</div>
     <button class="gbtn" id="gLogin"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar com Google</button>
     <div class="gmsg" id="gMsg">Acesso restrito à equipe SANTEX.</div>
     <button class="glink" id="gOther">Entrar com outra conta</button>
@@ -165,13 +165,13 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
   <div class="top">
     <div>
       <img class="logo" src="assets/logo-escuro.jpg" alt="SANTEX — Geotecnologia & Engenharia de Precisão">
-      <div class="sub" id="hdrSub">Sistema de Orçamentos</div>
+      <div class="sub" id="hdrSub">Sistema de orçamentos</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div style="display:flex;gap:6px;align-items:center"><button id="bInstall" class="btn small" style="display:none;background:#4fd5fe;color:#002955">⬇ Instalar App</button><button id="bLogin" class="btn small" style="display:none;background:#fff;color:#002955">Entrar com Google</button><span id="userBox" style="display:none;font-size:12.5px;align-items:center;gap:6px"><img id="userPic" alt="" style="width:26px;height:26px;border-radius:50%;display:none"><span id="userName"></span><button id="bLogout" class="btn small ghost" style="color:#fff;border-color:#9fb6d3;padding:4px 8px">Sair</button></span></div><div id="syncNote">Carregando dados…</div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div style="display:flex;gap:6px;align-items:center"><button id="bInstall" class="btn small" style="display:none;background:#4fd5fe;color:#002955">⬇ Instalar app</button><button id="bLogin" class="btn small" style="display:none;background:#fff;color:#002955">Entrar com Google</button><span id="userBox" style="display:none;font-size:12.5px;align-items:center;gap:6px"><img id="userPic" alt="" style="width:26px;height:26px;border-radius:50%;display:none"><span id="userName"></span><button id="bLogout" class="btn small ghost" style="color:#fff;border-color:#9fb6d3;padding:4px 8px">Sair</button></span></div><div id="syncNote">Carregando dados…</div></div>
   </div>
   <nav>
-    <button data-tab="novo" class="on">Novo Orçamento</button>
-    <button data-tab="hist">Orçamentos Salvos</button>
+    <button data-tab="novo" class="on">Novo orçamento</button>
+    <button data-tab="hist">Orçamentos salvos</button>
     <button data-tab="cfg">Configurações</button>
   </nav>
 </header>
@@ -184,29 +184,29 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
       <div class="info warn" id="baseWarn" style="display:none">Defina a sua base (de onde o carro sempre sai): clique em <b>🏠 Definir base</b> no mapa abaixo e marque o local. Só precisa fazer isso uma vez.</div>
 
       <div class="card">
-        <h2><span class="n">1</span>Cliente e Imóvel</h2>
+        <h2><span class="n">1</span>Cliente e imóvel</h2>
         <p class="hint">Rural ou urbano define o valor mínimo (R$ 3.000 rural, R$ 1.200 urbano).</p>
         <div class="row">
           <label>Cliente<input data-k="cliente" placeholder="Nome do cliente"></label>
-          <label>Telefone / Contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
-          <label>Responsável Técnico<select data-k="rt" id="rtSel"></select></label>
+          <label>Telefone / contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
+          <label>Responsável técnico<select data-k="rt" id="rtSel"></select></label>
         </div>
         <div class="row">
-          <label>Imóvel / Fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
+          <label>Imóvel / fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
           <label>Município / UF<input data-k="municipio" placeholder="Cidade - UF"></label>
-          <label>Tipo de Área
+          <label>Tipo de área
             <select data-k="tipo"><option value="rural">Rural</option><option value="urbano">Urbano</option></select>
           </label>
         </div>
         <div class="mapbox">
           <div class="maptools">
             <input id="mapSearch" placeholder="Buscar cidade ou local… (Enter)">
-            <button class="btn small" id="mDraw">✏️ Desenhar Área</button>
-            <button class="btn ghost small" id="mUndo">↶ Desfazer Ponto</button>
-            <button class="btn ghost small" id="mClear">Limpar Área</button>
-            <button class="btn ghost small" id="mGps">📡 Minha Posição</button>
+            <button class="btn small" id="mDraw">✏️ Desenhar área</button>
+            <button class="btn ghost small" id="mUndo">↶ Desfazer ponto</button>
+            <button class="btn ghost small" id="mClear">Limpar área</button>
+            <button class="btn ghost small" id="mGps">📡 Minha posição</button>
             <label class="btn ghost small filebtn">📂 Importar KML/KMZ<input type="file" id="mKml" accept=".kml,.kmz" hidden></label>
-            <button class="btn ghost small" id="mBase">🏠 Definir Base</button>
+            <button class="btn ghost small" id="mBase">🏠 Definir base</button>
           </div>
           <div id="map"></div>
           <div id="mapMsg" class="hint" style="margin:6px 0 0"></div>
@@ -220,9 +220,9 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
         <div class="row">
           <label>Área<small>em hectares</small><input data-k="areaHa" type="number" min="0" step="0.01" placeholder="0"></label>
           <label>Perímetro<small>em km (opcional — senão é estimado)</small><input data-k="perimKm" type="number" min="0" step="0.01" placeholder="auto"></label>
-          <label>Nº de Vértices<small>opcional</small><input data-k="vertices" type="number" min="0" step="1" placeholder="0"></label>
+          <label>Nº de vértices<small>opcional</small><input data-k="vertices" type="number" min="0" step="1" placeholder="0"></label>
           <label>Confrontantes<small>anuências e declarações</small><input data-k="confrontantes" type="number" min="0" step="1" placeholder="0"></label>
-          <label>Dificuldade do Terreno
+          <label>Dificuldade do terreno
             <select data-k="dificuldade">
               <option value="1">Fácil — aberto, plano, bom acesso</option>
               <option value="1.2">Normal — pastagem, cerrado ralo</option>
@@ -240,23 +240,23 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
       </div>
 
       <div class="card">
-        <h2><span class="n">3</span>Deslocamento e Logística</h2>
+        <h2><span class="n">3</span>Deslocamento e logística</h2>
         <div class="fuel" id="fuelBox">⛽ <b id="fuelLbl"></b>
           <input id="fuelPrice" type="number" min="0" step="0.01"> R$/litro
           <span class="age" id="fuelAge"></span></div>
         <div id="distInfo" class="info"></div>
         <div class="row">
-          <label>Km em Asfalto<small>só ida — vazio usa a rota</small><input data-k="kmAsf" type="number" min="0" step="1" placeholder="auto"></label>
-          <label>Km em Estrada de Terra<small>só ida — vazio usa a rota</small><input data-k="kmTerra" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Km em asfalto<small>só ida — vazio usa a rota</small><input data-k="kmAsf" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Km em estrada de terra<small>só ida — vazio usa a rota</small><input data-k="kmTerra" type="number" min="0" step="1" placeholder="auto"></label>
           <label>Pedágios<small>ida e volta, R$</small><input data-k="pedagio" type="number" min="0" step="0.01" placeholder="0"></label>
         </div>
         <div class="row">
-          <label>Viagens Extras<small>assinatura de confrontantes, entrega etc.</small><input data-k="viagensExtras" type="number" min="0" step="1"></label>
+          <label>Viagens extras<small>assinatura de confrontantes, entrega etc.</small><input data-k="viagensExtras" type="number" min="0" step="1"></label>
           <label>Ajudantes<input data-k="ajudantes" type="number" min="0" step="1"></label>
-          <label>Dias de Campo (ajuste manual)<small>deixe vazio para calcular</small><input data-k="diasManual" type="number" min="0" step="0.5" placeholder="auto"></label>
+          <label>Dias de campo (ajuste manual)<small>deixe vazio para calcular</small><input data-k="diasManual" type="number" min="0" step="0.5" placeholder="auto"></label>
         </div>
         <div style="margin-bottom:14px">
-          <div style="font-size:12.5px;font-weight:600;color:#2c3e57;margin-bottom:6px">Estratégia de Campo</div>
+          <div style="font-size:12.5px;font-weight:600;color:#2c3e57;margin-bottom:6px">Estratégia de campo</div>
           <div class="seg" id="modoSeg">
             <button data-m="auto">Automático (mais barato)</button>
             <button data-m="diario">Ir e voltar todo dia</button>
@@ -267,55 +267,55 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
       </div>
 
       <div class="card">
-        <h2><span class="n">4</span>Materiais, Documentação e Extras</h2>
+        <h2><span class="n">4</span>Materiais, documentação e extras</h2>
         <div class="row">
-          <label>Marcos a Implantar<small>quantidade</small><input data-k="marcos" type="number" min="0" step="1" placeholder="auto"></label>
-          <label>Outras Despesas<small>R$ (aluguel, roçada, barco…)</small><input data-k="outras" type="number" min="0" step="0.01" placeholder="0"></label>
-          <label>Descrição das Outras Despesas<input data-k="outrasDesc" placeholder="opcional"></label>
+          <label>Marcos a implantar<small>quantidade</small><input data-k="marcos" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Outras despesas<small>R$ (aluguel, roçada, barco…)</small><input data-k="outras" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label>Descrição das outras despesas<input data-k="outrasDesc" placeholder="opcional"></label>
         </div>
         <div class="row">
           <label>Emitir ART/TRT
             <select data-k="incluirArt"><option value="sim">Sim — incluir no preço</option><option value="nao">Não</option></select></label>
-          <label>Taxas de Terceiros<small>cartório, certidões, INCRA… (R$)</small><input data-k="taxas" type="number" min="0" step="0.01" placeholder="0"></label>
-          <label>Essas Taxas
+          <label>Taxas de terceiros<small>cartório, certidões, INCRA… (R$)</small><input data-k="taxas" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label>Essas taxas
             <select data-k="taxasModo"><option value="cliente">Pagas pelo cliente (fora do preço)</option><option value="incluso">Incluídas no preço</option></select></label>
         </div>
       </div>
 
       <div class="card">
-        <h2><span class="n">5</span>Condições da Proposta</h2>
+        <h2><span class="n">5</span>Condições da proposta</h2>
         <div class="row">
           <label>Entrada (%)<input data-k="entrada" type="number" min="0" max="100" step="5"></label>
-          <label>Parcelas do Saldo<input data-k="parcelas" type="number" min="1" step="1"></label>
+          <label>Parcelas do saldo<input data-k="parcelas" type="number" min="1" step="1"></label>
           <label>Validade (dias)<input data-k="validade" type="number" min="1" step="1"></label>
           <label>Desconto (%)<small>sobre o calculado; nunca abaixo do mínimo</small><input data-k="desconto" type="number" min="0" max="50" step="1"></label>
         </div>
         <div class="row">
-          <label>Observações para o Cliente<textarea data-k="obs" placeholder="Ex.: o cliente deve fornecer matrícula atualizada e contato dos confrontantes."></textarea></label>
+          <label>Observações para o cliente<textarea data-k="obs" placeholder="Ex.: o cliente deve fornecer matrícula atualizada e contato dos confrontantes."></textarea></label>
         </div>
       </div>
     </div>
 
     <aside class="sum">
       <div class="total">
-        <div class="lbl">Preço da Proposta</div>
+        <div class="lbl">Preço da proposta</div>
         <div class="v" id="tFinal">R$ 0</div>
         <div class="s" id="tSub"></div>
         <div class="mref" id="tRef"></div>
       </div>
       <div class="kpis">
-        <div class="kpi"><span>Custo Direto</span><b id="kCusto">—</b></div>
-        <div class="kpi"><span>Lucro Estimado</span><b id="kLucro">—</b></div>
-        <div class="kpi"><span>Dias de Campo</span><b id="kDias">—</b></div>
-        <div class="kpi"><span>Horas de Escritório</span><b id="kEscr">—</b></div>
+        <div class="kpi"><span>Custo direto</span><b id="kCusto">—</b></div>
+        <div class="kpi"><span>Lucro estimado</span><b id="kLucro">—</b></div>
+        <div class="kpi"><span>Dias de campo</span><b id="kDias">—</b></div>
+        <div class="kpi"><span>Horas de escritório</span><b id="kEscr">—</b></div>
       </div>
       <div class="card">
         <table class="bd" id="breakdown"></table>
         <div class="actions" style="margin:14px 0 8px">
-          <button class="btn" id="bSave">Salvar Orçamento</button>
-          <button class="btn ghost" id="bPdf">Gerar PDF da Proposta</button>
+          <button class="btn" id="bSave">Salvar orçamento</button>
+          <button class="btn ghost" id="bPdf">Gerar PDF da proposta</button>
           <button class="btn ghost" id="bTxt">Texto para WhatsApp</button>
-          <button class="btn ghost small" id="bNew">Limpar / Novo</button>
+          <button class="btn ghost small" id="bNew">Limpar / novo</button>
         </div>
         <div class="hint" id="editing"></div>
       </div>
@@ -335,14 +335,14 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
   <div class="info">Esses valores valem para todos os orçamentos. Altere e clique em <b>Salvar configurações</b>. Valores que vieram preenchidos são estimativas iniciais: revise com os custos reais de vocês.</div>
   <div id="cfgForm"></div>
   <div class="actions" style="margin-bottom:40px">
-    <button class="btn" id="bCfgSave">Salvar Configurações</button>
-    <button class="btn danger" id="bCfgReset">Restaurar Padrões</button>
+    <button class="btn" id="bCfgSave">Salvar configurações</button>
+    <button class="btn danger" id="bCfgReset">Restaurar padrões</button>
   </div>
-  <div class="card" style="margin-bottom:40px"><h2>Backup dos Dados</h2>
+  <div class="card" style="margin-bottom:40px"><h2>Backup dos dados</h2>
     <p class="hint">Os orçamentos e as configurações ficam salvos só neste aparelho. Exporte um backup de vez em quando (e guarde no Google Drive ou no WhatsApp). Para passar os dados para outro aparelho, exporte aqui e importe lá.</p>
     <div class="actions" style="margin-bottom:12px">
-      <button class="btn" id="bExport">⬇ Exportar Backup</button>
-      <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Importar Backup<input type="file" id="bImport" accept=".json,application/json" hidden></label>
+      <button class="btn" id="bExport">⬇ Exportar backup</button>
+      <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Importar backup<input type="file" id="bImport" accept=".json,application/json" hidden></label>
     </div>
     <div class="hint" id="bkpInfo"></div>
   </div>
@@ -350,7 +350,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 </main>
 
 <div class="modal" id="modal"><div class="box">
-  <h3 style="margin-top:0" id="mTitle">Texto da Proposta</h3>
+  <h3 style="margin-top:0" id="mTitle">Texto da proposta</h3>
   <pre id="mText"></pre>
   <div class="actions"><button class="btn" id="mCopy">Copiar</button><button class="btn ghost" id="mClose">Fechar</button></div>
 </div></div>
@@ -373,33 +373,33 @@ const DEFAULT_CFG = {
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
   responsaveis:[
-    {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em Agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-    {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro Civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
+    {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
+    {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
   ],
-  versao:9,
+  versao:10,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
-    {id:"georef", nome:"Georreferenciamento de Imóvel Rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
+    {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
       desc:"Levantamento geodésico dos limites com GNSS RTK, implantação de marcos, peças técnicas (planta, memorial descritivo, planilha ODS) e submissão para certificação no SIGEF/INCRA."},
-    {id:"plani_rural", nome:"Levantamento Planialtimétrico Rural", ambito:"rural", unidade:"ha", prod:30, diasFixos:0, escrFix:6, escrUnid:0.15, equip:["rtk1","rtk2"], marcos:false,
+    {id:"plani_rural", nome:"Levantamento planialtimétrico rural", ambito:"rural", unidade:"ha", prod:30, diasFixos:0, escrFix:6, escrUnid:0.15, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento planialtimétrico com GNSS RTK, curvas de nível e planta topográfica."},
-    {id:"plani_urb", nome:"Levantamento Planialtimétrico Urbano (Lote)", ambito:"urbano", unidade:"lote", prod:3, diasFixos:0, escrFix:3, escrUnid:2, equip:["rtk1","rtk2"], marcos:false,
+    {id:"plani_urb", nome:"Levantamento planialtimétrico urbano (lote)", ambito:"urbano", unidade:"lote", prod:3, diasFixos:0, escrFix:3, escrUnid:2, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento planialtimétrico cadastral do lote, com planta e memorial."},
-    {id:"planimetrico", nome:"Levantamento Topográfico Planimétrico (Perímetro e Benfeitorias)", ambito:"ambos", unidade:"ha", prod:50, diasFixos:0, escrFix:4, escrUnid:0.08, equip:["rtk1","rtk2"], marcos:false,
+    {id:"planimetrico", nome:"Levantamento topográfico planimétrico (perímetro e benfeitorias)", ambito:"ambos", unidade:"ha", prod:50, diasFixos:0, escrFix:4, escrUnid:0.08, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento do perímetro, divisas e benfeitorias com planta e memorial descritivo."},
-    {id:"drone", nome:"Aerofotogrametria com Drone (Ortomosaico e MDT)", ambito:"ambos", unidade:"ha", prod:250, diasFixos:0.25, escrFix:6, escrUnid:0.02, equip:["drone","rtk1"], marcos:false, semDificuldade:true,
+    {id:"drone", nome:"Aerofotogrametria com drone (ortomosaico e MDT)", ambito:"ambos", unidade:"ha", prod:250, diasFixos:0.25, escrFix:6, escrUnid:0.02, equip:["drone","rtk1"], marcos:false, semDificuldade:true,
       desc:"Voo com drone, pontos de controle com RTK, processamento de ortomosaico e modelo digital de terreno."},
-    {id:"reurb_rural", nome:"Regularização Fundiária Rural (Usucapião, Retificação)", ambito:"rural", unidade:"imóvel", prod:1, diasFixos:0, escrFix:20, escrUnid:0, equip:["rtk1","rtk2"], marcos:true,
+    {id:"reurb_rural", nome:"Regularização fundiária rural (usucapião, retificação)", ambito:"rural", unidade:"imóvel", prod:1, diasFixos:0, escrFix:20, escrUnid:0, equip:["rtk1","rtk2"], marcos:true,
       desc:"Levantamento e peças técnicas para regularização fundiária rural (planta, memorial, anuências)."},
-    {id:"reurb_urb", nome:"Regularização Fundiária Urbana (REURB) — por Lote", ambito:"urbano", unidade:"lote", prod:8, diasFixos:0.5, escrFix:10, escrUnid:3, equip:["rtk1","rtk2"], marcos:false,
+    {id:"reurb_urb", nome:"Regularização fundiária urbana (REURB) — por lote", ambito:"urbano", unidade:"lote", prod:8, diasFixos:0.5, escrFix:10, escrUnid:3, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento cadastral e peças técnicas para REURB (plantas e memoriais por lote)."},
-    {id:"desmemb", nome:"Desmembramento / Unificação / Retificação de Área", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:12, escrUnid:0, equip:["rtk1","rtk2"], marcos:false,
+    {id:"desmemb", nome:"Desmembramento / unificação / retificação de área", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:12, escrUnid:0, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento, projeto de desmembramento/unificação e memoriais descritivos."},
     {id:"car", nome:"CAR — Cadastro Ambiental Rural", ambito:"rural", unidade:"imóvel", prod:0, diasFixos:0, escrFix:6, escrUnid:0, equip:[], marcos:false,
       desc:"Elaboração e envio do Cadastro Ambiental Rural."},
-    {id:"locacao", nome:"Locação de Obra / Demarcação de Pontos", ambito:"ambos", unidade:"pontos", prod:30, diasFixos:0, escrFix:2, escrUnid:0.02, equip:["rtk1"], marcos:false,
+    {id:"locacao", nome:"Locação de obra / demarcação de pontos", ambito:"ambos", unidade:"pontos", prod:30, diasFixos:0, escrFix:2, escrUnid:0.02, equip:["rtk1"], marcos:false,
       desc:"Locação e demarcação de pontos em campo conforme projeto."},
-    {id:"mapas", nome:"Mapas e Plantas Temáticas (Escritório)", ambito:"ambos", unidade:"mapa", prod:0, diasFixos:0, escrFix:0, escrUnid:6, equip:[], marcos:false,
+    {id:"mapas", nome:"Mapas e plantas temáticas (escritório)", ambito:"ambos", unidade:"mapa", prod:0, diasFixos:0, escrFix:0, escrUnid:6, equip:[], marcos:false,
       desc:"Elaboração de mapas e plantas temáticas."}
   ]
 };
@@ -435,7 +435,8 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
   if(c&&c.versao<6){ if(c.equipe&&c.equipe.horaTecnico===90) c.equipe.horaTecnico=120; c.versao=6; }
   if(c&&c.versao<7){ if(c.equipe&&c.equipe.horaTecnico===120) c.equipe.horaTecnico=90; c.versao=7; }
   if(c&&c.versao<8){ if(c.responsaveis&&c.responsaveis[0]&&c.empresa&&c.empresa.registro&&!c.responsaveis[0].registro) c.responsaveis[0].registro=c.empresa.registro; c.versao=8; }
-  if(c&&c.versao<9){ const NM={"Georreferenciamento de imóvel rural (SIGEF/INCRA)": "Georreferenciamento de Imóvel Rural (SIGEF/INCRA)", "Levantamento planialtimétrico rural": "Levantamento Planialtimétrico Rural", "Levantamento planialtimétrico urbano (lote)": "Levantamento Planialtimétrico Urbano (Lote)", "Levantamento topográfico planimétrico (perímetro e benfeitorias)": "Levantamento Topográfico Planimétrico (Perímetro e Benfeitorias)", "Aerofotogrametria com drone (ortomosaico e MDT)": "Aerofotogrametria com Drone (Ortomosaico e MDT)", "Regularização fundiária rural (usucapião, retificação)": "Regularização Fundiária Rural (Usucapião, Retificação)", "Regularização fundiária urbana (REURB) — por lote": "Regularização Fundiária Urbana (REURB) — por Lote", "Desmembramento / unificação / retificação de área": "Desmembramento / Unificação / Retificação de Área", "CAR — Cadastro Ambiental Rural": "CAR — Cadastro Ambiental Rural", "Locação de obra / demarcação de pontos": "Locação de Obra / Demarcação de Pontos", "Mapas e plantas temáticas (escritório)": "Mapas e Plantas Temáticas (Escritório)"}; (c.servicos||[]).forEach(sv=>{ if(NM[sv.nome]) sv.nome=NM[sv.nome]; }); (c.equipamentos||[]).forEach(e=>{}); c.versao=9; }
+  if(c&&c.versao<9){ const NM={"Georreferenciamento de imóvel rural (SIGEF/INCRA)": "Georreferenciamento de imóvel rural (SIGEF/INCRA)", "Levantamento planialtimétrico rural": "Levantamento planialtimétrico rural", "Levantamento planialtimétrico urbano (lote)": "Levantamento planialtimétrico urbano (lote)", "Levantamento topográfico planimétrico (perímetro e benfeitorias)": "Levantamento topográfico planimétrico (perímetro e benfeitorias)", "Aerofotogrametria com drone (ortomosaico e MDT)": "Aerofotogrametria com drone (ortomosaico e MDT)", "Regularização fundiária rural (usucapião, retificação)": "Regularização fundiária rural (usucapião, retificação)", "Regularização fundiária urbana (REURB) — por lote": "Regularização fundiária urbana (REURB) — por lote", "Desmembramento / unificação / retificação de área": "Desmembramento / unificação / retificação de área", "CAR — Cadastro Ambiental Rural": "CAR — Cadastro Ambiental Rural", "Locação de obra / demarcação de pontos": "Locação de obra / demarcação de pontos", "Mapas e plantas temáticas (escritório)": "Mapas e plantas temáticas (escritório)"}; (c.servicos||[]).forEach(sv=>{ if(NM[sv.nome]) sv.nome=NM[sv.nome]; }); (c.equipamentos||[]).forEach(e=>{}); c.versao=9; }
+  if(c&&c.versao<10){ const NM={"Georreferenciamento de Imóvel Rural (SIGEF/INCRA)": "Georreferenciamento de imóvel rural (SIGEF/INCRA)", "Levantamento Planialtimétrico Rural": "Levantamento planialtimétrico rural", "Levantamento Planialtimétrico Urbano (Lote)": "Levantamento planialtimétrico urbano (lote)", "Levantamento Topográfico Planimétrico (Perímetro e Benfeitorias)": "Levantamento topográfico planimétrico (perímetro e benfeitorias)", "Aerofotogrametria com Drone (Ortomosaico e MDT)": "Aerofotogrametria com drone (ortomosaico e MDT)", "Regularização Fundiária Rural (Usucapião, Retificação)": "Regularização fundiária rural (usucapião, retificação)", "Regularização Fundiária Urbana (REURB) — por Lote": "Regularização fundiária urbana (REURB) — por lote", "Desmembramento / Unificação / Retificação de Área": "Desmembramento / unificação / retificação de área", "Locação de Obra / Demarcação de Pontos": "Locação de obra / demarcação de pontos", "Mapas e Plantas Temáticas (Escritório)": "Mapas e plantas temáticas (escritório)"}, TT={"Técnico em Agrimensura": "Técnico em agrimensura", "Engenheiro Civil": "Engenheiro civil"}; (c.servicos||[]).forEach(sv=>{ if(NM[sv.nome]) sv.nome=NM[sv.nome]; }); (c.responsaveis||[]).forEach(x=>{ if(TT[x.titulo]) x.titulo=TT[x.titulo]; }); c.versao=10; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
@@ -837,10 +838,10 @@ function recalc(){
   const km1=r.dist.asf+r.dist.terra;
   g("Deslocamento", ce.comb+ce.desg+ce.ped+ce.tecExtras);
   s(`Combustível (${ce.viagens}× ${fmt(km1*2,0)} km a ${brl(r.precoComb)}/L)`, ce.comb);
-  s("Desgaste e Depreciação do Carro", ce.desg);
+  s("Desgaste e depreciação do carro", ce.desg);
   s("Pedágios", ce.ped);
-  s("Horas de Viagens Extras", ce.tecExtras);
-  g("Equipe de Campo", ce.tecCampo+ce.ajud+ce.alim+ce.hosp);
+  s("Horas de viagens extras", ce.tecExtras);
+  g("Equipe de campo", ce.tecCampo+ce.ajud+ce.alim+ce.hosp);
   s(`Técnico (${fmt(ce.dias)} dias)`, ce.tecCampo);
   s(r.ajud>0?`Ajudante${r.ajud>1?"s":""}: ${r.ajud>1?r.ajud+" × ":""}${ce.dc} diária${ce.dc>1?"s":""} de campo × ${brl0(nz(cfg.equipe.diariaAjudante))}`:"Ajudante", ce.ajud);
   s(`Alimentação (${r.pessoas} pessoas)`, ce.alim);
@@ -851,13 +852,13 @@ function recalc(){
   if(r.marcos>0) g(`Marcos (${r.marcosQ} un.)`, r.marcos);
   g("Documentação", r.art+r.taxasIncl);
   s(esc(r.rt.doc)+" — "+esc(r.rt.nome), r.art);
-  s("Taxas de Terceiros (incluídas)", r.taxasIncl);
-  if(r.outras>0) g("Outras Despesas"+(q.outrasDesc?` — ${esc(q.outrasDesc)}`:""), r.outras);
-  L.push(`<tr class="tot"><td>Custo Direto</td><td>${brl(r.custoDireto)}</td></tr>`);
-  L.push(`<tr class="sub"><td>Rateio de Custos Fixos (${fmt(cfg.fin.rateioFixo,0)}%)</td><td>${brl(r.rateio)}</td></tr>`);
+  s("Taxas de terceiros (incluídas)", r.taxasIncl);
+  if(r.outras>0) g("Outras despesas"+(q.outrasDesc?` — ${esc(q.outrasDesc)}`:""), r.outras);
+  L.push(`<tr class="tot"><td>Custo direto</td><td>${brl(r.custoDireto)}</td></tr>`);
+  L.push(`<tr class="sub"><td>Rateio de custos fixos (${fmt(cfg.fin.rateioFixo,0)}%)</td><td>${brl(r.rateio)}</td></tr>`);
   L.push(`<tr class="sub"><td>Impostos (${fmt(cfg.fin.impostos,1)}% do preço)</td><td>${brl(r.impostos)}</td></tr>`);
   L.push(`<tr class="sub"><td>Lucro (meta ${fmt(cfg.fin.margem,0)}%)</td><td>${brl(r.lucro)}</td></tr>`);
-  L.push(`<tr class="tot"><td>Preço Final</td><td>${brl(r.final)}</td></tr>`);
+  L.push(`<tr class="tot"><td>Preço final</td><td>${brl(r.final)}</td></tr>`);
   if(r.avisos.length) L.push(`<tr><td colspan="2" style="border:0;padding-top:10px">${r.avisos.map(a=>`<div class="info warn" style="margin:0 0 6px">${esc(a)}</div>`).join("")}</td></tr>`);
   $("#breakdown").innerHTML=L.join("");
   window.__last=r;
@@ -875,7 +876,7 @@ function renderHist(){
   if(!quotes.length){ t.innerHTML=`<tr><td style="padding:24px;color:var(--muted)">Nenhum orçamento salvo ainda.</td></tr>`; return; }
   const ap=quotes.filter(x=>x.status==="Aprovado"||x.status==="Executado"), env=quotes.filter(x=>x.status!=="Rascunho");
   const taxa = env.length? Math.round(ap.length/env.length*100):0;
-  let h=`<tr><th>Nº / Data</th><th>Cliente / Imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias Est.</th><th>Dias Reais</th><th>Diferença</th><th></th></tr>`;
+  let h=`<tr><th>Nº / data</th><th>Cliente / imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias est.</th><th>Dias reais</th><th>Diferença</th><th></th></tr>`;
   for(const x of quotes){
     const dr=num(x.diasReais), de=nz(x.diasEstimados);
     const dif = !isNaN(dr)&&de>0 ? Math.round((dr-de)/de*100) : null;
@@ -913,32 +914,32 @@ function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o);}
 function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++)a=a[ks[i]];a[ks.at(-1)]=v;}
 function renderCfg(){
   const c=cfg;
-  let h=`<div class="card"><h2>Empresa e Base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir Base" no mapa do orçamento.</p>
-   <div class="row">${field("empresa.nome","Nome na Proposta","","text")}</div>
-   <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da Base","","text")}${field("empresa.baseCoord","Coordenada da Base","cole do Google Maps","text")}</div></div>`;
+  let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir base" no mapa do orçamento.</p>
+   <div class="row">${field("empresa.nome","Nome na proposta","","text")}</div>
+   <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
    ${field("combustivel.tipo","Combustível","Gasolina, Diesel S10…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
   h+=`<div class="card"><h2>Veículo</h2><p class="hint">Gol G5 Rallye 1.6 2012: consumo de fábrica com gasolina 13,4 km/l na estrada e 9,4 km/l na cidade. Os valores abaixo já descontam cerca de 12–15% pela idade do carro e pela carga de equipamentos; na terra usa-se o consumo de cidade (marchas baixas).</p><div class="row">
-   ${field("veiculo.modelo","Veículo","","text")}${field("veiculo.kmUrbano","Trecho Urbano na Saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no Asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na Terra","km/l")}
-   ${field("veiculo.manutKm","Manutenção e Pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do Carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste Extra na Terra","multiplicador")}
-   ${field("veiculo.fatorRota","Fator Linha Reta → Estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade Média Asfalto","km/h")}${field("veiculo.velTerra","Velocidade Média Terra","km/h")}</div></div>`;
+   ${field("veiculo.modelo","Veículo","","text")}${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
+   ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
+   ${field("veiculo.fatorRota","Fator linha reta → estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade média asfalto","km/h")}${field("veiculo.velTerra","Velocidade média terra","km/h")}</div></div>`;
   h+=`<div class="card"><h2>Equipe</h2><p class="hint">O ajudante recebe uma diária por dia de campo (dia de viagem com trabalho conta como diária cheia); processamento e escritório ficam só com o responsável técnico, pela hora técnica. Referência da diária: servente autônomo em MG R$ 233/dia já com alimentação e transporte (out/2026); no interior do Norte de Minas, descontando alimentação (paga à parte aqui) e transporte (no carro), fica em torno de R$ 130 a 180 — padrão R$ 150. O valor da sua hora entra como custo (pró-labore); o lucro vem pela margem.</p><div class="row">
-   ${field("equipe.horaTecnico","Hora do Técnico Responsável","R$/h")}${field("equipe.horasDia","Horas por Dia de Campo","h")}${field("equipe.horasConfrontante","Horas por Confrontante","contato, declaração, assinatura")}${field("equipe.diariaAjudante","Diária do Ajudante","R$/dia de campo (só campo)")}
-   ${field("equipe.alimentacao","Alimentação","R$/pessoa/dia")}${field("equipe.hospedagem","Hospedagem","R$/pessoa/noite")}${field("equipe.ajudantesPadrao","Ajudantes por Padrão","","number","1")}</div></div>`;
-  h+=`<div class="card"><h2>Equipamentos</h2><p class="hint">Custo por dia de uso = (valor ÷ vida útil + manutenção anual) ÷ dias de uso por ano.</p><div class="hwrap"><table class="cfg-table"><tr><th>Equipamento</th><th>Valor (R$)</th><th>Vida Útil (anos)</th><th>Dias de Uso por Ano</th><th>Manutenção/ano (R$)</th><th>Custo/dia</th></tr>`;
+   ${field("equipe.horaTecnico","Hora do técnico responsável","R$/h")}${field("equipe.horasDia","Horas por dia de campo","h")}${field("equipe.horasConfrontante","Horas por confrontante","contato, declaração, assinatura")}${field("equipe.diariaAjudante","Diária do ajudante","R$/dia de campo (só campo)")}
+   ${field("equipe.alimentacao","Alimentação","R$/pessoa/dia")}${field("equipe.hospedagem","Hospedagem","R$/pessoa/noite")}${field("equipe.ajudantesPadrao","Ajudantes por padrão","","number","1")}</div></div>`;
+  h+=`<div class="card"><h2>Equipamentos</h2><p class="hint">Custo por dia de uso = (valor ÷ vida útil + manutenção anual) ÷ dias de uso por ano.</p><div class="hwrap"><table class="cfg-table"><tr><th>Equipamento</th><th>Valor (R$)</th><th>Vida útil (anos)</th><th>Dias de uso por ano</th><th>Manutenção/ano (R$)</th><th>Custo/dia</th></tr>`;
   c.equipamentos.forEach((e,i)=>{ h+=`<tr><td><input data-c="equipamentos.${i}.nome" type="text" value="${esc(e.nome)}"></td><td><input data-c="equipamentos.${i}.valor" type="number" value="${esc(e.valor)}"></td><td><input data-c="equipamentos.${i}.vidaAnos" type="number" step="0.5" value="${esc(e.vidaAnos)}"></td><td><input data-c="equipamentos.${i}.diasAno" type="number" value="${esc(e.diasAno)}"></td><td><input data-c="equipamentos.${i}.manutAno" type="number" value="${esc(e.manutAno)}"></td><td class="mono">${brl(equipCustoDia(e))}</td></tr>`; });
   h+=`</table></div><br></div>`;
-  h+=`<div class="card"><h2>Responsáveis Técnicos</h2><p class="hint">Escolhido em cada orçamento. O documento e a taxa mudam conforme o conselho: TRT 2026 (CFT) R$ 68,17 valor único; ART 2026 (CREA) R$ 108,39 até R$ 15 mil de contrato e R$ 285,59 acima.</p><div class="hwrap"><table class="cfg-table"><tr><th>Nome</th><th>Título</th><th>Registro</th><th>Documento</th><th>Taxa até R$ 15 mil</th><th>Taxa Acima</th></tr>`;
+  h+=`<div class="card"><h2>Responsáveis técnicos</h2><p class="hint">Escolhido em cada orçamento. O documento e a taxa mudam conforme o conselho: TRT 2026 (CFT) R$ 68,17 valor único; ART 2026 (CREA) R$ 108,39 até R$ 15 mil de contrato e R$ 285,59 acima.</p><div class="hwrap"><table class="cfg-table"><tr><th>Nome</th><th>Título</th><th>Registro</th><th>Documento</th><th>Taxa até R$ 15 mil</th><th>Taxa acima</th></tr>`;
   (c.responsaveis||[]).forEach((x,i)=>{ const f0=(x.faixas||[])[0]||{}, f1=(x.faixas||[])[1]||f0;
     h+=`<tr><td><input data-c="responsaveis.${i}.nome" type="text" value="${esc(x.nome)}"></td><td><input data-c="responsaveis.${i}.titulo" type="text" value="${esc(x.titulo)}"></td><td><input data-c="responsaveis.${i}.registro" type="text" placeholder="CFT/CREA nº" value="${esc(x.registro)}"></td><td><input data-c="responsaveis.${i}.doc" type="text" value="${esc(x.doc)}"></td>
     <td><input data-rtf="${i}" data-n="0" type="number" step="0.01" value="${esc(f0.valor)}" style="width:90px"></td><td><input data-rtf="${i}" data-n="1" type="number" step="0.01" value="${esc(f1.valor)}" style="width:90px"></td></tr>`; });
   h+=`</table></div><br></div>`;
-  h+=`<div class="card"><h2>Materiais</h2><div class="row">${field("materiais.custoMarco","Custo por Marco","material + implantação, R$")}</div></div>`;
+  h+=`<div class="card"><h2>Materiais</h2><div class="row">${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}</div></div>`;
   h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
-   ${field("fin.rateioFixo","Rateio de Custos Fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de Lucro","% sobre o preço")}
-   <label>Piso de Mercado Regional<small>não cobrar abaixo da faixa de mercado</small><select data-c="fin.pisoMercado"><option value="sim" ${cfg.fin.pisoMercado!==false&&cfg.fin.pisoMercado!=="nao"?"selected":""}>Sim — usar o piso</option><option value="nao" ${cfg.fin.pisoMercado===false||cfg.fin.pisoMercado==="nao"?"selected":""}>Não — só custos</option></select></label>
-   ${field("fin.minimoRural","Mínimo Rural","R$")}${field("fin.minimoUrbano","Mínimo Urbano","R$")}${field("fin.arredondar","Arredondar para Múltiplos de","R$")}</div></div>`;
-  h+=`<div class="card"><h2>Catálogo de Serviços</h2><p class="hint">Produtividade = quanto rende por dia de campo em terreno fácil (a dificuldade multiplica). Use 0 para serviço sem campo ou com dias fixos.</p><div class="hwrap"><table class="cfg-table"><tr><th>Serviço</th><th>Âmbito</th><th>Unidade</th><th>Produção/dia</th><th>Dias Fixos</th><th>Escritório Fixo (h)</th><th>Escritório por Unidade (h)</th><th>RTK1</th><th>RTK2</th><th>Drone</th><th>Marcos</th><th></th></tr>`;
+   ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
+   <label>Piso de mercado regional<small>não cobrar abaixo da faixa de mercado</small><select data-c="fin.pisoMercado"><option value="sim" ${cfg.fin.pisoMercado!==false&&cfg.fin.pisoMercado!=="nao"?"selected":""}>Sim — usar o piso</option><option value="nao" ${cfg.fin.pisoMercado===false||cfg.fin.pisoMercado==="nao"?"selected":""}>Não — só custos</option></select></label>
+   ${field("fin.minimoRural","Mínimo rural","R$")}${field("fin.minimoUrbano","Mínimo urbano","R$")}${field("fin.arredondar","Arredondar para múltiplos de","R$")}</div></div>`;
+  h+=`<div class="card"><h2>Catálogo de serviços</h2><p class="hint">Produtividade = quanto rende por dia de campo em terreno fácil (a dificuldade multiplica). Use 0 para serviço sem campo ou com dias fixos.</p><div class="hwrap"><table class="cfg-table"><tr><th>Serviço</th><th>Âmbito</th><th>Unidade</th><th>Produção/dia</th><th>Dias fixos</th><th>Escritório fixo (h)</th><th>Escritório por unidade (h)</th><th>RTK1</th><th>RTK2</th><th>Drone</th><th>Marcos</th><th></th></tr>`;
   c.servicos.forEach((s,i)=>{
     const ck=(id)=>`<input type="checkbox" data-eq="${i}" data-id="${id}" ${s.equip.includes(id)?"checked":""} style="width:18px;height:18px">`;
     h+=`<tr><td style="min-width:240px"><input data-c="servicos.${i}.nome" type="text" value="${esc(s.nome)}"></td>
@@ -953,8 +954,8 @@ function renderCfg(){
     <td><button class="btn danger small" data-del="${i}">×</button></td></tr>
     <tr><td colspan="12" style="padding-bottom:10px"><input data-c="servicos.${i}.desc" type="text" value="${esc(s.desc)}" placeholder="Descrição que aparece na proposta" style="font-size:12.5px;color:#44546b"></td></tr>`;
   });
-  h+=`</table></div><div class="actions" style="margin:10px 0 14px"><button class="btn ghost small" id="bAddSvc">+ Adicionar Serviço</button></div></div>`;
-  h+=`<div class="card"><h2>Referências de Mercado Usadas</h2><p class="hint">Valores-padrão e a faixa de “mercado regional” do orçamento foram calibrados com estas fontes (pesquisa de nov/2026). Não há tabela pública de preços praticados por topógrafos no Norte de Minas; onde faltou dado local, a referência foi ajustada para o interior.</p>
+  h+=`</table></div><div class="actions" style="margin:10px 0 14px"><button class="btn ghost small" id="bAddSvc">+ Adicionar serviço</button></div></div>`;
+  h+=`<div class="card"><h2>Referências de mercado usadas</h2><p class="hint">Valores-padrão e a faixa de “mercado regional” do orçamento foram calibrados com estas fontes (pesquisa de nov/2026). Não há tabela pública de preços praticados por topógrafos no Norte de Minas; onde faltou dado local, a referência foi ajustada para o interior.</p>
    <table class="cfg-table" style="font-size:12.5px"><tr><th>Item</th><th>Referência</th><th>Fonte</th></tr>
    <tr><td>Georreferenciamento (público, larga escala)</td><td>R$ 49,83 a 202,87/ha · R$ 747 a 3.043/km de perímetro · rendimento 5 a 0,8 km/dia conforme dificuldade (±10% regional)</td><td>Portaria INCRA nº 12/2025</td></tr>
    <tr><td>Georreferenciamento (particular)</td><td>R$ 250 a 350/ha (média nacional, áreas pequenas); até 50 ha ≈ R$ 6 mil a 15 mil; áreas médias e grandes R$ 20 a 100/ha</td><td>Aegro 2026; Terra Registros; IB Topografia</td></tr>
@@ -985,10 +986,10 @@ function renderCfg(){
   $("#bAddSvc").addEventListener("click",()=>{ cfg.servicos.push({id:"s"+Date.now(), nome:"Novo serviço", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:4, escrUnid:0, equip:["rtk1"], marcos:false, desc:""}); afterCfgEdit(true); });
 }
 function afterCfgEdit(rerender){ renderRTSelect();
-  $("#hdrSub").textContent="Sistema de Orçamentos";
+  $("#hdrSub").textContent="Sistema de orçamentos";
   if(rerender) renderCfg();
   renderSvcList(); recalc();
-  $("#bCfgSave").textContent="Salvar Configurações •";
+  $("#bCfgSave").textContent="Salvar configurações •";
 }
 
 /* =====================================================================
@@ -1018,7 +1019,7 @@ function proposalData(){
 }
 function proposalText(){
   const p=proposalData(), r=p.r;
-  let t=`*PROPOSTA DE SERVIÇOS TOPOGRÁFICOS* nº ${p.numero}\n${p.e.nome}\n\n`;
+  let t=`*Proposta de serviços topográficos* nº ${p.numero}\n${p.e.nome}\n\n`;
   t+=`Cliente: ${q.cliente||"—"}\nImóvel: ${q.imovel||"—"}${q.municipio?" — "+q.municipio:""}\n`;
   if(p.area) t+=`Área aproximada: ${p.area}\n`;
   if(p.loc) t+=`Localização: ${p.loc}\n`;
@@ -1027,7 +1028,7 @@ function proposalText(){
   t+=`Prazo estimado: ${p.diasUteis} dias úteis após aprovação e acesso ao imóvel.\n`;
   t+=`\n*Incluso:* ${p.incl.join("; ")}.\n*Não incluso:* ${p.nao.join("; ")}.\n`;
   if(q.obs) t+=`\nObs.: ${q.obs}\n`;
-  t+=`\nProposta válida até ${p.validade}.\nResponsável Técnico: ${r.rt.nome} — ${r.rt.titulo}${r.rt.registro?" — "+r.rt.registro:""}${p.e.telefone?"\n"+p.e.telefone:""}`;
+  t+=`\nProposta válida até ${p.validade}.\nResponsável técnico: ${r.rt.nome} — ${r.rt.titulo}${r.rt.registro?" — "+r.rt.registro:""}${p.e.telefone?"\n"+p.e.telefone:""}`;
   return t;
 }
 function buildPdf(){
@@ -1041,16 +1042,16 @@ function buildPdf(){
   doc.setTextColor(255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
   doc.text(["RT: "+(r.rt.nome||"")+" — "+(r.rt.titulo||"")+(r.rt.registro?" — "+r.rt.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  "), cfg.empresa.cidadeBase||""].filter(Boolean),W-M,12,{align:"right"});
   y=42; doc.setTextColor(...ink);
-  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text("PROPOSTA DE PRESTAÇÃO DE SERVIÇOS TOPOGRÁFICOS",M,y);
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text("Proposta de prestação de serviços topográficos",M,y);
   doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...muted);
   doc.text(`Nº ${p.numero}   ·   Emitida em ${p.hoje}   ·   Válida até ${p.validade}`,M,y+6); y+=16;
-  const sec=(t)=>{ if(y>262){doc.addPage();y=20;} doc.setTextColor(...green); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); doc.text(t.toUpperCase(),M,y); doc.setDrawColor(...cyan); doc.setLineWidth(0.4); doc.line(M,y+1.8,W-M,y+1.8); doc.setLineWidth(0.2); y+=7; doc.setTextColor(...ink); doc.setFont("helvetica","normal"); doc.setFontSize(10); };
+  const sec=(t)=>{ if(y>262){doc.addPage();y=20;} doc.setTextColor(...green); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); doc.text(t,M,y); doc.setDrawColor(...cyan); doc.setLineWidth(0.4); doc.line(M,y+1.8,W-M,y+1.8); doc.setLineWidth(0.2); y+=7; doc.setTextColor(...ink); doc.setFont("helvetica","normal"); doc.setFontSize(10); };
   const para=(t,ind=0)=>{ const ls=doc.splitTextToSize(t,W-2*M-ind); ls.forEach(l=>{ if(y>282){doc.addPage();y=20;} doc.text(l,M+ind,y); y+=5; }); };
   const pts=(q.poligono||[]); const temCroqui=pts.length>=3; const kvW=W-2*M-38-(temCroqui?62:0);
   const kv=(k,v)=>{ if(!v) return; doc.setFont("helvetica","bold"); doc.text(k,M,y); doc.setFont("helvetica","normal"); const ls=doc.splitTextToSize(v,kvW); doc.text(ls,M+38,y); y+=5*ls.length; };
   sec("Cliente e imóvel");
   const y0=y;
-  kv("Cliente:",q.cliente||"—"); kv("Contato:",q.contato); kv("Imóvel:",q.imovel); kv("Município:",q.municipio); kv("Área Aprox.:",p.area); kv("Perímetro:",nz(q.perimKm)>0?fmt(nz(q.perimKm),2)+" km":""); kv("Localização:",p.loc);
+  kv("Cliente:",q.cliente||"—"); kv("Contato:",q.contato); kv("Imóvel:",q.imovel); kv("Município:",q.municipio); kv("Área aprox.:",p.area); kv("Perímetro:",nz(q.perimKm)>0?fmt(nz(q.perimKm),2)+" km":""); kv("Localização:",p.loc);
   if(temCroqui){ // croqui da poligonal
     const bx=W-M-58, by=y0-4, bw=58, bh=44; doc.setDrawColor(...muted); doc.setFillColor(244,248,252); doc.roundedRect(bx,by,bw,bh,2,2,"FD");
     const lat0=pts.reduce((a,p)=>a+p[0],0)/pts.length, kx=111320*Math.cos(lat0*Math.PI/180), ky=110540;
@@ -1069,7 +1070,7 @@ function buildPdf(){
   y+=3;
   if(y>245){doc.addPage();y=20;}
   doc.setFillColor(228,243,251); doc.roundedRect(M,y,W-2*M,20,3,3,"F"); doc.setFillColor(...cyan); doc.rect(M,y,1.5,20,"F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...green); doc.text("VALOR TOTAL DOS SERVIÇOS",M+6,y+8);
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...green); doc.text("Valor total dos serviços",M+6,y+8);
   doc.setFontSize(17); doc.text(brl(r.final),W-M-6,y+13,{align:"right"});
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(...muted); doc.text(doc.splitTextToSize(p.cond,105),M+6,y+14);
   y+=28; doc.setTextColor(...ink); doc.setFontSize(10);
@@ -1080,7 +1081,7 @@ function buildPdf(){
   if(q.obs){ sec("Observações"); para(q.obs); y+=3; }
   if(y>266){doc.addPage();y=30;} else y=Math.min(Math.max(y+16,250),272);
   doc.setDrawColor(...ink); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
-  doc.setFontSize(9); doc.text([r.rt.nome||"", (r.rt.titulo||"Responsável Técnico")+(r.rt.registro?" — "+r.rt.registro:"")],M,y+5);
+  doc.setFontSize(9); doc.text([r.rt.nome||"", (r.rt.titulo||"Responsável técnico")+(r.rt.registro?" — "+r.rt.registro:"")],M,y+5);
   doc.text(["De acordo — "+(q.cliente||"Cliente"),"Data: ____/____/______"],W-M-75,y+5);
   const np=doc.getNumberOfPages(); for(let i=1;i<=np;i++){ doc.setPage(i); doc.setFillColor(...green); doc.rect(0,290,W,7,"F"); doc.setFontSize(7.5); doc.setTextColor(255); doc.text("SANTEX — Geotecnologia & Engenharia de Precisão",M,294.5); doc.text(`Página ${i} de ${np}`,W-M,294.5,{align:"right"}); }
   return doc;
@@ -1146,13 +1147,13 @@ function initMap(){
   $("#mUndo").addEventListener("click",()=>{ if(!q.poligono.length) return; q.poligono.pop(); polyChanged(); });
   $("#mClear").addEventListener("click",function(){
     if(!q.poligono.length) return;
-    if(this.dataset.c){ q.poligono=[]; this.dataset.c=""; this.textContent="Limpar Área"; polyChanged(); setDrawing(true); }
-    else { this.dataset.c="1"; this.textContent="Confirmar Limpeza?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar Área";},3000); }
+    if(this.dataset.c){ q.poligono=[]; this.dataset.c=""; this.textContent="Limpar área"; polyChanged(); setDrawing(true); }
+    else { this.dataset.c="1"; this.textContent="Confirmar limpeza?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar área";},3000); }
   });
   $("#mGps").addEventListener("click",useGps);
   $("#mKml").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importKml(f); e.target.value=""; });
   $("#mBase").addEventListener("click",function(){
-    if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a Base? Clique de Novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
+    if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a base? Clique de novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
     this.dataset.c=""; pickingBase=!pickingBase; if(pickingBase) setDrawing(false);
     $("#map").classList.toggle("picking",pickingBase); updateBaseBtn();
     mapMsg(pickingBase? "🏠 <b>Clique no mapa no local de onde você sempre sai</b> (ou use “Minha posição” estando lá).":"");
@@ -1162,8 +1163,8 @@ function initMap(){
   drawBase(); mapReload(true);
   if(!parseCoord(cfg.empresa.baseCoord)) mapMsg("Primeiro passo: clique em <b>🏠 Definir base</b> e marque no mapa o local de onde você sai.");
 }
-function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base Definida" : "🏠 Definir Base"); }
-function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir Área" : (q.poligono.length? "✏️ Editar / Continuar Área":"✏️ Desenhar Área");
+function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base definida" : "🏠 Definir base"); }
+function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / continuar área":"✏️ Desenhar área");
   if(map) $("#map").classList.toggle("picking",on||pickingBase);
   if(on){ pickingBase=false; updateBaseBtn(); mapMsg("Clique no mapa para marcar cada vértice da área. Arraste os pontos amarelos para ajustar. Clique em <b>✔ Concluir</b> quando terminar."); }
   else if(!pickingBase) mapMsg(q.poligono.length>=3? "Área definida. Arraste os vértices para ajustar, se precisar.":""); }
@@ -1317,7 +1318,7 @@ function renderFuel(){
    ===================================================================== */
 function tab(t){ if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
 function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
-function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de Orçamentos"; }
+function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de orçamentos"; }
 
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 bindForm();
@@ -1325,8 +1326,8 @@ $("#bSave").addEventListener("click",saveQuote);
 $("#bPdf").addEventListener("click",doPdf);
 $("#bTxt").addEventListener("click",openText);
 $("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); mapReload(false); toast("Formulário limpo"); });
-$("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar Configurações"; });
-$("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar Padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar Restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar Padrões";},3000);} });
+$("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar configurações"; });
+$("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar padrões";},3000);} });
 $("#mClose").addEventListener("click",()=>$("#modal").classList.remove("on"));
 $("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); });
 $("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("#mText").textContent); toast("Copiado"); }catch(e){ const rng=document.createRange(); rng.selectNodeContents($("#mText")); const s=getSelection(); s.removeAllRanges(); s.addRange(rng); toast("Selecionado — use Ctrl+C"); } });
