@@ -14,6 +14,9 @@ Site: https://clarkve12.github.io/orcamento-topografia/
 - Valor mínimo: R$ 3.000 rural / R$ 1.200 urbano
 - Proposta em PDF com logotipo e croqui da área
 
+## Instalar como app
+No Chrome (PC ou Android), abra o site e clique em **⬇ Instalar app** no topo, ou no menu ⋮ → **Instalar app** / **Adicionar à tela inicial**.
+
 ## Serviços externos usados (gratuitos, sem chave)
 - Imagens de satélite: Esri World Imagery
 - Rotas: OSRM (router.project-osrm.org)

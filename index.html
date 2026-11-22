@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SANTEX — Orçamentos</title>
-<link rel="icon" href="assets/icone.png">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SANTEX">
 <meta name="theme-color" content="#002955">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -141,7 +146,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
       <img class="logo" src="assets/logo-escuro.jpg" alt="SANTEX — Geotecnologia & Engenharia de Precisão">
       <div class="sub" id="hdrSub">Sistema de orçamentos</div>
     </div>
-    <div id="syncNote">Carregando dados…</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button id="bInstall" class="btn small" style="display:none;background:#4fd5fe;color:#002955">⬇ Instalar app</button><div id="syncNote">Carregando dados…</div></div>
   </div>
   <nav>
     <button data-tab="novo" class="on">Novo orçamento</button>
@@ -329,7 +334,7 @@ const DEFAULT_CFG = {
   empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
   combustivel:{tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
   veiculo:{modelo:"VW Gol G5 Rallye 1.6 2012 (gasolina)", kmUrbano:3, consumoAsf:11.5, consumoTerra:8, manutKm:0.30, deprecKm:0.15, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
-  equipe:{horaTecnico:90, horasConfrontante:1.5, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
+  equipe:{horaTecnico:120, horasConfrontante:1.5, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
   equipamentos:[
     {id:"rtk1", nome:"RTK 1 (base)",  valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
     {id:"rtk2", nome:"RTK 2 (rover)", valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
@@ -337,7 +342,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  versao:5,
+  versao:6,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -393,6 +398,7 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
   if(c&&c.versao<3){ const f=c.combustivel||(c.combustivel={}); if(!f.tipo||/diesel/i.test(f.tipo)){ f.tipo="Gasolina comum"; f.preco=7.39; f.atualizadoEm="2026-11-21T22:03:00-03:00"; } c.versao=3; }
   if(c&&c.versao<4){ const v=c.veiculo||(c.veiculo={}); const ch=(k,o,n)=>{ if(v[k]===o||v[k]===undefined) v[k]=n; }; ch("consumoAsf",10,11.5); ch("consumoTerra",7,8); ch("manutKm",0.4,0.3); ch("deprecKm",0.35,0.15); v.modelo="VW Gol G5 Rallye 1.6 2012 (gasolina)"; c.versao=4; }
   if(c&&c.versao<5){ (c.servicos||[]).forEach(sv=>{ if(sv.id==="drone"){ if(sv.prod===150) sv.prod=250; if(sv.escrUnid===0.05) sv.escrUnid=0.02; sv.semDificuldade=true; } }); c.versao=5; }
+  if(c&&c.versao<6){ if(c.equipe&&c.equipe.horaTecnico===90) c.equipe.horaTecnico=120; c.versao=6; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
@@ -1027,11 +1033,11 @@ function centroid(pts){ // centróide da área (cai no meio do polígono na maio
 function initMap(){
   if(!window.L){ mapMsg('<span style="color:var(--danger)">O mapa não carregou (sem internet?). Você ainda pode colar a coordenada e digitar os km.</span>'); return; }
   map=L.map("map",{maxZoom:21,zoomControl:true}).setView(MAP_CENTER,11);
-  const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri, Maxar"});
-  const clar=L.tileLayer("https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri Clarity"});
-  const osm=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:21,maxNativeZoom:19,attribution:"© OpenStreetMap"});
-  const lbl=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19});
-  const roads=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19});
+  const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri, Maxar",crossOrigin:true});
+  const clar=L.tileLayer("https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagem © Esri Clarity",crossOrigin:true});
+  const osm=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:21,maxNativeZoom:19,attribution:"© OpenStreetMap",crossOrigin:true});
+  const lbl=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,crossOrigin:true});
+  const roads=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,crossOrigin:true});
   sat.addTo(map); lbl.addTo(map); roads.addTo(map);
   L.control.layers({"Satélite":sat,"Satélite (Clarity)":clar,"Mapa de ruas":osm},{"Nomes e limites":lbl,"Estradas":roads},{position:"topright"}).addTo(map);
   L.control.scale({imperial:false}).addTo(map);
@@ -1227,6 +1233,14 @@ $("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.w
 
 initStorage();
 initMap();
+/* ---------- app instalável (Chrome no PC e no Android) ---------- */
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); installEvt=e; const b=$("#bInstall"); if(b) b.style.display="inline-block"; });
+window.addEventListener("appinstalled",()=>{ installEvt=null; const b=$("#bInstall"); if(b) b.style.display="none"; toast("App instalado"); });
+$("#bInstall").addEventListener("click",async()=>{ if(!installEvt){ toast("Use o menu do Chrome → Instalar app"); return; } installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt=null; $("#bInstall").style.display="none"; });
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
+  navigator.serviceWorker.register("sw.js").then(()=>{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }).catch(()=>{});
+}
 </script>
 </body>
 </html>
