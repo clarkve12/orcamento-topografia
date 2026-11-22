@@ -2,10 +2,10 @@
    - App (página, logos, bibliotecas): busca na internet e guarda a última versão; sem internet, usa a guardada.
    - Imagens do mapa: guarda as que você já viu (até ~3.000) para abrir mais rápido e sem sinal.
    - Rota (OSRM) e busca de lugares precisam de internet e não são guardadas. */
-var SHELL = 'sx-app-v4';
+var SHELL = 'sx-app-v5';
 var TILES = 'sx-mapa-v1';
 var MAX_TILES = 3000;
-var SHELL_URLS = ['./', './index.html', './manifest.json',
+var SHELL_URLS = ['./', './index.html', './manifest.json', './financeiro.js',
   './assets/logo-escuro.jpg', './assets/logo-claro.jpg', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-180.png', './assets/icon-maskable-512.png',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',

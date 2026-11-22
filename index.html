@@ -36,8 +36,9 @@ header .top{display:flex;justify-content:space-between;align-items:flex-end;gap:
 header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
 header .sub{opacity:.85;font-size:13px;color:var(--cyan);font-weight:600;margin-top:2px}
 #syncNote{font-size:12px;opacity:.85}
-nav{display:flex;gap:4px;max-width:1280px;margin:14px auto 0}
-nav button{background:transparent;border:0;color:#b9cde3;font:inherit;font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
+nav{display:flex;gap:4px;max-width:1280px;margin:14px auto 0;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{white-space:nowrap;flex:0 0 auto;background:transparent;border:0;color:#b9cde3;font:inherit;font-weight:700;padding:10px 14px;border-radius:10px 10px 0 0;cursor:pointer}
 nav button.on{background:var(--bg);color:var(--brand)}
 main{max-width:1280px;margin:0 auto;padding:20px}
 .view{display:none}.view.on{display:block}
@@ -145,6 +146,30 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 #gate .gbtn svg{width:20px;height:20px}
 #gate .gmsg{margin-top:18px;font-size:14px;min-height:20px;color:#d7e6f5}
 #gate .glink{margin-top:10px;background:none;border:0;color:#9fd8ff;text-decoration:underline;font:inherit;cursor:pointer;display:none}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.kgrid .kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 12px}
+.kgrid .kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums;margin-top:2px}
+.kgrid .kpi span{font-size:12px;color:var(--muted);font-weight:600}
+.kgrid .kpi.good{border-left-color:#2fbf71}.kgrid .kpi.warn{border-left-color:#e0a100}.kgrid .kpi.bad{border-left-color:var(--danger)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:12px}
+.fh{font-size:13.5px;margin:4px 0 8px;color:var(--brand);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table.ft{width:100%;border-collapse:collapse;font-size:13px}
+table.ft th{text-align:left;font-size:11.5px;color:var(--muted);padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.ft td{padding:6px;border-bottom:1px dashed var(--line);vertical-align:top}
+table.ft .n,table.hist .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.ft tr.tot td,table.hist tr.tot td{font-weight:800;border-top:1px solid var(--line);background:#f5f8fc}
+tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
+.neg{color:var(--danger)}
+.pill.bad{background:#fde3e0;color:var(--danger)}
+.sub-card{background:#f7fafd;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.bars{display:flex;gap:6px;align-items:flex-end;height:140px;padding:6px 0;overflow-x:auto}
+.bcol{flex:1 0 34px;display:flex;flex-direction:column;align-items:center;height:100%}
+.bstack{flex:1;width:100%;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+.bstack i{display:block;width:12px;border-radius:3px 3px 0 0;min-height:1px}
+.b1{background:var(--accent)}.b2{background:#ff9f68}
+.bcol span{font-size:10.5px;color:var(--muted);margin-top:4px;white-space:nowrap}
+.lg{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle}
+#fmodal .box{max-width:760px}
 .modal{position:fixed;inset:0;background:rgba(20,28,24,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
 .modal.on{display:flex}
 .modal .box{background:var(--panel);border-radius:14px;max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:18px}
@@ -170,15 +195,25 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div style="display:flex;gap:6px;align-items:center"><button id="bInstall" class="btn small" style="display:none;background:#4fd5fe;color:#002955">⬇ Instalar app</button><button id="bLogin" class="btn small" style="display:none;background:#fff;color:#002955">Entrar com Google</button><span id="userBox" style="display:none;font-size:12.5px;align-items:center;gap:6px"><img id="userPic" alt="" style="width:26px;height:26px;border-radius:50%;display:none"><span id="userName"></span><button id="bLogout" class="btn small ghost" style="color:#fff;border-color:#9fb6d3;padding:4px 8px">Sair</button></span></div><div id="syncNote">Carregando dados…</div></div>
   </div>
   <nav>
-    <button data-tab="novo" class="on">Novo orçamento</button>
-    <button data-tab="hist">Orçamentos salvos</button>
+    <button data-tab="painel" class="on">Painel</button>
+    <button data-tab="novo">Novo orçamento</button>
+    <button data-tab="hist">Orçamentos</button>
+    <button data-tab="servicos">Serviços</button>
+    <button data-tab="despesas">Despesas</button>
+    <button data-tab="socios">Sócios</button>
+    <button data-tab="relatorio">Relatório</button>
     <button data-tab="cfg">Configurações</button>
   </nav>
 </header>
 
 <main>
 <!-- ================= NOVO ORÇAMENTO ================= -->
-<section class="view on" id="v-novo">
+<section class="view on" id="v-painel"><div id="fin-painel"><p class="hint">Carregando…</p></div></section>
+<section class="view" id="v-servicos"><div id="fin-servicos"></div></section>
+<section class="view" id="v-despesas"><div id="fin-despesas"></div></section>
+<section class="view" id="v-socios"><div id="fin-socios"></div></section>
+<section class="view" id="v-relatorio"><div id="fin-relatorio"></div></section>
+<section class="view" id="v-novo">
   <div class="grid">
     <div id="form">
       <div class="info warn" id="baseWarn" style="display:none">Defina a sua base (de onde o carro sempre sai): clique em <b>🏠 Definir base</b> no mapa abaixo e marque o local. Só precisa fazer isso uma vez.</div>
@@ -356,6 +391,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 </div></div>
 <div class="toast" id="toast"></div>
 
+<script src="financeiro.js"></script>
 <script>
 /* =====================================================================
    CONFIGURAÇÃO PADRÃO
@@ -372,6 +408,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
+  financeiro:{fechamento:31, vencimento:7, socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}]},
   responsaveis:[
     {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
     {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
@@ -693,9 +730,9 @@ async function startSync(fs){
     const qs=await fs.collection("orcamentos").get(); const ids=new Set(qs.docs.map(d=>d.id));
     const local=(lsGet(LS_Q)||[]).filter(x=>x&&x.id&&!ids.has(x.id));
     for(const x of local){ fs.collection("orcamentos").doc(x.id).set(toCloud(x)).catch(()=>{}); }
-    db=fs; usingDb=true;
+    db=fs; usingDb=true; if(window.finStart) window.finStart(fs);
     unsubCfg=ref.onSnapshot(sn=>{
-      if(sn.exists && sn.data().cfg){ cfg=migrate(merge(DEFAULT_CFG,sn.data().cfg)); lsSet(LS_CFG,cfg); renderCfg(); renderRTSelect(); renderSvcList(); recalc(); if(typeof drawBase==="function"&&map) drawBase(); }
+      if(sn.exists && sn.data().cfg){ cfg=migrate(merge(DEFAULT_CFG,sn.data().cfg)); lsSet(LS_CFG,cfg); renderCfg(); renderRTSelect(); renderSvcList(); recalc(); if(typeof drawBase==="function"&&map) drawBase(); if(window.finRender) window.finRender(); }
       $("#syncNote").textContent="☁ Sincronizado na nuvem";
     }, e=>{ $("#syncNote").textContent="Nuvem indisponível — usando dados deste aparelho"; });
     unsubQ=fs.collection("orcamentos").orderBy("criadoEm","desc").limit(1000).onSnapshot(sn=>{
@@ -709,7 +746,7 @@ async function startSync(fs){
     else { $("#syncNote").textContent="Sem conexão com a nuvem — dados neste aparelho"; gate("open"); setTimeout(()=>{ if(map) map.invalidateSize(); },80); }
   }
 }
-function stopSync(){ if(unsubCfg) unsubCfg(); if(unsubQ) unsubQ(); unsubCfg=unsubQ=null; usingDb=false; db=null; const n=$("#syncNote"); if(n) n.textContent="Dados salvos neste aparelho"; }
+function stopSync(){ if(window.finStop) window.finStop(); if(unsubCfg) unsubCfg(); if(unsubQ) unsubQ(); unsubCfg=unsubQ=null; usingDb=false; db=null; const n=$("#syncNote"); if(n) n.textContent="Dados salvos neste aparelho"; }
 async function saveCfg(){
   lsSet(LS_CFG,cfg);
   if(usingDb){ db.doc("config/main").set({cfg:clone(cfg), atualizadoEm:new Date().toISOString(), por:(fbUser&&fbUser.email)||""}).catch(e=>toast("Não foi possível salvar na nuvem ("+(e.code||"erro")+")")); toast("Configurações salvas"); }
@@ -889,7 +926,7 @@ function renderHist(){
       <td class="num">${fmt(de)}</td>
       <td><input class="hd" type="number" min="0" step="0.5" value="${esc(x.diasReais||"")}"></td>
       <td class="num">${dif==null?"—":`<span class="pill ${Math.abs(dif)>20?"warn":""}">${dif>0?"+":""}${dif}%</span>`}</td>
-      <td style="white-space:nowrap"><button class="btn ghost small ho">Abrir</button> <button class="btn danger small hx">Excluir</button></td></tr>`;
+      <td style="white-space:nowrap"><button class="btn ghost small ho">Abrir</button> ${x.servicoCodigo?`<button class="btn small hsv" title="Abrir o serviço">${esc(x.servicoCodigo)}</button>`:`<button class="btn ghost small hsv" title="Cliente aprovou: criar o serviço com estes dados">→ Serviço</button>`} <button class="btn danger small hx">Excluir</button></td></tr>`;
   }
   h+=`<tr><td colspan="9" style="color:var(--muted);font-size:12.5px">${quotes.length} orçamentos · ${env.length} enviados · taxa de aprovação ${taxa}%</td></tr>`;
   t.innerHTML=h;
@@ -898,6 +935,7 @@ function renderHist(){
     tr.querySelector(".hs").addEventListener("change",e=>updateQuoteField(id,{status:e.target.value}));
     tr.querySelector(".hd").addEventListener("change",e=>updateQuoteField(id,{diasReais:e.target.value}));
     tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); if(typeof q.poligono==="string"){ try{ q.poligono=JSON.parse(q.poligono); }catch(e){ q.poligono=[]; } } q.id=id; q.numero=x.numero; q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); setTimeout(()=>{ if(map) map.invalidateSize(); mapReload(true); },50); });
+    tr.querySelector(".hsv").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; if(x.servicoId&&window._fin&&window._fin.FIN.servicos.some(s=>s.id===x.servicoId)){ tab("servicos"); setTimeout(()=>window.finAbrirServico&&window.finAbrirServico(x.servicoId),50); return; } if(window.finNovoServicoDeOrcamento){ tab("servicos"); window.finNovoServicoDeOrcamento(Object.assign({id},x)); } });
     const bx=tr.querySelector(".hx");
     bx.addEventListener("click",()=>{ if(bx.dataset.c){ deleteQuote(id); } else { bx.dataset.c="1"; bx.textContent="Confirmar?"; setTimeout(()=>{bx.dataset.c="";bx.textContent="Excluir";},3000);} });
   });
@@ -934,6 +972,9 @@ function renderCfg(){
     h+=`<tr><td><input data-c="responsaveis.${i}.nome" type="text" value="${esc(x.nome)}"></td><td><input data-c="responsaveis.${i}.titulo" type="text" value="${esc(x.titulo)}"></td><td><input data-c="responsaveis.${i}.registro" type="text" placeholder="CFT/CREA nº" value="${esc(x.registro)}"></td><td><input data-c="responsaveis.${i}.doc" type="text" value="${esc(x.doc)}"></td>
     <td><input data-rtf="${i}" data-n="0" type="number" step="0.01" value="${esc(f0.valor)}" style="width:90px"></td><td><input data-rtf="${i}" data-n="1" type="number" step="0.01" value="${esc(f1.valor)}" style="width:90px"></td></tr>`; });
   h+=`</table></div><br></div>`;
+  h+=`<div class="card"><h2>Financeiro</h2><p class="hint">Fatura do cartão (vencimento das compras parceladas) e divisão do lucro entre os sócios.</p><div class="row">
+   ${field("financeiro.fechamento","Dia de fechamento da fatura","use 31 para o último dia do mês","number","1")}${field("financeiro.vencimento","Dia de vencimento da fatura","","number","1")}</div><div class="row">
+   ${(c.financeiro.socios||[]).map((x,i)=>field("financeiro.socios."+i+".nome","Sócio "+(i+1),"","text")+field("financeiro.socios."+i+".pct","Participação (%)","","number","1")).join("")}</div></div>`;
   h+=`<div class="card"><h2>Materiais</h2><div class="row">${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}</div></div>`;
   h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
    ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
@@ -1316,7 +1357,7 @@ function renderFuel(){
 /* =====================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
-function tab(t){ if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function tab(t){ if(["painel","servicos","despesas","socios","relatorio"].includes(t)&&window.finRender) setTimeout(window.finRender,0); if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
 function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
 function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de orçamentos"; }
 
