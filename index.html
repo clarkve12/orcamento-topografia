@@ -225,11 +225,11 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
         <p class="hint">Rural ou urbano define o valor mínimo (R$ 3.000 rural, R$ 1.200 urbano).</p>
         <div class="row">
           <label>Cliente<input data-k="cliente" placeholder="Nome do cliente"></label>
-          <label>Telefone / contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
+          <label>Telefone / Contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
           <label>Responsável técnico<select data-k="rt" id="rtSel"></select></label>
         </div>
         <div class="row">
-          <label>Imóvel / fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
+          <label>Imóvel / Fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
           <label>Município / UF<input data-k="municipio" placeholder="Cidade - UF"></label>
           <label>Tipo de área
             <select data-k="tipo"><option value="rural">Rural</option><option value="urbano">Urbano</option></select>
@@ -250,7 +250,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
           <div class="geo" id="geoBox"></div>
         </div>
         <div class="row">
-          <label>Localização (GPS)<small>preenchida pelo mapa, ou cole coordenada / link do Google Maps</small>
+          <label>Localização (GPS)<small>preenchida pelo mapa; também aceita coordenada ou link do Google Maps</small>
             <input data-k="coord" placeholder="-15.7801, -47.9292  ou  15°46'48&quot;S 47°55'45&quot;W"></label>
         </div>
         <div id="coordOk" class="hint" style="margin-top:-6px"></div>
@@ -357,7 +357,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
           <button class="btn ghost" id="bWa">Enviar no WhatsApp</button>
           <button class="btn ghost" id="bTxt">Texto da proposta</button>
           <button class="btn ghost small" id="bRev" style="display:none" title="Mantém o número e cria a revisão seguinte; a anterior fica como substituída">Salvar como revisão</button>
-          <button class="btn ghost small" id="bNew">Limpar / novo</button>
+          <button class="btn ghost small" id="bNew">Limpar / Novo</button>
         </div>
         <div class="hint" id="editing"></div>
       </div>
@@ -418,10 +418,10 @@ const DEFAULT_CFG = {
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
   financeiro:{fechamento:31, vencimento:7, socios:[{nome:"Clessiano Antunes",pct:50},{nome:"João Veríssimo",pct:50}]},
   responsaveis:[
-    {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-    {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
+    {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em Agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
+    {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro Civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
   ],
-  versao:10,
+  versao:11,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -438,11 +438,11 @@ const DEFAULT_CFG = {
       desc:"Levantamento e peças técnicas para regularização fundiária rural (planta, memorial, anuências)."},
     {id:"reurb_urb", nome:"Regularização fundiária urbana (REURB) — por lote", ambito:"urbano", unidade:"lote", prod:8, diasFixos:0.5, escrFix:10, escrUnid:3, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento cadastral e peças técnicas para REURB (plantas e memoriais por lote)."},
-    {id:"desmemb", nome:"Desmembramento / unificação / retificação de área", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:12, escrUnid:0, equip:["rtk1","rtk2"], marcos:false,
+    {id:"desmemb", nome:"Desmembramento / Unificação / Retificação de área", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:12, escrUnid:0, equip:["rtk1","rtk2"], marcos:false,
       desc:"Levantamento, projeto de desmembramento/unificação e memoriais descritivos."},
     {id:"car", nome:"CAR — Cadastro Ambiental Rural", ambito:"rural", unidade:"imóvel", prod:0, diasFixos:0, escrFix:6, escrUnid:0, equip:[], marcos:false,
       desc:"Elaboração e envio do Cadastro Ambiental Rural."},
-    {id:"locacao", nome:"Locação de obra / demarcação de pontos", ambito:"ambos", unidade:"pontos", prod:30, diasFixos:0, escrFix:2, escrUnid:0.02, equip:["rtk1"], marcos:false,
+    {id:"locacao", nome:"Locação de obra / Demarcação de pontos", ambito:"ambos", unidade:"pontos", prod:30, diasFixos:0, escrFix:2, escrUnid:0.02, equip:["rtk1"], marcos:false,
       desc:"Locação e demarcação de pontos em campo conforme projeto."},
     {id:"mapas", nome:"Mapas e plantas temáticas (escritório)", ambito:"ambos", unidade:"mapa", prod:0, diasFixos:0, escrFix:0, escrUnid:6, equip:[], marcos:false,
       desc:"Elaboração de mapas e plantas temáticas."}
@@ -482,6 +482,7 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
   if(c&&c.versao<8){ if(c.responsaveis&&c.responsaveis[0]&&c.empresa&&c.empresa.registro&&!c.responsaveis[0].registro) c.responsaveis[0].registro=c.empresa.registro; c.versao=8; }
   if(c&&c.versao<9){ const NM={"Georreferenciamento de imóvel rural (SIGEF/INCRA)": "Georreferenciamento de imóvel rural (SIGEF/INCRA)", "Levantamento planialtimétrico rural": "Levantamento planialtimétrico rural", "Levantamento planialtimétrico urbano (lote)": "Levantamento planialtimétrico urbano (lote)", "Levantamento topográfico planimétrico (perímetro e benfeitorias)": "Levantamento topográfico planimétrico (perímetro e benfeitorias)", "Aerofotogrametria com drone (ortomosaico e MDT)": "Aerofotogrametria com drone (ortomosaico e MDT)", "Regularização fundiária rural (usucapião, retificação)": "Regularização fundiária rural (usucapião, retificação)", "Regularização fundiária urbana (REURB) — por lote": "Regularização fundiária urbana (REURB) — por lote", "Desmembramento / unificação / retificação de área": "Desmembramento / unificação / retificação de área", "CAR — Cadastro Ambiental Rural": "CAR — Cadastro Ambiental Rural", "Locação de obra / demarcação de pontos": "Locação de obra / demarcação de pontos", "Mapas e plantas temáticas (escritório)": "Mapas e plantas temáticas (escritório)"}; (c.servicos||[]).forEach(sv=>{ if(NM[sv.nome]) sv.nome=NM[sv.nome]; }); (c.equipamentos||[]).forEach(e=>{}); c.versao=9; }
   if(c&&c.versao<10){ const NM={"Georreferenciamento de Imóvel Rural (SIGEF/INCRA)": "Georreferenciamento de imóvel rural (SIGEF/INCRA)", "Levantamento Planialtimétrico Rural": "Levantamento planialtimétrico rural", "Levantamento Planialtimétrico Urbano (Lote)": "Levantamento planialtimétrico urbano (lote)", "Levantamento Topográfico Planimétrico (Perímetro e Benfeitorias)": "Levantamento topográfico planimétrico (perímetro e benfeitorias)", "Aerofotogrametria com Drone (Ortomosaico e MDT)": "Aerofotogrametria com drone (ortomosaico e MDT)", "Regularização Fundiária Rural (Usucapião, Retificação)": "Regularização fundiária rural (usucapião, retificação)", "Regularização Fundiária Urbana (REURB) — por Lote": "Regularização fundiária urbana (REURB) — por lote", "Desmembramento / Unificação / Retificação de Área": "Desmembramento / unificação / retificação de área", "Locação de Obra / Demarcação de Pontos": "Locação de obra / demarcação de pontos", "Mapas e Plantas Temáticas (Escritório)": "Mapas e plantas temáticas (escritório)"}, TT={"Técnico em Agrimensura": "Técnico em agrimensura", "Engenheiro Civil": "Engenheiro civil"}; (c.servicos||[]).forEach(sv=>{ if(NM[sv.nome]) sv.nome=NM[sv.nome]; }); (c.responsaveis||[]).forEach(x=>{ if(TT[x.titulo]) x.titulo=TT[x.titulo]; }); c.versao=10; }
+  if(c&&c.versao<11){ const up=t=>String(t||"").replace(/(\S) \/ ([a-zà-ÿ])/g,(m,a,b)=>a+" / "+b.toUpperCase()); (c.servicos||[]).forEach(sv=>{ sv.nome=up(sv.nome); }); const TT={"Técnico em agrimensura":"Técnico em Agrimensura","Engenheiro civil":"Engenheiro Civil"}; (c.responsaveis||[]).forEach(x=>{ if(TT[x.titulo]) x.titulo=TT[x.titulo]; }); c.versao=11; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
@@ -819,7 +820,7 @@ function fillForm(){ setTimeout(()=>{ renderTaxas(); if(typeof renderRelevo==="f
   document.querySelectorAll("#form [data-k]").forEach(el=>{ const v=q[el.dataset.k]; el.value = v==null?"":v; });
 }
 let draftT;
-const TAXAS_SUG=["Registro / averbação em cartório","Prenotação / protocolo no cartório","Certidão de inteiro teor da matrícula","Certidão de ônus reais","CCIR (taxa de cadastro)","ITR / certidão negativa","Reconhecimento de firmas","Correios / despachante","Outras taxas"];
+const TAXAS_SUG=["Registro / Averbação em cartório","Prenotação / Protocolo no cartório","Certidão de inteiro teor da matrícula","Certidão de ônus reais","CCIR (taxa de cadastro)","ITR / Certidão negativa","Reconhecimento de firmas","Correios / Despachante","Outras taxas"];
 function syncTaxas(){ const it=Array.isArray(q.taxasItens)?q.taxasItens:[]; const el=$('#form [data-k="taxas"]');
   if(it.length){ q.taxas=String(Math.round(it.reduce((a,t)=>a+nz(t.valor),0)*100)/100); if(el){ el.value=q.taxas; el.readOnly=true; } } else if(el) el.readOnly=false; }
 function renderTaxas(){ const box=$("#taxasBox"); if(!box) return; if(!Array.isArray(q.taxasItens)) q.taxasItens=[]; const it=q.taxasItens;
@@ -942,7 +943,7 @@ function renderHist(){
   if(!quotes.length){ t.innerHTML=`<tr><td style="padding:24px;color:var(--muted)">Nenhum orçamento salvo ainda.</td></tr>`; return; }
   const ap=quotes.filter(x=>x.status==="Aprovado"||x.status==="Executado"), env=quotes.filter(x=>x.status!=="Rascunho"&&x.status!=="Substituído");
   const taxa = env.length? Math.round(ap.length/env.length*100):0;
-  let h=`<tr><th>Nº / data</th><th>Cliente / imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias est.</th><th>Dias reais</th><th>Diferença</th><th></th></tr>`;
+  let h=`<tr><th>Nº / Data</th><th>Cliente / Imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias est.</th><th>Dias reais</th><th>Diferença</th><th></th></tr>`;
   for(const x of quotes){
     const dr=num(x.diasReais), de=nz(x.diasEstimados);
     const dif = !isNaN(dr)&&de>0 ? Math.round((dr-de)/de*100) : null;
@@ -1277,7 +1278,7 @@ function initMap(){
   if(!parseCoord(cfg.empresa.baseCoord)) mapMsg("Primeiro passo: clique em <b>🏠 Definir base</b> e marque no mapa o local de onde você sai.");
 }
 function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base definida" : "🏠 Definir base"); }
-function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / continuar área":"✏️ Desenhar área");
+function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / Continuar área":"✏️ Desenhar área");
   if(map) $("#map").classList.toggle("picking",on||pickingBase);
   if(on){ pickingBase=false; updateBaseBtn(); mapMsg("Clique no mapa para marcar cada vértice da área. Arraste os pontos amarelos para ajustar. Clique em <b>✔ Concluir</b> quando terminar."); }
   else if(!pickingBase) mapMsg(q.poligono.length>=3? "Área definida. Arraste os vértices para ajustar, se precisar.":""); }
