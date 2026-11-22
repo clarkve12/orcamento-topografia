@@ -224,7 +224,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
         <h2><span class="n">1</span>Cliente e imóvel</h2>
         <p class="hint">Rural ou urbano define o valor mínimo (R$ 3.000 rural, R$ 1.200 urbano).</p>
         <div class="row">
-          <label>Cliente<input data-k="cliente" placeholder="Nome do cliente"></label>
+          <label>Cliente<small>da lista de clientes cadastrados</small><select data-k="cliente" id="cliSel"><option value="">Selecione o cliente…</option></select></label>
           <label>Telefone / Contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
           <label>Responsável técnico<select data-k="rt" id="rtSel"></select></label>
         </div>
@@ -816,7 +816,7 @@ function bindForm(){
   });
   document.querySelectorAll("#modoSeg button").forEach(b=>b.addEventListener("click",()=>{ q.modo=b.dataset.m; onChange(); }));
 }
-function fillForm(){ setTimeout(()=>{ renderTaxas(); if(typeof renderRelevo==="function") renderRelevo(); },0);
+function fillForm(){ if(window.finPreencherCliSel) window.finPreencherCliSel(); setTimeout(()=>{ renderTaxas(); if(typeof renderRelevo==="function") renderRelevo(); },0);
   document.querySelectorAll("#form [data-k]").forEach(el=>{ const v=q[el.dataset.k]; el.value = v==null?"":v; });
 }
 let draftT;

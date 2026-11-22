@@ -268,8 +268,13 @@ function renderServicos(){
   el.querySelectorAll("tr[data-id]").forEach(tr=>tr.addEventListener("click",()=>abrirServico(tr.dataset.id)));
 }
 const ETAPAS=["A agendar","Agendado","Em campo","Escritório","Enviado ao SIGEF","Certificado","Cartório","Concluído"];
-const CAMPOS_SERV=[{k:"data",label:"Data",type:"date",req:true},{k:"local",label:"Local do serviço",req:true},{k:"cidade",label:"Cidade"},{k:"uf",label:"UF",type:"select",options:UFS,def:"MG"},{k:"contratante",label:"Contratante (cliente)",list:"dl-clientes"},{k:"tipo",label:"Serviço",type:"select",options:TIPOS_SERVICO},{k:"valor",label:"Valor do orçamento (R$)",type:"number"},
+const CAMPOS_SERV=[{k:"data",label:"Data",type:"date",req:true},{k:"local",label:"Local do serviço",req:true},{k:"cidade",label:"Cidade"},{k:"uf",label:"UF",type:"select",options:UFS,def:"MG"},{k:"contratante",label:"Contratante (cliente)",type:"select",options:[]},{k:"tipo",label:"Serviço",type:"select",options:TIPOS_SERVICO},{k:"valor",label:"Valor do orçamento (R$)",type:"number"},
   {k:"etapa",label:"Etapa",type:"select",options:ETAPAS,def:"A agendar"},{k:"dataCampo",label:"Data de campo",type:"date"},{k:"entrega",label:"Previsão de entrega",type:"date"},{k:"diasReais",label:"Dias reais de campo",type:"number"},{k:"obs",label:"Observações",type:"textarea"}];
+function ligarSelCliente(sel,atual){
+  if(!sel) return; sel.innerHTML=opcoesClientes(atual,"Selecione o cliente…").replace(`+ Cadastrar novo cliente…`,`+ Novo cliente (digitar o nome)`); sel.value=atual;
+  sel.addEventListener("change",()=>{ if(sel.value!==NOVO_CLI) return;
+    const inp=document.createElement("input"); inp.dataset.f="contratante"; inp.placeholder="Nome do novo cliente (será cadastrado ao salvar)"; sel.replaceWith(inp); inp.focus(); });
+}
 function abrirServico(id, pre){
   const s = id ? FIN.servicos.find(x=>x.id===id) : Object.assign({data:hojeStr(),uf:"MG",tipo:TIPOS_SERVICO[0],etapa:"A agendar",recebimentos:[],parcelas:[]},pre||{});
   if(!s) return;
@@ -309,6 +314,7 @@ function abrirServico(id, pre){
     if(!id && orc && typeof updateQuoteField==="function"){ updateQuoteField(orc,{servicoId:nid,servicoCodigo:novo.codigo,status:"Aprovado",clienteId:novo.clienteId||null}); }
     toast(`Serviço ${novo.codigo} salvo`);
   }, id ? ()=>{ FIN.despServ.filter(d=>d.servicoId===id).forEach(d=>excluir("despServ",d.id)); excluir("servicos",id); toast("Serviço excluído"); } : null, extra);
+  ligarSelCliente(document.querySelector('#fmBody [data-f="contratante"]'), s.contratante||"");
   if(!id) return;
   const reabrir=()=>setTimeout(()=>abrirServico(id),250);
   const rec=s.recebimentos||[];
@@ -363,12 +369,21 @@ function renderDespesas(){
   el.querySelectorAll("[data-pg1]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); const g=FIN.despGer.find(x=>x.id===b.dataset.pg1); salvar("despGer",Object.assign({},g,{pagas:Math.round(nz(g.pagas))+1}),g.id); toast("Parcela marcada como paga"); }));
   const fb=el.querySelector("#dgFatura"); if(fb) fb.onclick=function(){ if(!this.dataset.c){ this.dataset.c="1"; this.textContent=`Confirmar: marcar ${cartao.filter(x=>x.prox===fat).length} parcela(s) de ${fmtD(fat)} como pagas?`; setTimeout(()=>{ renderDespesas(); },4000); return; }
     cartao.filter(x=>x.prox===fat).forEach(x=>salvar("despGer",Object.assign({},x.g,{pagas:x.pg+1}),x.g.id)); toast("Fatura registrada como paga"); };
-  const svOpts=FIN.servicos.slice().sort((a,b)=>(b.codigo||"").localeCompare(a.codigo||"")).map(s=>`${s.codigo} - ${s.local}`);
-  const CS=[{k:"data",label:"Data",type:"date",req:true},{k:"servico",label:"Serviço",type:"select",options:svOpts},{k:"despesa",label:"Despesa",type:"select",options:CAT_DESP_SERV},{k:"valor",label:"Valor (R$)",type:"number",req:true},{k:"obs",label:"Observações"}];
+  const svLbl=s=>`${s.codigo} - ${s.local}${s.contratante?" — "+s.contratante:""}`;
+  const svOrd=FIN.servicos.slice().sort((a,b)=>(b.codigo||"").localeCompare(a.codigo||""));
+  const svOpts=svOrd.map(svLbl);
+  const cliNomes=["Todos os clientes"].concat([...new Set(svOrd.map(s=>{ const c=clienteDoServico(s); return c?c.nome:(s.contratante||""); }).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b))));
+  const CS=[{k:"data",label:"Data",type:"date",req:true},{k:"_cli",label:"Cliente",type:"select",options:cliNomes},{k:"servico",label:"Serviço",type:"select",options:svOpts},{k:"despesa",label:"Despesa",type:"select",options:CAT_DESP_SERV},{k:"valor",label:"Valor (R$)",type:"number",req:true},{k:"obs",label:"Observações"}];
   const toId=lbl=>{ const cod=String(lbl).split(" - ")[0]; return (FIN.servicos.find(s=>s.codigo===cod)||{}).id; };
-  el.querySelector("#dsNova").onclick=()=>{ if(!svOpts.length) return toast("Cadastre um serviço primeiro"); abrirForm("Nova despesa de serviço",CS,{data:hojeStr(),servico:svOpts[0]},o=>{ const sid=toId(o.servico); delete o.servico; salvar("despServ",Object.assign(o,{servicoId:sid})); toast("Despesa lançada"); }); };
+  const filtroCliDesp=()=>{ const fc=document.querySelector('#fmBody [data-f="_cli"]'), fs=document.querySelector('#fmBody [data-f="servico"]'); if(!fc||!fs) return;
+    const aplicar=()=>{ const nome=fc.value, cur=fs.value; const l=svOrd.filter(s=>fc.selectedIndex===0||norm((clienteDoServico(s)||{}).nome||s.contratante)===norm(nome)).map(svLbl);
+      fs.innerHTML=l.map(o=>`<option>${esc(o)}</option>`).join(""); if(l.includes(cur)) fs.value=cur; };
+    fc.addEventListener("change",aplicar); };
+  const semCli=o=>{ delete o._cli; return o; };
+  el.querySelector("#dsNova").onclick=()=>{ if(!svOpts.length) return toast("Cadastre um serviço primeiro"); abrirForm("Nova despesa de serviço",CS,{data:hojeStr(),servico:svOpts[0]},o=>{ const sid=toId(o.servico); delete o.servico; salvar("despServ",Object.assign(semCli(o),{servicoId:sid})); toast("Despesa lançada"); }); filtroCliDesp(); };
   el.querySelectorAll("[data-ds]").forEach(tr=>tr.addEventListener("click",()=>{ const d=FIN.despServ.find(x=>x.id===tr.dataset.ds); const s=sv(d.servicoId);
-    abrirForm("Despesa de serviço",CS,Object.assign({},d,{servico:`${s.codigo} - ${s.local}`}),o=>{ const sid=toId(o.servico); delete o.servico; salvar("despServ",Object.assign({},d,o,{servicoId:sid}),d.id); toast("Despesa atualizada"); },()=>{ excluir("despServ",d.id); toast("Despesa excluída"); }); }));
+    const cn=(clienteDoServico(s)||{}).nome||s.contratante;
+    abrirForm("Despesa de serviço",CS,Object.assign({},d,{servico:svLbl(s),_cli:cliNomes.includes(cn)?cn:cliNomes[0]}),o=>{ const sid=toId(o.servico); delete o.servico; salvar("despServ",Object.assign({},d,semCli(o),{servicoId:sid}),d.id); toast("Despesa atualizada"); },()=>{ excluir("despServ",d.id); toast("Despesa excluída"); }); filtroCliDesp(); document.querySelector('#fmBody [data-f="_cli"]').dispatchEvent(new Event("change")); document.querySelector('#fmBody [data-f="servico"]').value=svLbl(s); }));
 }
 
 function renderSocios(){
@@ -468,11 +483,34 @@ function orcamentosDoCliente(c){ const k=norm(c.nome); return (typeof quotes!=="
 function atualizarDatalists(){
   let dl=document.getElementById("dl-clientes"); if(!dl){ dl=document.createElement("datalist"); dl.id="dl-clientes"; document.body.appendChild(dl); }
   dl.innerHTML=FIN.clientes.map(c=>`<option value="${esc(c.nome)}">`).join("");
-  const inp=document.querySelector('#form [data-k="cliente"]'); if(inp&&!inp.getAttribute("list")) inp.setAttribute("list","dl-clientes");
+  preencherCliSel();
 }
+const NOVO_CLI="__novo__";
+function opcoesClientes(atual,vazio){ // atual: nome em uso (pode não estar cadastrado)
+  const nomes=FIN.clientes.map(c=>c.nome).sort((a,b)=>norm(a).localeCompare(norm(b)));
+  let h=`<option value="">${esc(vazio||"Selecione o cliente…")}</option>`;
+  if(atual&&!clientePorNome(atual)) h+=`<option value="${esc(atual)}">${esc(atual)} (não cadastrado)</option>`;
+  h+=nomes.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  return h+`<option value="${NOVO_CLI}">+ Cadastrar novo cliente…</option>`;
+}
+function preencherCliSel(){
+  const sel=document.getElementById("cliSel"); if(!sel) return;
+  const atual=(typeof q!=="undefined"&&q&&q.cliente)||"";
+  sel.innerHTML=opcoesClientes(atual); sel.value=atual;
+}
+window.finPreencherCliSel=preencherCliSel;
 // no orçamento: ao escolher um cliente cadastrado, preenche o telefone
-document.addEventListener("change",e=>{ const t=e.target; if(!t||!t.matches||!t.matches('#form [data-k="cliente"]')) return; const c=clientePorNome(t.value); if(!c) return;
-  const ct=document.querySelector('#form [data-k="contato"]'); if(ct&&!ct.value&&c.telefone){ ct.value=c.telefone; ct.dispatchEvent(new Event("input",{bubbles:true})); } });
+let cliAnterior="";
+document.addEventListener("focusin",e=>{ if(e.target&&e.target.id==="cliSel") cliAnterior=e.target.value===NOVO_CLI?"":e.target.value; });
+document.addEventListener("change",e=>{ const t=e.target; if(!t||t.id!=="cliSel") return;
+  if(t.value===NOVO_CLI){
+    t.value=cliAnterior; q.cliente=cliAnterior;
+    if(!fsRef){ toast("Entre com sua conta para cadastrar clientes"); return; }
+    abrirCliente(null,nome=>{ setTimeout(()=>{ q.cliente=nome; preencherCliSel(); t.dispatchEvent(new Event("change",{bubbles:true})); },150); });
+    return;
+  }
+  const c=clientePorNome(t.value); q.clienteId=c?c.id:null; if(!c) return;
+  const ct=document.querySelector('#form [data-k="contato"]'); if(ct&&c.telefone&&ct.value!==c.telefone){ ct.value=c.telefone; ct.dispatchEvent(new Event("input",{bubbles:true})); } });
 function garantirCliente(nome,extra){ // cadastra automaticamente quem ainda não existe
   if(!String(nome||"").trim()) return null; const c=clientePorNome(nome); if(c) return c.id;
   const novo=Object.assign({nome:String(nome).trim(),tipoPessoa:"Física",uf:"MG",criadoEm:new Date().toISOString()},extra||{});
@@ -512,7 +550,7 @@ function renderCadastros(){
   el.querySelectorAll("[data-pr]").forEach(tr=>tr.addEventListener("click",e=>{ if(e.target.closest("a")) return; abrirPrestador(tr.dataset.pr); }));
   const b=el.querySelector("#clBusca"); b.addEventListener("input",()=>{ filtroCli=b.value; const pos=b.selectionStart; renderCadastros(); const nb=document.getElementById("clBusca"); nb.focus(); nb.setSelectionRange(pos,pos); });
 }
-function abrirCliente(id){
+function abrirCliente(id,aoSalvar){
   const c = id ? FIN.clientes.find(x=>x.id===id) : {tipoPessoa:"Física",uf:"MG"}; if(!c) return;
   let extra="";
   if(id){
@@ -523,7 +561,8 @@ function abrirCliente(id){
   }
   abrirForm(id?"Cliente: "+c.nome:"Novo cliente",CAMPOS_CLI,c,o=>{
     const dup=clientePorNome(o.nome); if(dup&&dup.id!==id){ toast("Já existe um cliente com esse nome"); return false; }
-    salvar("clientes",Object.assign({},c,o,id?{}:{criadoEm:new Date().toISOString()}),id); toast("Cliente salvo");
+    const nid=salvar("clientes",Object.assign({},c,o,id?{}:{criadoEm:new Date().toISOString()}),id); toast("Cliente salvo");
+    if(!id&&nid) FIN.clientes.push(Object.assign({id:nid},c,o)); if(aoSalvar) aoSalvar(o.nome);
   }, id?()=>{ excluir("clientes",id); toast("Cliente excluído"); }:null, extra);
   document.querySelectorAll("[data-osv]").forEach(tr=>tr.onclick=()=>{ tab("servicos"); abrirServico(tr.dataset.osv); });
 }
