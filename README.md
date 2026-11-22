@@ -3,7 +3,7 @@
 Calculadora de orçamentos para serviços de topografia e georreferenciamento (rural e urbano).
 Responsável técnico: Clessiano Antunes (TRT/CFT).
 
-Site: https://clarkve12.github.io/santex-gestao/
+Site: https://santexgeo.github.io/gestao/
 
 ## Funções
 - **Mapa com satélite**: desenhar a poligonal da área, importar KML/KMZ (CAR, SIGEF, Google Earth), usar o GPS do celular
