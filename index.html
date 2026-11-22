@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orçamento de Topografia — Clessiano Antunes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1f2a24; --muted:#66706a; --line:#e2ddd0;
+  --brand:#2f5d46; --brand-2:#3f7a5c; --brand-soft:#e3eee6; --accent:#b8742a; --accent-soft:#f6ead9;
+  --danger:#a8432f; --radius:12px;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
+header{background:var(--brand);color:#fff;padding:18px 22px 0}
+header .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
+header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+header .sub{opacity:.8;font-size:13px}
+#syncNote{font-size:12px;opacity:.85}
+nav{display:flex;gap:4px;max-width:1280px;margin:14px auto 0}
+nav button{background:transparent;border:0;color:#d8e6dc;font:inherit;font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
+nav button.on{background:var(--bg);color:var(--brand)}
+main{max-width:1280px;margin:0 auto;padding:20px}
+.view{display:none}.view.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 8px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.card h2 .n{background:var(--brand);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px}
+.card .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:#3d4842}
+label small{font-weight:500;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:14px;padding:8px 10px;border:1px solid #cfc9ba;border-radius:8px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline-offset:-1px;border-color:transparent}
+textarea{min-height:64px;resize:vertical}
+.btn{font:inherit;font-weight:700;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:var(--brand);color:#fff}
+.btn:hover{background:var(--brand-2)}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.ghost:hover{background:var(--brand-soft)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid #e3c2b9}
+a.btn{text-decoration:none;display:inline-block}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand)}
+.pill.warn{background:var(--accent-soft);color:var(--accent)}
+.info{background:var(--brand-soft);border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.info.warn{background:var(--accent-soft)}
+.svc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#fff}
+.svc.on{border-color:var(--brand-2);background:#f6faf7}
+.svc .nm{font-weight:700;font-size:14px}
+.svc .meta{font-size:12px;color:var(--muted)}
+.svc input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand)}
+.svc .qty{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.svc .qty input{width:96px}
+@media(max-width:560px){.svc{grid-template-columns:auto 1fr}.svc .qty{grid-column:2}}
+.seg{display:inline-flex;border:1px solid #cfc9ba;border-radius:9px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;font-weight:700;border:0;background:#fff;padding:8px 12px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--brand);color:#fff}
+/* summary */
+.sum{position:sticky;top:14px}
+.sum .card{padding:16px}
+.total{background:var(--brand);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:12px}
+.total .lbl{font-size:12px;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.total .v{font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.total .s{font-size:13px;opacity:.9}
+table.bd{width:100%;border-collapse:collapse;font-size:13px}
+table.bd td{padding:5px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+table.bd td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px}
+table.bd tr.g td{font-weight:800;border-bottom:1px solid var(--line);padding-top:10px}
+table.bd tr.sub td:first-child{padding-left:12px;color:#4d5852}
+table.bd tr.tot td{font-weight:800;border-bottom:0;padding-top:8px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--muted);font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.mono{font-family:var(--mono);font-size:12.5px}
+/* history */
+table.hist{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:13.5px}
+table.hist th{text-align:left;background:#efeadf;padding:9px 10px;font-size:12px;color:#4d5852}
+table.hist td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:middle}
+table.hist td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.hist select{width:auto;padding:4px 6px;font-size:13px}
+table.hist input{width:72px;padding:4px 6px;font-size:13px}
+.hwrap{overflow-x:auto}
+/* settings */
+.cfg-table{width:100%;border-collapse:collapse;font-size:13px}
+.cfg-table th{text-align:left;font-size:11.5px;color:var(--muted);padding:4px 4px;font-weight:700}
+.cfg-table td{padding:3px 4px}
+.cfg-table input,.cfg-table select{padding:6px 7px;font-size:13px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+.mobilebar{display:none}
+@media(max-width:980px){
+  .mobilebar{display:flex;position:sticky;bottom:0;z-index:20;background:var(--brand);color:#fff;padding:10px 16px;justify-content:space-between;align-items:center;font-weight:800;border-radius:12px 12px 0 0}
+  .sum{position:static}
+}
+.modal{position:fixed;inset:0;background:rgba(20,28,24,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border-radius:14px;max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:18px}
+.modal pre{white-space:pre-wrap;font-family:Manrope,sans-serif;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div>
+      <h1>Orçamento de Topografia</h1>
+      <div class="sub" id="hdrSub">Clessiano Antunes — Responsável técnico</div>
+    </div>
+    <div id="syncNote">Carregando dados…</div>
+  </div>
+  <nav>
+    <button data-tab="novo" class="on">Novo orçamento</button>
+    <button data-tab="hist">Orçamentos salvos</button>
+    <button data-tab="cfg">Configurações</button>
+  </nav>
+</header>
+
+<main>
+<!-- ================= NOVO ORÇAMENTO ================= -->
+<section class="view on" id="v-novo">
+  <div class="grid">
+    <div id="form">
+      <div class="info warn" id="baseWarn" style="display:none">Cadastre a coordenada da sua base (de onde o carro sai) em <b>Configurações → Empresa e base</b> para o sistema estimar a distância.</div>
+
+      <div class="card">
+        <h2><span class="n">1</span>Cliente e imóvel</h2>
+        <p class="hint">Rural ou urbano define o valor mínimo (R$ 3.000 rural, R$ 1.200 urbano).</p>
+        <div class="row">
+          <label>Cliente<input data-k="cliente" placeholder="Nome do cliente"></label>
+          <label>Telefone / contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
+        </div>
+        <div class="row">
+          <label>Imóvel / fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
+          <label>Município / UF<input data-k="municipio" placeholder="Cidade - UF"></label>
+          <label>Tipo de área
+            <select data-k="tipo"><option value="rural">Rural</option><option value="urbano">Urbano</option></select>
+          </label>
+        </div>
+        <div class="row">
+          <label>Localização (GPS)<small>Cole coordenada, link do Google Maps ou graus/min/seg</small>
+            <input data-k="coord" placeholder="-15.7801, -47.9292  ou  15°46'48&quot;S 47°55'45&quot;W"></label>
+        </div>
+        <div id="coordOk" class="hint" style="margin-top:-6px"></div>
+        <div class="row">
+          <label>Área<small>em hectares</small><input data-k="areaHa" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label>Perímetro<small>em km (opcional — senão é estimado)</small><input data-k="perimKm" type="number" min="0" step="0.01" placeholder="auto"></label>
+          <label>Nº de vértices<small>opcional</small><input data-k="vertices" type="number" min="0" step="1" placeholder="0"></label>
+          <label>Dificuldade do terreno
+            <select data-k="dificuldade">
+              <option value="1">Fácil — aberto, plano</option>
+              <option value="1.25">Normal</option>
+              <option value="1.5">Difícil — mata, relevo</option>
+              <option value="1.9">Muito difícil — mata fechada, alagado</option>
+            </select></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">2</span>Serviços</h2>
+        <p class="hint">Marque os serviços. A quantidade já vem da área/perímetro do imóvel, mas pode ser ajustada.</p>
+        <div id="svcList"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">3</span>Deslocamento e logística</h2>
+        <div id="distInfo" class="info"></div>
+        <div class="row">
+          <label>Km em asfalto<small>somente ida</small><input data-k="kmAsf" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Km em estrada de terra<small>somente ida</small><input data-k="kmTerra" type="number" min="0" step="1" placeholder="0"></label>
+          <label>Pedágios<small>ida e volta, R$</small><input data-k="pedagio" type="number" min="0" step="0.01" placeholder="0"></label>
+        </div>
+        <div class="row">
+          <label>Viagens extras<small>assinatura de confrontantes, entrega etc.</small><input data-k="viagensExtras" type="number" min="0" step="1"></label>
+          <label>Ajudantes<input data-k="ajudantes" type="number" min="0" step="1"></label>
+          <label>Dias de campo (ajuste manual)<small>deixe vazio para calcular</small><input data-k="diasManual" type="number" min="0" step="0.5" placeholder="auto"></label>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:12.5px;font-weight:600;color:#3d4842;margin-bottom:6px">Estratégia de campo</div>
+          <div class="seg" id="modoSeg">
+            <button data-m="auto">Automático (mais barato)</button>
+            <button data-m="diario">Ir e voltar todo dia</button>
+            <button data-m="pernoite">Pernoitar na região</button>
+          </div>
+          <div id="modoInfo" class="hint" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">4</span>Materiais, documentação e extras</h2>
+        <div class="row">
+          <label>Marcos a implantar<small>quantidade</small><input data-k="marcos" type="number" min="0" step="1" placeholder="auto"></label>
+          <label>Outras despesas<small>R$ (aluguel, roçada, barco…)</small><input data-k="outras" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label>Descrição das outras despesas<input data-k="outrasDesc" placeholder="opcional"></label>
+        </div>
+        <div class="row">
+          <label>Emitir TRT
+            <select data-k="incluirArt"><option value="sim">Sim — incluir no preço</option><option value="nao">Não</option></select></label>
+          <label>Taxas de terceiros<small>cartório, certidões, INCRA… (R$)</small><input data-k="taxas" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label>Essas taxas
+            <select data-k="taxasModo"><option value="cliente">Pagas pelo cliente (fora do preço)</option><option value="incluso">Incluídas no preço</option></select></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">5</span>Condições da proposta</h2>
+        <div class="row">
+          <label>Entrada (%)<input data-k="entrada" type="number" min="0" max="100" step="5"></label>
+          <label>Parcelas do saldo<input data-k="parcelas" type="number" min="1" step="1"></label>
+          <label>Validade (dias)<input data-k="validade" type="number" min="1" step="1"></label>
+          <label>Desconto (%)<small>sobre o calculado; nunca abaixo do mínimo</small><input data-k="desconto" type="number" min="0" max="50" step="1"></label>
+        </div>
+        <div class="row">
+          <label>Observações para o cliente<textarea data-k="obs" placeholder="Ex.: o cliente deve fornecer matrícula atualizada e contato dos confrontantes."></textarea></label>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sum">
+      <div class="total">
+        <div class="lbl">Preço da proposta</div>
+        <div class="v" id="tFinal">R$ 0</div>
+        <div class="s" id="tSub"></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span>Custo direto</span><b id="kCusto">—</b></div>
+        <div class="kpi"><span>Lucro estimado</span><b id="kLucro">—</b></div>
+        <div class="kpi"><span>Dias de campo</span><b id="kDias">—</b></div>
+        <div class="kpi"><span>Horas de escritório</span><b id="kEscr">—</b></div>
+      </div>
+      <div class="card">
+        <table class="bd" id="breakdown"></table>
+        <div class="actions" style="margin:14px 0 8px">
+          <button class="btn" id="bSave">Salvar orçamento</button>
+          <button class="btn ghost" id="bPdf">Gerar PDF da proposta</button>
+          <button class="btn ghost" id="bTxt">Texto para WhatsApp</button>
+          <button class="btn ghost small" id="bNew">Limpar / novo</button>
+        </div>
+        <div class="hint" id="editing"></div>
+      </div>
+    </aside>
+  </div>
+  <div class="mobilebar"><span>Preço</span><span id="mFinal">R$ 0</span></div>
+</section>
+
+<!-- ================= HISTÓRICO ================= -->
+<section class="view" id="v-hist">
+  <div class="info">Depois de executar um serviço, anote os <b>dias reais de campo</b>. A coluna "Diferença" mostra se o sistema está estimando bem; se errar sempre para o mesmo lado, ajuste a produtividade do serviço em Configurações.</div>
+  <div class="hwrap"><table class="hist" id="histTable"></table></div>
+</section>
+
+<!-- ================= CONFIGURAÇÕES ================= -->
+<section class="view" id="v-cfg">
+  <div class="info">Esses valores valem para todos os orçamentos. Altere e clique em <b>Salvar configurações</b>. Valores que vieram preenchidos são estimativas iniciais: revise com os custos reais de vocês.</div>
+  <div id="cfgForm"></div>
+  <div class="actions" style="margin-bottom:40px">
+    <button class="btn" id="bCfgSave">Salvar configurações</button>
+    <button class="btn danger" id="bCfgReset">Restaurar padrões</button>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="modal"><div class="box">
+  <h3 style="margin-top:0" id="mTitle">Texto da proposta</h3>
+  <pre id="mText"></pre>
+  <div class="actions"><button class="btn" id="mCopy">Copiar</button><button class="btn ghost" id="mClose">Fechar</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO PADRÃO
+   ===================================================================== */
+const DEFAULT_CFG = {
+  empresa:{nome:"Clessiano Antunes — Topografia e Georreferenciamento", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"", baseCoord:""},
+  veiculo:{precoComb:6.29, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
+  equipe:{horaTecnico:90, horasDia:9, diariaAjudante:180, alimentacao:60, hospedagem:150, ajudantesPadrao:1},
+  equipamentos:[
+    {id:"rtk1", nome:"RTK 1 (base)",  valor:45000, vidaAnos:5, diasAno:150, manutAno:1500},
+    {id:"rtk2", nome:"RTK 2 (rover)", valor:45000, vidaAnos:5, diasAno:150, manutAno:1500},
+    {id:"drone",nome:"Drone",         valor:20000, vidaAnos:3, diasAno:60,  manutAno:1500}
+  ],
+  materiais:{custoMarco:45},
+  docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
+  fin:{rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
+  servicos:[
+    {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
+      desc:"Levantamento geodésico dos limites com GNSS RTK, implantação de marcos, peças técnicas (planta, memorial descritivo, planilha ODS) e submissão para certificação no SIGEF/INCRA."},
+    {id:"plani_rural", nome:"Levantamento planialtimétrico rural", ambito:"rural", unidade:"ha", prod:30, diasFixos:0, escrFix:6, escrUnid:0.15, equip:["rtk1","rtk2"], marcos:false,
+      desc:"Levantamento planialtimétrico com GNSS RTK, curvas de nível e planta topográfica."},
+    {id:"plani_urb", nome:"Levantamento planialtimétrico urbano (lote)", ambito:"urbano", unidade:"lote", prod:3, diasFixos:0, escrFix:3, escrUnid:2, equip:["rtk1","rtk2"], marcos:false,
+      desc:"Levantamento planialtimétrico cadastral do lote, com planta e memorial."},
+    {id:"planimetrico", nome:"Levantamento topográfico planimétrico (perímetro e benfeitorias)", ambito:"ambos", unidade:"ha", prod:50, diasFixos:0, escrFix:4, escrUnid:0.08, equip:["rtk1","rtk2"], marcos:false,
+      desc:"Levantamento do perímetro, divisas e benfeitorias com planta e memorial descritivo."},
+    {id:"drone", nome:"Aerofotogrametria com drone (ortomosaico e MDT)", ambito:"ambos", unidade:"ha", prod:150, diasFixos:0.25, escrFix:6, escrUnid:0.05, equip:["drone","rtk1"], marcos:false,
+      desc:"Voo com drone, pontos de controle com RTK, processamento de ortomosaico e modelo digital de terreno."},
+    {id:"reurb_rural", nome:"Regularização fundiária rural (usucapião, retificação)", ambito:"rural", unidade:"imóvel", prod:1, diasFixos:0, escrFix:20, escrUnid:0, equip:["rtk1","rtk2"], marcos:true,
+      desc:"Levantamento e peças técnicas para regularização fundiária rural (planta, memorial, anuências)."},
+    {id:"reurb_urb", nome:"Regularização fundiária urbana (REURB) — por lote", ambito:"urbano", unidade:"lote", prod:8, diasFixos:0.5, escrFix:10, escrUnid:3, equip:["rtk1","rtk2"], marcos:false,
+      desc:"Levantamento cadastral e peças técnicas para REURB (plantas e memoriais por lote)."},
+    {id:"desmemb", nome:"Desmembramento / unificação / retificação de área", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:12, escrUnid:0, equip:["rtk1","rtk2"], marcos:false,
+      desc:"Levantamento, projeto de desmembramento/unificação e memoriais descritivos."},
+    {id:"car", nome:"CAR — Cadastro Ambiental Rural", ambito:"rural", unidade:"imóvel", prod:0, diasFixos:0, escrFix:6, escrUnid:0, equip:[], marcos:false,
+      desc:"Elaboração e envio do Cadastro Ambiental Rural."},
+    {id:"locacao", nome:"Locação de obra / demarcação de pontos", ambito:"ambos", unidade:"pontos", prod:30, diasFixos:0, escrFix:2, escrUnid:0.02, equip:["rtk1"], marcos:false,
+      desc:"Locação e demarcação de pontos em campo conforme projeto."},
+    {id:"mapas", nome:"Mapas e plantas temáticas (escritório)", ambito:"ambos", unidade:"mapa", prod:0, diasFixos:0, escrFix:0, escrUnid:6, equip:[], marcos:false,
+      desc:"Elaboração de mapas e plantas temáticas."}
+  ]
+};
+const UNIDADES = ["ha","km","lote","imóvel","pontos","mapa","vértice"];
+
+function blankQuote(){
+  return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.25",
+    servicos:{}, kmAsf:"", kmTerra:"", pedagio:"", viagensExtras:"", ajudantes:"", diasManual:"", modo:"auto",
+    marcos:"", outras:"", outrasDesc:"", incluirArt:"sim", taxas:"", taxasModo:"cliente",
+    entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:""};
+}
+
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $ = s=>document.querySelector(s);
+const num = v=>{ if(v===""||v==null) return NaN; const n=parseFloat(String(v).replace(",",".")); return isFinite(n)?n:NaN; };
+const nz = v=>{ const n=num(v); return isNaN(n)?0:n; };
+const brl = v=>"R$ "+(Math.round(v*100)/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const brl0 = v=>"R$ "+Math.round(v).toLocaleString("pt-BR");
+const fmt = (v,d=1)=>(Math.round(v*10**d)/10**d).toLocaleString("pt-BR");
+const clone = o=>JSON.parse(JSON.stringify(o));
+const half = x=>Math.ceil(x*2-1e-9)/2;
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2600);}
+function migrate(c){ if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
+function merge(def,obj){ // completa obj com chaves novas do padrão
+  if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
+  if(def && typeof def==="object"){ const out={}; for(const k in def) out[k]= (obj && k in obj)? merge(def[k],obj[k]) : clone(def[k]); if(obj) for(const k in obj) if(!(k in out)) out[k]=obj[k]; return out; }
+  return obj===undefined?def:obj;
+}
+
+/* ---------- coordenadas ---------- */
+function parseCoord(txt){
+  if(!txt) return null; let s=String(txt).trim();
+  let m = s.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/) || s.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || s.match(/[?&](?:q|query|ll|destination)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i);
+  if(m) return chk(+m[1],+m[2]);
+  // graus, minutos, segundos
+  const dms=/(\d{1,3})\s*[°º]\s*(\d{1,2})?\s*['’′]?\s*(\d{1,2}(?:[.,]\d+)?)?\s*(?:["”″]|'')?\s*([NSLOEW])/gi;
+  const parts=[...s.matchAll(dms)];
+  if(parts.length>=2){
+    const conv=p=>{let v=+p[1]+(+(p[2]||0))/60+(+(String(p[3]||0).replace(",",".")))/3600; const h=p[4].toUpperCase(); if(h==="S"||h==="O"||h==="W") v=-v; return {v,h};};
+    const a=conv(parts[0]), b=conv(parts[1]);
+    const lat=("NS".includes(a.h))?a.v:b.v, lng=("NS".includes(a.h))?b.v:a.v;
+    return chk(lat,lng);
+  }
+  m = s.match(/(-?\d{1,3}[.,]\d+)\s*[,;\s]\s*(-?\d{1,3}[.,]\d+)/);
+  if(m) return chk(+m[1].replace(",","."), +m[2].replace(",","."));
+  return null;
+  function chk(lat,lng){ return (Math.abs(lat)<=90 && Math.abs(lng)<=180)?{lat,lng}:null; }
+}
+function haversineKm(a,b){const R=6371,r=x=>x*Math.PI/180;const dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng);const h=Math.sin(dLat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+const llStr = p=>p.lat.toFixed(6)+","+p.lng.toFixed(6);
+
+/* =====================================================================
+   CÁLCULO
+   ===================================================================== */
+function equipCustoDia(e){ const v=nz(e.valor), vida=Math.max(nz(e.vidaAnos),0.1), dias=Math.max(nz(e.diasAno),1); return (v/vida + nz(e.manutAno))/dias; }
+function artValor(c, preco){
+  const f=(c.docs.faixas||[]).filter(x=>x && !isNaN(num(x.valor)));
+  for(const x of f){ const ate=nz(x.ate); if(ate>0 && preco<=ate) return nz(x.valor); }
+  const ult=f.find(x=>!(nz(x.ate)>0)) || f[f.length-1]; return ult?nz(ult.valor):0;
+}
+function qtdPadrao(def,q){
+  const area=nz(q.areaHa);
+  if(def.unidade==="ha") return area;
+  if(def.unidade==="km") return perimetroKm(q).v;
+  if(def.unidade==="vértice") return nz(q.vertices);
+  return 1;
+}
+function perimetroKm(q){
+  const p=num(q.perimKm); if(!isNaN(p)&&p>0) return {v:p, est:false};
+  const area=nz(q.areaHa); if(area<=0) return {v:0, est:true};
+  // quadrado equivalente com 25% a mais por irregularidade das divisas
+  return {v: Math.round(4*Math.sqrt(area*10000)*1.25/1000*100)/100, est:true};
+}
+
+function compute(q,c){
+  const r={linhas:[], avisos:[]};
+  const dif=nz(q.dificuldade)||1;
+  // ---- serviços
+  let diasTrab=0, horasEscr=0, rural=q.tipo==="rural", usaMarcos=false; const equipIds=new Set(); const sel=[];
+  for(const def of c.servicos){
+    const s=q.servicos[def.id]; if(!s||!s.on) continue;
+    const qtd = isNaN(num(s.qtd)) ? qtdPadrao(def,q) : nz(s.qtd);
+    const dCampo = (nz(def.prod)>0 ? qtd/nz(def.prod) : 0) + nz(def.diasFixos);
+    const hEscr = nz(def.escrFix) + qtd*nz(def.escrUnid);
+    diasTrab += dCampo; horasEscr += hEscr;
+    (def.equip||[]).forEach(e=>equipIds.add(e));
+    if(def.ambito==="rural") rural=true;
+    if(def.marcos) usaMarcos=true;
+    sel.push({def,qtd,dCampo,hEscr});
+  }
+  r.sel=sel; r.rural=rural;
+  diasTrab*=dif;
+  const diasMan=num(q.diasManual); const manual=!isNaN(diasMan)&&diasMan>0; if(manual) diasTrab=diasMan;
+  const horasDia=Math.max(nz(c.equipe.horasDia),4);
+  const horasTrab=diasTrab*horasDia;
+  // ---- distância
+  const base=parseCoord(c.empresa.baseCoord), dest=parseCoord(q.coord);
+  let reta=null, estRodov=null; if(base&&dest){ reta=haversineKm(base,dest); estRodov=reta*nz(c.veiculo.fatorRota||1.3); }
+  const asfIn=num(q.kmAsf), terra=nz(q.kmTerra);
+  const asf = !isNaN(asfIn) ? asfIn : (estRodov!=null ? Math.max(estRodov-terra,0) : 0);
+  const kmEstimado = isNaN(asfIn) && estRodov!=null;
+  r.dist={base,dest,reta,estRodov,asf,terra,kmEstimado};
+  const v=c.veiculo;
+  const tIda = asf/Math.max(nz(v.velAsf),10) + terra/Math.max(nz(v.velTerra),5);
+  r.tIda=tIda;
+  const ajud = isNaN(num(q.ajudantes)) ? nz(c.equipe.ajudantesPadrao) : nz(q.ajudantes);
+  const pessoas=1+ajud;
+  const extras=nz(q.viagensExtras);
+  // custo de uma viagem de ida e volta (veículo)
+  const mk=nz(v.manutKm)+nz(v.deprecKm);
+  const combRT = 2*(asf*nz(v.precoComb)/Math.max(nz(v.consumoAsf),1) + terra*nz(v.precoComb)/Math.max(nz(v.consumoTerra),1));
+  const desgRT = 2*(asf*mk + terra*mk*nz(v.fatorDesgasteTerra||1));
+  const equipDia=[...equipIds].map(id=>c.equipamentos.find(e=>e.id===id)).filter(Boolean).map(e=>({nome:e.nome, dia:equipCustoDia(e)}));
+  const equipDiaTot=equipDia.reduce((a,b)=>a+b.dia,0);
+
+  function cenario(modo){
+    let dias, noites=0, viagens;
+    if(horasTrab<=0){ dias=0; viagens=extras; }
+    else if(modo==="diario"){
+      const ef=Math.max(horasDia-2*tIda, 2);
+      dias = manual? diasTrab : half(horasTrab/ef);
+      viagens=Math.ceil(dias)+extras;
+    } else {
+      dias = manual? diasTrab : half((horasTrab+2*tIda)/horasDia);
+      noites=Math.max(0,Math.ceil(dias)-1); viagens=1+extras;
+    }
+    const dc=Math.ceil(dias);
+    const o={modo,dias,dc,noites,viagens};
+    o.comb=combRT*viagens; o.desg=desgRT*viagens; o.ped=nz(q.pedagio)*viagens;
+    o.tecCampo = (modo==="diario" ? dias*horasDia : dias*horasDia) * nz(c.equipe.horaTecnico);
+    o.tecExtras = extras*2*tIda*nz(c.equipe.horaTecnico);
+    o.ajud = ajud*dc*nz(c.equipe.diariaAjudante);
+    o.alim = pessoas*dc*nz(c.equipe.alimentacao);
+    o.hosp = modo==="pernoite" ? pessoas*noites*nz(c.equipe.hospedagem) : 0;
+    o.equip = equipDiaTot*dc;
+    o.total=o.comb+o.desg+o.ped+o.tecCampo+o.tecExtras+o.ajud+o.alim+o.hosp+o.equip;
+    return o;
+  }
+  const cd=cenario("diario"), cp=cenario("pernoite");
+  let escolha = q.modo==="diario"?cd : q.modo==="pernoite"?cp : (cp.total<cd.total?cp:cd);
+  r.cen={diario:cd, pernoite:cp, escolhido:escolha};
+  // ---- demais custos
+  const escritorio = horasEscr*nz(c.equipe.horaTecnico);
+  const marcosQ = isNaN(num(q.marcos)) ? (usaMarcos? nz(q.vertices):0) : nz(q.marcos);
+  const marcos = marcosQ*nz(c.materiais.custoMarco);
+  const outras = nz(q.outras);
+  const taxasIncl = q.taxasModo==="incluso" ? nz(q.taxas) : 0;
+  const f=c.fin;
+  const divisor = 1 - nz(f.impostos)/100 - nz(f.margem)/100;
+  const k = (1+nz(f.rateioFixo)/100)/Math.max(divisor,0.05);
+  const semDocs = escolha.total + escritorio + marcos + outras + taxasIncl;
+  // ART depende do preço → iteração
+  let art = q.incluirArt==="sim" ? nz((c.docs.faixas[0]||{}).valor) : 0, precoCalc=0;
+  for(let i=0;i<4;i++){ precoCalc=(semDocs+art)*k; if(q.incluirArt==="sim") art=artValor(c,precoCalc); }
+  precoCalc=(semDocs+art)*k;
+  const custoDireto=semDocs+art;
+  const descPct=Math.min(Math.max(nz(q.desconto),0),50);
+  const precoDesc=precoCalc*(1-descPct/100);
+  const minimo = rural ? nz(f.minimoRural) : nz(f.minimoUrbano);
+  const arred=Math.max(nz(f.arredondar),1);
+  let final=Math.ceil(Math.max(precoDesc,minimo)/arred)*arred;
+  if(q.incluirArt==="sim"){ const a2=artValor(c,final); if(a2!==art){ art=a2; } }
+  const custoTotal=custoDireto+custoDireto*nz(f.rateioFixo)/100; // direto + rateio
+  const impostos=final*nz(f.impostos)/100;
+  const lucro=final-custoTotal-impostos;
+  Object.assign(r,{diasTrab,horasEscr,escritorio,marcosQ,marcos,outras,taxasIncl,art,custoDireto,precoCalc,precoDesc,descPct,minimo,final,
+    minimoAplicado: precoDesc<minimo, impostos, rateio:custoDireto*nz(f.rateioFixo)/100, lucro, ajud, pessoas, equipDia, manual});
+  if(!sel.length) r.avisos.push("Nenhum serviço selecionado.");
+  if(sel.some(s=>s.def.unidade==="km") && perimetroKm(q).est && nz(q.areaHa)>0) r.avisos.push("Perímetro estimado a partir da área. Informe o perímetro real se tiver (matrícula, CAR, KML).");
+  if(horasTrab>0 && !base) r.avisos.push("Coordenada da base não cadastrada — informe os km manualmente.");
+  if(horasTrab>0 && base && !dest && isNaN(asfIn)) r.avisos.push("Informe a localização do imóvel ou os km da rota.");
+  return r;
+}
+
+/* =====================================================================
+   ESTADO E PERSISTÊNCIA
+   ===================================================================== */
+let cfg = clone(DEFAULT_CFG);
+let q = blankQuote();
+let quotes = [];   // {id, ...}
+let db=null, dlCap=null, usingDb=false;
+const LS_CFG="topo_cfg_v1", LS_Q="topo_quotes_v1", LS_DRAFT="topo_draft_v1";
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+async function initStorage(){
+  const lc=lsGet(LS_CFG); if(lc) cfg=migrate(merge(DEFAULT_CFG,lc));
+  const lq=lsGet(LS_Q); if(Array.isArray(lq)) quotes=lq;
+  const d=lsGet(LS_DRAFT); if(d) q=merge(blankQuote(),d);
+  renderAll();
+  try{
+    if(window.claude && claude.use){
+      claude.use("downloads").then(x=>{dlCap=x;}).catch(()=>{});
+      db = await claude.use("db");
+    }
+  }catch(e){db=null;}
+  if(!db){ $("#syncNote").textContent="Dados salvos neste aparelho"; return; }
+  usingDb=true; $("#syncNote").textContent="Sincronizando…";
+  const timer=setTimeout(()=>{$("#syncNote").textContent="Sem conexão com o banco — dados podem estar desatualizados";},10000);
+  db.doc("config/main").onSnapshot(snap=>{
+    clearTimeout(timer);
+    if(snap.exists){ const d=snap.data(); if(d && d.cfg){ cfg=migrate(merge(DEFAULT_CFG, d.cfg)); renderCfg(); renderSvcList(); recalc(); } }
+    $("#syncNote").textContent="Dados sincronizados na nuvem";
+  }, e=>{clearTimeout(timer); $("#syncNote").textContent="Banco indisponível — salvando neste navegador"; usingDb=false;});
+  db.collection("orcamentos").orderBy("criadoEm","desc").limit(500).onSnapshot(snap=>{
+    quotes=snap.docs.map(d=>Object.assign({id:d.id}, d.data())); renderHist();
+  }, e=>{});
+}
+async function saveCfg(){
+  lsSet(LS_CFG,cfg);
+  if(usingDb){ try{ await db.doc("config/main").set({cfg:clone(cfg), atualizadoEm:new Date().toISOString()}); toast("Configurações salvas"); }catch(e){ toast("Não foi possível salvar na nuvem ("+(e.code||"erro")+")"); } }
+  else toast("Configurações salvas neste navegador");
+}
+function quoteRecord(){
+  const r=compute(q,cfg);
+  return {criadoEm: q.criadoEm || new Date().toISOString(), atualizadoEm:new Date().toISOString(),
+    numero: q.numero || gerarNumero(), cliente:q.cliente, imovel:q.imovel, municipio:q.municipio, tipo:q.tipo,
+    servicos: r.sel.map(s=>s.def.nome).join("; "), valor:r.final, custoDireto:r.custoDireto, diasEstimados:r.cen.escolhido.dias,
+    status: q.status||"Rascunho", diasReais: q.diasReais||"", q: clone(q)};
+}
+function gerarNumero(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+async function saveQuote(){
+  if(!q.cliente && !q.imovel){ toast("Informe ao menos o cliente ou o imóvel"); return; }
+  const rec=quoteRecord(); q.numero=rec.numero; q.criadoEm=rec.criadoEm; rec.q=clone(q);
+  if(usingDb){
+    try{
+      const ref = q.id ? db.collection("orcamentos").doc(q.id) : db.collection("orcamentos").doc();
+      const keep = quotes.find(x=>x.id===q.id); if(keep){ rec.status=keep.status; rec.diasReais=keep.diasReais; }
+      await ref.set(rec); q.id=ref.id; toast("Orçamento "+rec.numero+" salvo");
+    }catch(e){ toast(e.code==="quota_exceeded"?"Limite de orçamentos atingido — exclua antigos":"Erro ao salvar ("+(e.code||"erro")+")"); }
+  } else {
+    if(!q.id) q.id="l"+Date.now(); rec.id=q.id;
+    const i=quotes.findIndex(x=>x.id===q.id); if(i>=0){ rec.status=quotes[i].status; rec.diasReais=quotes[i].diasReais; quotes[i]=rec; } else quotes.unshift(rec);
+    lsSet(LS_Q,quotes); renderHist(); toast("Orçamento "+rec.numero+" salvo neste navegador");
+  }
+  lsSet(LS_DRAFT,q); renderEditing();
+}
+async function updateQuoteField(id, patch){
+  if(usingDb){ try{ await db.collection("orcamentos").doc(id).update(patch); }catch(e){ toast("Erro ao atualizar"); } }
+  else { const x=quotes.find(x=>x.id===id); if(x){ Object.assign(x,patch); lsSet(LS_Q,quotes); renderHist(); } }
+}
+async function deleteQuote(id){
+  if(usingDb){ try{ await db.collection("orcamentos").doc(id).delete(); toast("Excluído"); }catch(e){ toast("Erro ao excluir"); } }
+  else { quotes=quotes.filter(x=>x.id!==id); lsSet(LS_Q,quotes); renderHist(); toast("Excluído"); }
+  if(q.id===id){ q.id=null; renderEditing(); }
+}
+
+/* =====================================================================
+   RENDER — FORMULÁRIO
+   ===================================================================== */
+function bindForm(){
+  document.querySelectorAll("#form [data-k]").forEach(el=>{
+    const k=el.dataset.k;
+    el.addEventListener("input",()=>{ q[k]=el.value; onChange(); });
+    el.addEventListener("change",()=>{ q[k]=el.value; onChange(); });
+  });
+  document.querySelectorAll("#modoSeg button").forEach(b=>b.addEventListener("click",()=>{ q.modo=b.dataset.m; onChange(); }));
+}
+function fillForm(){
+  document.querySelectorAll("#form [data-k]").forEach(el=>{ const v=q[el.dataset.k]; el.value = v==null?"":v; });
+}
+let draftT;
+function onChange(){ recalc(); clearTimeout(draftT); draftT=setTimeout(()=>lsSet(LS_DRAFT,q),400); }
+
+function renderSvcList(){
+  const box=$("#svcList"); box.innerHTML="";
+  for(const def of cfg.servicos){
+    const s=q.servicos[def.id]||{on:false,qtd:""};
+    const d=document.createElement("div"); d.className="svc"+(s.on?" on":"");
+    const amb = def.ambito==="ambos"?"rural e urbano":def.ambito;
+    d.innerHTML=`<input type="checkbox" ${s.on?"checked":""} aria-label="${esc(def.nome)}">
+      <div><div class="nm">${esc(def.nome)}</div><div class="meta">${esc(amb)} · produtividade ${def.prod>0?fmt(def.prod)+" "+esc(def.unidade)+"/dia":"—"}${def.diasFixos>0?" + "+fmt(def.diasFixos)+" dia fixo":""}</div></div>
+      <div class="qty"><input type="number" min="0" step="0.01" placeholder="${esc(fmt(qtdPadrao(def,q),2))}" value="${esc(s.qtd)}"> ${esc(def.unidade)}</div>`;
+    const cb=d.querySelector("input[type=checkbox]"), qi=d.querySelector(".qty input");
+    cb.addEventListener("change",()=>{ q.servicos[def.id]=Object.assign({qtd:""},q.servicos[def.id],{on:cb.checked}); d.classList.toggle("on",cb.checked); onChange(); });
+    qi.addEventListener("input",()=>{ q.servicos[def.id]=Object.assign({on:true},q.servicos[def.id],{qtd:qi.value}); if(!cb.checked){cb.checked=true;d.classList.add("on");} q.servicos[def.id].on=true; onChange(); });
+    d.dataset.id=def.id;
+    box.appendChild(d);
+  }
+}
+function refreshSvcPlaceholders(){
+  document.querySelectorAll("#svcList .svc").forEach(d=>{ const def=cfg.servicos.find(x=>x.id===d.dataset.id); if(def) d.querySelector(".qty input").placeholder=fmt(qtdPadrao(def,q),2); });
+}
+
+function recalc(){
+  const r=compute(q,cfg);
+  refreshSvcPlaceholders();
+  // coordenada
+  const dest=r.dist.dest;
+  $("#coordOk").innerHTML = q.coord ? (dest? `✓ Lido: <span class="mono">${dest.lat.toFixed(6)}, ${dest.lng.toFixed(6)}</span>` : `<span style="color:var(--danger)">Não consegui ler essa coordenada.</span>`) : "";
+  $("#baseWarn").style.display = r.dist.base? "none":"block";
+  // distância
+  let di="";
+  if(r.dist.base && dest){
+    const url=`https://www.google.com/maps/dir/?api=1&origin=${llStr(r.dist.base)}&destination=${llStr(dest)}&travelmode=driving`;
+    di=`Distância em linha reta: <b>${fmt(r.dist.reta)} km</b> · estimativa por estrada: <b>${fmt(r.dist.estRodov,0)} km</b> (só ida).<br>
+      ${r.dist.kmEstimado?'<span class="pill warn">usando estimativa</span> ':''}Para mais precisão, <a href="${url}" target="_blank" rel="noopener">abra a rota no Google Maps</a> e digite os km reais abaixo, separando o trecho de terra.`;
+  } else if(!r.dist.base){ di="Sem coordenada da base: digite os km de ida abaixo."; }
+  else { di="Cole a localização do imóvel no item 1 para estimar a distância, ou digite os km abaixo."; }
+  di+=`<br>Tempo estimado de viagem: <b>${fmt(r.tIda)} h</b> por trecho.`;
+  $("#distInfo").innerHTML=di;
+  $("#form [data-k=kmAsf]").placeholder = r.dist.estRodov!=null? fmt(Math.max(r.dist.estRodov-r.dist.terra,0),0)+" (estimado)":"km";
+  $("#form [data-k=marcos]").placeholder = String(r.marcosQ||0)+" (auto)";
+  $("#form [data-k=ajudantes]").placeholder = String(cfg.equipe.ajudantesPadrao);
+  $("#form [data-k=viagensExtras]").placeholder = "0";
+  // modo
+  document.querySelectorAll("#modoSeg button").forEach(b=>b.classList.toggle("on", b.dataset.m===(q.modo||"auto")));
+  const cd=r.cen.diario, cp=r.cen.pernoite, ce=r.cen.escolhido;
+  $("#modoInfo").innerHTML = (cd.dias>0||cp.dias>0) ?
+    `Ir e voltar: ${fmt(cd.dias)} dias, ${cd.viagens} viagens, custo de campo ${brl0(cd.total)} &nbsp;·&nbsp; Pernoitar: ${fmt(cp.dias)} dias, ${cp.noites} noites, ${brl0(cp.total)}<br>Usando: <b>${ce.modo==="diario"?"ir e voltar todo dia":"pernoitar na região"}</b>${r.manual?" (dias ajustados manualmente)":""}.`
+    : "Sem trabalho de campo nos serviços selecionados.";
+  // resumo
+  $("#tFinal").textContent=brl0(r.final); $("#mFinal").textContent=brl0(r.final);
+  let sub = r.minimoAplicado ? `Valor mínimo ${r.rural?"rural":"urbano"} aplicado (cálculo deu ${brl0(r.precoDesc)})` : `Calculado ${brl0(r.precoDesc)}${r.descPct?` com ${fmt(r.descPct,0)}% de desconto`:""}, arredondado`;
+  if(q.taxasModo==="cliente" && nz(q.taxas)>0) sub+=` · + taxas de terceiros ${brl0(nz(q.taxas))} pagas pelo cliente`;
+  $("#tSub").textContent=sub;
+  $("#kCusto").textContent=brl0(r.custoDireto);
+  $("#kLucro").textContent=brl0(r.lucro); $("#kLucro").style.color = r.lucro<0?"var(--danger)":"";
+  $("#kDias").textContent=fmt(ce.dias); $("#kEscr").textContent=fmt(r.horasEscr,0)+" h";
+  const L=[];
+  const g=(t,v)=>L.push(`<tr class="g"><td>${t}</td><td>${brl(v)}</td></tr>`);
+  const s=(t,v)=>{ if(Math.abs(v)>0.004) L.push(`<tr class="sub"><td>${t}</td><td>${brl(v)}</td></tr>`); };
+  const km1=r.dist.asf+r.dist.terra;
+  g("Deslocamento", ce.comb+ce.desg+ce.ped+ce.tecExtras);
+  s(`Combustível (${ce.viagens}× ${fmt(km1*2,0)} km)`, ce.comb);
+  s("Desgaste e depreciação do carro", ce.desg);
+  s("Pedágios", ce.ped);
+  s("Horas de viagem extras", ce.tecExtras);
+  g("Equipe de campo", ce.tecCampo+ce.ajud+ce.alim+ce.hosp);
+  s(`Técnico (${fmt(ce.dias)} dias)`, ce.tecCampo);
+  s(`Ajudante${r.ajud!==1?"s":""} (${r.ajud}× ${ce.dc} diárias)`, ce.ajud);
+  s(`Alimentação (${r.pessoas} pessoas)`, ce.alim);
+  s(`Hospedagem (${ce.noites} noites)`, ce.hosp);
+  g("Equipamentos", ce.equip);
+  r.equipDia.forEach(e=>s(`${esc(e.nome)} (${ce.dc}× ${brl0(e.dia)}/dia)`, e.dia*ce.dc));
+  g(`Escritório (${fmt(r.horasEscr,0)} h)`, r.escritorio);
+  if(r.marcos>0) g(`Marcos (${r.marcosQ} un.)`, r.marcos);
+  g("Documentação", r.art+r.taxasIncl);
+  s(esc(cfg.docs.nomeDoc), r.art);
+  s("Taxas de terceiros (incluídas)", r.taxasIncl);
+  if(r.outras>0) g("Outras despesas"+(q.outrasDesc?` — ${esc(q.outrasDesc)}`:""), r.outras);
+  L.push(`<tr class="tot"><td>Custo direto</td><td>${brl(r.custoDireto)}</td></tr>`);
+  L.push(`<tr class="sub"><td>Rateio de custos fixos (${fmt(cfg.fin.rateioFixo,0)}%)</td><td>${brl(r.rateio)}</td></tr>`);
+  L.push(`<tr class="sub"><td>Impostos (${fmt(cfg.fin.impostos,1)}% do preço)</td><td>${brl(r.impostos)}</td></tr>`);
+  L.push(`<tr class="sub"><td>Lucro (meta ${fmt(cfg.fin.margem,0)}%)</td><td>${brl(r.lucro)}</td></tr>`);
+  L.push(`<tr class="tot"><td>Preço final</td><td>${brl(r.final)}</td></tr>`);
+  if(r.avisos.length) L.push(`<tr><td colspan="2" style="border:0;padding-top:10px">${r.avisos.map(a=>`<div class="info warn" style="margin:0 0 6px">${esc(a)}</div>`).join("")}</td></tr>`);
+  $("#breakdown").innerHTML=L.join("");
+  window.__last=r;
+}
+function renderEditing(){
+  $("#editing").textContent = q.id ? `Editando orçamento nº ${q.numero||""} — "Salvar" atualiza o mesmo registro.` : "Orçamento novo, ainda não salvo.";
+}
+
+/* =====================================================================
+   RENDER — HISTÓRICO
+   ===================================================================== */
+const STATUS=["Rascunho","Enviado","Aprovado","Perdido","Executado"];
+function renderHist(){
+  const t=$("#histTable");
+  if(!quotes.length){ t.innerHTML=`<tr><td style="padding:24px;color:var(--muted)">Nenhum orçamento salvo ainda.</td></tr>`; return; }
+  const ap=quotes.filter(x=>x.status==="Aprovado"||x.status==="Executado"), env=quotes.filter(x=>x.status!=="Rascunho");
+  const taxa = env.length? Math.round(ap.length/env.length*100):0;
+  let h=`<tr><th>Nº / data</th><th>Cliente / imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias est.</th><th>Dias reais</th><th>Diferença</th><th></th></tr>`;
+  for(const x of quotes){
+    const dr=num(x.diasReais), de=nz(x.diasEstimados);
+    const dif = !isNaN(dr)&&de>0 ? Math.round((dr-de)/de*100) : null;
+    h+=`<tr data-id="${esc(x.id)}">
+      <td><span class="mono">${esc(x.numero||"")}</span><br><small style="color:var(--muted)">${esc((x.criadoEm||"").slice(0,10).split("-").reverse().join("/"))}</small></td>
+      <td><b>${esc(x.cliente||"—")}</b><br><small>${esc(x.imovel||"")}${x.municipio?" · "+esc(x.municipio):""}</small></td>
+      <td style="max-width:280px"><small>${esc(x.servicos||"")}</small></td>
+      <td class="num"><b>${brl0(nz(x.valor))}</b></td>
+      <td><select class="hs">${STATUS.map(s=>`<option ${s===(x.status||"Rascunho")?"selected":""}>${s}</option>`).join("")}</select></td>
+      <td class="num">${fmt(de)}</td>
+      <td><input class="hd" type="number" min="0" step="0.5" value="${esc(x.diasReais||"")}"></td>
+      <td class="num">${dif==null?"—":`<span class="pill ${Math.abs(dif)>20?"warn":""}">${dif>0?"+":""}${dif}%</span>`}</td>
+      <td style="white-space:nowrap"><button class="btn ghost small ho">Abrir</button> <button class="btn danger small hx">Excluir</button></td></tr>`;
+  }
+  h+=`<tr><td colspan="9" style="color:var(--muted);font-size:12.5px">${quotes.length} orçamentos · ${env.length} enviados · taxa de aprovação ${taxa}%</td></tr>`;
+  t.innerHTML=h;
+  t.querySelectorAll("tr[data-id]").forEach(tr=>{
+    const id=tr.dataset.id;
+    tr.querySelector(".hs").addEventListener("change",e=>updateQuoteField(id,{status:e.target.value}));
+    tr.querySelector(".hd").addEventListener("change",e=>updateQuoteField(id,{diasReais:e.target.value}));
+    tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); q.id=id; q.numero=x.numero; q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); });
+    const bx=tr.querySelector(".hx");
+    bx.addEventListener("click",()=>{ if(bx.dataset.c){ deleteQuote(id); } else { bx.dataset.c="1"; bx.textContent="Confirmar?"; setTimeout(()=>{bx.dataset.c="";bx.textContent="Excluir";},3000);} });
+  });
+}
+
+/* =====================================================================
+   RENDER — CONFIGURAÇÕES
+   ===================================================================== */
+function field(path,label,hint,type="number",step="0.01"){
+  const v=getPath(cfg,path);
+  return `<label>${label}${hint?`<small>${hint}</small>`:""}<input data-c="${path}" type="${type}" step="${step}" value="${esc(v)}"></label>`;
+}
+function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o);}
+function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++)a=a[ks[i]];a[ks.at(-1)]=v;}
+function renderCfg(){
+  const c=cfg;
+  let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A coordenada da base é o ponto de saída do carro para calcular as rotas.</p>
+   <div class="row">${field("empresa.nome","Nome na proposta","","text")}${field("empresa.responsavel","Responsável técnico","","text")}${field("empresa.registro","Registro profissional","CREA/CFT nº","text")}</div>
+   <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
+  h+=`<div class="card"><h2>Veículo</h2><div class="row">
+   ${field("veiculo.precoComb","Combustível","R$/litro")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
+   ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
+   ${field("veiculo.fatorRota","Fator linha reta → estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade média asfalto","km/h")}${field("veiculo.velTerra","Velocidade média terra","km/h")}</div></div>`;
+  h+=`<div class="card"><h2>Equipe</h2><p class="hint">O valor da sua hora entra como custo (seu pró-labore). O lucro vem por cima, pela margem.</p><div class="row">
+   ${field("equipe.horaTecnico","Hora do técnico responsável","R$/h")}${field("equipe.horasDia","Horas por dia de campo","h")}${field("equipe.diariaAjudante","Diária do ajudante","R$ com encargos")}
+   ${field("equipe.alimentacao","Alimentação","R$/pessoa/dia")}${field("equipe.hospedagem","Hospedagem","R$/pessoa/noite")}${field("equipe.ajudantesPadrao","Ajudantes por padrão","","number","1")}</div></div>`;
+  h+=`<div class="card"><h2>Equipamentos</h2><p class="hint">Custo por dia de uso = (valor ÷ vida útil + manutenção anual) ÷ dias de uso por ano.</p><div class="hwrap"><table class="cfg-table"><tr><th>Equipamento</th><th>Valor (R$)</th><th>Vida útil (anos)</th><th>Dias de uso/ano</th><th>Manutenção/ano (R$)</th><th>Custo/dia</th></tr>`;
+  c.equipamentos.forEach((e,i)=>{ h+=`<tr><td><input data-c="equipamentos.${i}.nome" type="text" value="${esc(e.nome)}"></td><td><input data-c="equipamentos.${i}.valor" type="number" value="${esc(e.valor)}"></td><td><input data-c="equipamentos.${i}.vidaAnos" type="number" step="0.5" value="${esc(e.vidaAnos)}"></td><td><input data-c="equipamentos.${i}.diasAno" type="number" value="${esc(e.diasAno)}"></td><td><input data-c="equipamentos.${i}.manutAno" type="number" value="${esc(e.manutAno)}"></td><td class="mono">${brl(equipCustoDia(e))}</td></tr>`; });
+  h+=`</table></div><br></div>`;
+  h+=`<div class="card"><h2>Materiais e documentação</h2><p class="hint">TRT 2026 (CFT, Resolução 282/2025): valor único de R$ 68,17. Se o conselho criar faixas por valor de contrato, adicione linhas abaixo.</p><div class="row">
+   ${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}${field("docs.nomeDoc","Documento de responsabilidade","","text")}</div>
+   <table class="cfg-table" style="max-width:520px;margin-bottom:14px"><tr><th>Contrato até (R$) — 0 = acima disso</th><th>Valor da taxa (R$)</th></tr>`;
+  c.docs.faixas.forEach((f,i)=>{ h+=`<tr><td><input data-c="docs.faixas.${i}.ate" type="number" value="${esc(f.ate)}"></td><td><input data-c="docs.faixas.${i}.valor" type="number" step="0.01" value="${esc(f.valor)}"></td></tr>`; });
+  h+=`</table></div>`;
+  h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
+   ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
+   ${field("fin.minimoRural","Mínimo rural","R$")}${field("fin.minimoUrbano","Mínimo urbano","R$")}${field("fin.arredondar","Arredondar para múltiplos de","R$")}</div></div>`;
+  h+=`<div class="card"><h2>Catálogo de serviços</h2><p class="hint">Produtividade = quanto rende por dia de campo em terreno fácil (a dificuldade multiplica). Use 0 para serviço sem campo ou com dias fixos.</p><div class="hwrap"><table class="cfg-table"><tr><th>Serviço</th><th>Âmbito</th><th>Unidade</th><th>Produção/dia</th><th>Dias fixos</th><th>Escritório fixo (h)</th><th>Escritório por unidade (h)</th><th>RTK1</th><th>RTK2</th><th>Drone</th><th>Marcos</th><th></th></tr>`;
+  c.servicos.forEach((s,i)=>{
+    const ck=(id)=>`<input type="checkbox" data-eq="${i}" data-id="${id}" ${s.equip.includes(id)?"checked":""} style="width:18px;height:18px">`;
+    h+=`<tr><td style="min-width:240px"><input data-c="servicos.${i}.nome" type="text" value="${esc(s.nome)}"></td>
+    <td><select data-c="servicos.${i}.ambito">${["rural","urbano","ambos"].map(a=>`<option ${a===s.ambito?"selected":""}>${a}</option>`).join("")}</select></td>
+    <td><select data-c="servicos.${i}.unidade">${UNIDADES.map(a=>`<option ${a===s.unidade?"selected":""}>${a}</option>`).join("")}</select></td>
+    <td><input data-c="servicos.${i}.prod" type="number" step="0.1" value="${esc(s.prod)}" style="width:80px"></td>
+    <td><input data-c="servicos.${i}.diasFixos" type="number" step="0.25" value="${esc(s.diasFixos)}" style="width:70px"></td>
+    <td><input data-c="servicos.${i}.escrFix" type="number" step="0.5" value="${esc(s.escrFix)}" style="width:70px"></td>
+    <td><input data-c="servicos.${i}.escrUnid" type="number" step="0.01" value="${esc(s.escrUnid)}" style="width:70px"></td>
+    <td>${ck("rtk1")}</td><td>${ck("rtk2")}</td><td>${ck("drone")}</td>
+    <td><input type="checkbox" data-mk="${i}" ${s.marcos?"checked":""} style="width:18px;height:18px"></td>
+    <td><button class="btn danger small" data-del="${i}">×</button></td></tr>
+    <tr><td colspan="12" style="padding-bottom:10px"><input data-c="servicos.${i}.desc" type="text" value="${esc(s.desc)}" placeholder="Descrição que aparece na proposta" style="font-size:12.5px;color:#4d5852"></td></tr>`;
+  });
+  h+=`</table></div><div class="actions" style="margin:10px 0 14px"><button class="btn ghost small" id="bAddSvc">+ Adicionar serviço</button></div></div>`;
+  $("#cfgForm").innerHTML=h;
+  $("#cfgForm").querySelectorAll("[data-c]").forEach(el=>el.addEventListener("change",()=>{
+    const p=el.dataset.c; const cur=getPath(cfg,p);
+    setPath(cfg,p, el.type==="number" ? nz(el.value) : el.value);
+    afterCfgEdit(p.startsWith("equipamentos"));
+  }));
+  $("#cfgForm").querySelectorAll("[data-eq]").forEach(el=>el.addEventListener("change",()=>{
+    const s=cfg.servicos[+el.dataset.eq]; const id=el.dataset.id; s.equip=s.equip.filter(x=>x!==id); if(el.checked) s.equip.push(id); afterCfgEdit(false);
+  }));
+  $("#cfgForm").querySelectorAll("[data-mk]").forEach(el=>el.addEventListener("change",()=>{ cfg.servicos[+el.dataset.mk].marcos=el.checked; afterCfgEdit(false); }));
+  $("#cfgForm").querySelectorAll("[data-del]").forEach(el=>el.addEventListener("click",()=>{ cfg.servicos.splice(+el.dataset.del,1); afterCfgEdit(true); }));
+  $("#bAddSvc").addEventListener("click",()=>{ cfg.servicos.push({id:"s"+Date.now(), nome:"Novo serviço", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:4, escrUnid:0, equip:["rtk1"], marcos:false, desc:""}); afterCfgEdit(true); });
+}
+function afterCfgEdit(rerender){
+  $("#hdrSub").textContent=(cfg.empresa.responsavel||"")+" — Responsável técnico";
+  if(rerender) renderCfg();
+  renderSvcList(); recalc();
+  $("#bCfgSave").textContent="Salvar configurações •";
+}
+
+/* =====================================================================
+   PROPOSTA (PDF E TEXTO)
+   ===================================================================== */
+function proposalData(){
+  const r=compute(q,cfg); const e=cfg.empresa;
+  const hoje=new Date(); const val=new Date(hoje.getTime()+nz(q.validade||15)*864e5);
+  const d=x=>x.toLocaleDateString("pt-BR");
+  const entrada=Math.min(Math.max(nz(q.entrada),0),100), parc=Math.max(Math.round(nz(q.parcelas)||1),1);
+  const vEnt=r.final*entrada/100, saldo=r.final-vEnt;
+  let cond = entrada>=100 ? `Pagamento à vista: ${brl(r.final)}.` :
+    entrada>0 ? `Entrada de ${fmt(entrada,0)}% (${brl(vEnt)}) na aprovação; saldo de ${brl(saldo)} ${parc>1?`em ${parc} parcelas de ${brl(saldo/parc)}`:"na entrega dos trabalhos"}.` :
+    (parc>1? `${parc} parcelas de ${brl(r.final/parc)}.` : `Pagamento de ${brl(r.final)} na entrega dos trabalhos.`);
+  const diasUteis = Math.ceil(r.cen.escolhido.dias) + Math.ceil(r.horasEscr/8);
+  const incl=["Deslocamento da equipe e do equipamento até o imóvel","Equipe técnica de campo e equipamentos GNSS RTK"+(r.sel.some(s=>s.def.equip.includes("drone"))?" e drone":""),"Processamento e elaboração das peças técnicas"];
+  if(r.marcosQ>0) incl.push(`Fornecimento e implantação de ${r.marcosQ} marcos`);
+  if(q.incluirArt==="sim") incl.push(`Emissão de ${cfg.docs.nomeDoc.replace(/\s*\(.*\)/,"")} do responsável técnico`);
+  if(q.taxasModo==="incluso" && nz(q.taxas)>0) incl.push("Taxas de terceiros previstas neste orçamento");
+  const nao=[];
+  if(nz(q.taxas)>0 && q.taxasModo==="cliente") nao.push(`Taxas de cartório, certidões e órgãos públicos (estimadas em ${brl(nz(q.taxas))}), pagas diretamente pelo cliente`);
+  else nao.push("Taxas de cartório, certidões e órgãos públicos");
+  nao.push("Roçada, abertura de picadas ou serviços não descritos nesta proposta");
+  const loc = r.dist.dest? `${r.dist.dest.lat.toFixed(6)}, ${r.dist.dest.lng.toFixed(6)}`:"";
+  const area = nz(q.areaHa)>0? `${fmt(nz(q.areaHa),2)} ha`:"";
+  return {r,e,numero:q.numero||gerarNumero(),hoje:d(hoje),validade:d(val),cond,diasUteis,incl,nao,loc,area};
+}
+function proposalText(){
+  const p=proposalData(), r=p.r;
+  let t=`*PROPOSTA DE SERVIÇOS TOPOGRÁFICOS* nº ${p.numero}\n${p.e.nome}\n\n`;
+  t+=`Cliente: ${q.cliente||"—"}\nImóvel: ${q.imovel||"—"}${q.municipio?" — "+q.municipio:""}\n`;
+  if(p.area) t+=`Área aproximada: ${p.area}\n`;
+  if(p.loc) t+=`Localização: ${p.loc}\n`;
+  t+=`\n*Serviços:*\n`+r.sel.map(s=>`• ${s.def.nome}`).join("\n");
+  t+=`\n\n*Valor total: ${brl(r.final)}*\n${p.cond}\n`;
+  t+=`Prazo estimado: ${p.diasUteis} dias úteis após aprovação e acesso ao imóvel.\n`;
+  t+=`\n*Incluso:* ${p.incl.join("; ")}.\n*Não incluso:* ${p.nao.join("; ")}.\n`;
+  if(q.obs) t+=`\nObs.: ${q.obs}\n`;
+  t+=`\nProposta válida até ${p.validade}.\n${p.e.responsavel}${p.e.registro?" — "+p.e.registro:""}${p.e.telefone?"\n"+p.e.telefone:""}`;
+  return t;
+}
+function buildPdf(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4"});
+  const p=proposalData(), r=p.r; const W=210, M=18; let y=0;
+  const green=[47,93,70];
+  doc.setFillColor(...green); doc.rect(0,0,W,30,"F");
+  doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(p.e.nome||"",M,13,{maxWidth:W-2*M});
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+  doc.text([p.e.responsavel+(p.e.registro?" — "+p.e.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  ")].filter(Boolean),M,20);
+  y=42; doc.setTextColor(31,42,36);
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text("PROPOSTA DE PRESTAÇÃO DE SERVIÇOS TOPOGRÁFICOS",M,y);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(102,112,106);
+  doc.text(`Nº ${p.numero}   ·   Emitida em ${p.hoje}   ·   Válida até ${p.validade}`,M,y+6); y+=16;
+  const sec=(t)=>{ if(y>262){doc.addPage();y=20;} doc.setTextColor(...green); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); doc.text(t.toUpperCase(),M,y); doc.setDrawColor(226,221,208); doc.line(M,y+1.8,W-M,y+1.8); y+=7; doc.setTextColor(31,42,36); doc.setFont("helvetica","normal"); doc.setFontSize(10); };
+  const para=(t,ind=0)=>{ const ls=doc.splitTextToSize(t,W-2*M-ind); ls.forEach(l=>{ if(y>280){doc.addPage();y=20;} doc.text(l,M+ind,y); y+=5; }); };
+  const kv=(k,v)=>{ if(!v) return; doc.setFont("helvetica","bold"); doc.text(k,M,y); doc.setFont("helvetica","normal"); const ls=doc.splitTextToSize(v,W-2*M-38); doc.text(ls,M+38,y); y+=5*ls.length; };
+  sec("Cliente e imóvel");
+  kv("Cliente:",q.cliente||"—"); kv("Contato:",q.contato); kv("Imóvel:",q.imovel); kv("Município:",q.municipio); kv("Área aprox.:",p.area); kv("Localização:",p.loc); y+=4;
+  sec("Serviços");
+  r.sel.forEach(s=>{ doc.setFont("helvetica","bold"); para("• "+s.def.nome); doc.setFont("helvetica","normal"); if(s.def.desc){ doc.setTextColor(77,88,82); para(s.def.desc,4); doc.setTextColor(31,42,36);} y+=1.5; });
+  y+=3;
+  if(y>245){doc.addPage();y=20;}
+  doc.setFillColor(227,238,230); doc.roundedRect(M,y,W-2*M,20,3,3,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...green); doc.text("VALOR TOTAL DOS SERVIÇOS",M+6,y+8);
+  doc.setFontSize(17); doc.text(brl(r.final),W-M-6,y+13,{align:"right"});
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(77,88,82); doc.text(doc.splitTextToSize(p.cond,105),M+6,y+14);
+  y+=28; doc.setTextColor(31,42,36); doc.setFontSize(10);
+  sec("Prazo");
+  para(`Estimativa de ${p.diasUteis} dias úteis após a aprovação, o pagamento da entrada e a liberação do acesso ao imóvel. Prazos de análise de cartório e órgãos públicos (INCRA/SIGEF, prefeitura) não dependem da contratada.`); y+=3;
+  sec("Está incluso"); p.incl.forEach(i=>para("• "+i)); y+=3;
+  sec("Não está incluso"); p.nao.forEach(i=>para("• "+i)); y+=3;
+  if(q.obs){ sec("Observações"); para(q.obs); y+=3; }
+  if(y>250){doc.addPage();y=30;} else y=Math.max(y+14,255);
+  doc.setDrawColor(31,42,36); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
+  doc.setFontSize(9); doc.text([p.e.responsavel||"", "Responsável técnico"+(p.e.registro?" — "+p.e.registro:"")],M,y+5);
+  doc.text(["De acordo — "+(q.cliente||"Cliente"),"Data: ____/____/______"],W-M-75,y+5);
+  return doc;
+}
+async function doPdf(){
+  if(!window.jspdf){ toast("Gerador de PDF não carregou — use o texto da proposta"); openText(); return; }
+  if(!compute(q,cfg).sel.length){ toast("Selecione ao menos um serviço"); return; }
+  const doc=buildPdf(); const name=`Proposta ${q.numero||gerarNumero()} - ${(q.cliente||"cliente").replace(/[\\/:*?"<>|]/g,"")}.pdf`;
+  const blob=doc.output("blob");
+  if(!dlCap && window.claude && claude.use){ try{ dlCap=await claude.use("downloads"); }catch(e){} }
+  if(dlCap){
+    try{ await dlCap.save({filename:name, data:blob}); toast("PDF salvo"); return; }
+    catch(e){ if(e && e.code==="declined") return; }
+  }
+  // alternativa: abrir em nova aba
+  try{ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); toast("PDF baixado"); }catch(e){ toast("Não foi possível baixar aqui — use o texto da proposta"); }
+}
+function openText(){ $("#mText").textContent=proposalText(); $("#modal").classList.add("on"); }
+
+/* =====================================================================
+   NAVEGAÇÃO E INICIALIZAÇÃO
+   ===================================================================== */
+function tab(t){ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent=(cfg.empresa.responsavel||"")+" — Responsável técnico"; }
+
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
+bindForm();
+$("#bSave").addEventListener("click",saveQuote);
+$("#bPdf").addEventListener("click",doPdf);
+$("#bTxt").addEventListener("click",openText);
+$("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); toast("Formulário limpo"); });
+$("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar configurações"; });
+$("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar padrões";},3000);} });
+$("#mClose").addEventListener("click",()=>$("#modal").classList.remove("on"));
+$("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); });
+$("#mCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("#mText").textContent); toast("Copiado"); }catch(e){ const rng=document.createRange(); rng.selectNodeContents($("#mText")); const s=getSelection(); s.removeAllRanges(); s.addRange(rng); toast("Selecionado — use Ctrl+C"); } });
+
+initStorage();
+</script>
+</body>
+</html>
