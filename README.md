@@ -9,7 +9,7 @@ Site: https://clarkve12.github.io/orcamento-topografia/
 - **Mapa com satélite**: desenhar a poligonal da área, importar KML/KMZ (CAR, SIGEF, Google Earth), usar o GPS do celular
 - **Área, perímetro e vértices** calculados a partir da poligonal
 - **Base fixa** (Águas Vermelhas - MG) e **rota automática** pelas estradas, separando asfalto e terra
-- **Combustível** com preço do Posto Ingazeira e data da última atualização
+- **Combustível** (gasolina) com preço e data da última atualização
 - Custos de deslocamento, equipe, equipamentos (2 RTK + drone), escritório, marcos, TRT, impostos e margem
 - Valor mínimo: R$ 3.000 rural / R$ 1.200 urbano
 - Proposta em PDF com logotipo e croqui da área
