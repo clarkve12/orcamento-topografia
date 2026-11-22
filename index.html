@@ -73,6 +73,10 @@ a.btn{text-decoration:none;display:inline-block}
 .total{background:linear-gradient(135deg,#002955,#0b4a8b);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:12px}
 .total .lbl{font-size:12px;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .total .v{color:var(--cyan);font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.total .mref{margin-top:8px;font-size:12.5px;background:rgba(255,255,255,.1);border-radius:8px;padding:6px 9px;display:none}
+.total .mref b{color:#fff}
+.total .mref .tag{display:inline-block;font-weight:800;border-radius:99px;padding:1px 8px;margin-left:4px;font-size:11.5px}
+.tag.ok{background:#2fbf71;color:#fff}.tag.lo{background:#ffd34d;color:#3a2a00}.tag.hi{background:#ff9f68;color:#3a1600}
 .total .s{font-size:13px;opacity:.9}
 table.bd{width:100%;border-collapse:collapse;font-size:13px}
 table.bd td{padding:5px 0;border-bottom:1px dashed var(--line);vertical-align:top}
@@ -192,10 +196,11 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
           <label>Nº de vértices<small>opcional</small><input data-k="vertices" type="number" min="0" step="1" placeholder="0"></label>
           <label>Dificuldade do terreno
             <select data-k="dificuldade">
-              <option value="1">Fácil — aberto, plano</option>
-              <option value="1.25">Normal</option>
-              <option value="1.5">Difícil — mata, relevo</option>
-              <option value="1.9">Muito difícil — mata fechada, alagado</option>
+              <option value="1">Fácil — aberto, plano, bom acesso</option>
+              <option value="1.2">Normal — pastagem, cerrado ralo</option>
+              <option value="1.45">Médio — cerrado, relevo ondulado</option>
+              <option value="2.3">Difícil — mata, serra, acesso ruim</option>
+              <option value="4">Muito difícil — mata fechada, alagado, grota</option>
             </select></label>
         </div>
       </div>
@@ -268,6 +273,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
         <div class="lbl">Preço da proposta</div>
         <div class="v" id="tFinal">R$ 0</div>
         <div class="s" id="tSub"></div>
+        <div class="mref" id="tRef"></div>
       </div>
       <div class="kpis">
         <div class="kpi"><span>Custo direto</span><b id="kCusto">—</b></div>
@@ -320,17 +326,18 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
    ===================================================================== */
 const DEFAULT_CFG = {
   empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
-  combustivel:{posto:"Posto Ingazeira", cidade:"Águas Vermelhas - MG", tipo:"Diesel S10", preco:6.29, atualizadoEm:""},
+  combustivel:{posto:"Posto Ingazeira", cidade:"Águas Vermelhas - MG", tipo:"Diesel S10", preco:6.95, atualizadoEm:""},
   veiculo:{kmUrbano:3, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
-  equipe:{horaTecnico:90, horasDia:9, diariaAjudante:180, alimentacao:60, hospedagem:150, ajudantesPadrao:1},
+  equipe:{horaTecnico:90, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
   equipamentos:[
-    {id:"rtk1", nome:"RTK 1 (base)",  valor:45000, vidaAnos:5, diasAno:150, manutAno:1500},
-    {id:"rtk2", nome:"RTK 2 (rover)", valor:45000, vidaAnos:5, diasAno:150, manutAno:1500},
-    {id:"drone",nome:"Drone",         valor:20000, vidaAnos:3, diasAno:60,  manutAno:1500}
+    {id:"rtk1", nome:"RTK 1 (base)",  valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
+    {id:"rtk2", nome:"RTK 2 (rover)", valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
+    {id:"drone",nome:"Drone",         valor:25000, vidaAnos:3, diasAno:60,  manutAno:1500}
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  fin:{rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
+  versao:2,
+  fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
       desc:"Levantamento geodésico dos limites com GNSS RTK, implantação de marcos, peças técnicas (planta, memorial descritivo, planilha ODS) e submissão para certificação no SIGEF/INCRA."},
@@ -359,7 +366,7 @@ const DEFAULT_CFG = {
 const UNIDADES = ["ha","km","lote","imóvel","pontos","mapa","vértice"];
 
 function blankQuote(){
-  return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.25",
+  return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.2",
     servicos:{}, kmAsf:"", kmTerra:"", pedagio:"", viagensExtras:"", ajudantes:"", diasManual:"", modo:"auto",
     marcos:"", outras:"", outrasDesc:"", incluirArt:"sim", taxas:"", taxasModo:"cliente",
     entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[]};
@@ -378,7 +385,10 @@ const clone = o=>JSON.parse(JSON.stringify(o));
 const half = x=>Math.ceil(x*2-1e-9)/2;
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2600);}
-function migrate(c){ if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
+function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old) o[k]=nv; };
+    ch(c.equipe,"diariaAjudante",180,150); ch(c.equipe,"hospedagem",150,120); ch(c.combustivel,"preco",6.29,6.95);
+    (c.equipamentos||[]).forEach(e=>{ if((e.id==="rtk1"||e.id==="rtk2")&&e.valor===45000) e.valor=30000; if(e.id==="drone"&&e.valor===20000) e.valor=25000; });
+    c.versao=2; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
   if(def && typeof def==="object"){ const out={}; for(const k in def) out[k]= (obj && k in obj)? merge(def[k],obj[k]) : clone(def[k]); if(obj) for(const k in obj) if(!(k in out)) out[k]=obj[k]; return out; }
@@ -519,13 +529,15 @@ function compute(q,c){
   const precoDesc=precoCalc*(1-descPct/100);
   const minimo = rural ? nz(f.minimoRural) : nz(f.minimoUrbano);
   const arred=Math.max(nz(f.arredondar),1);
-  let final=Math.ceil(Math.max(precoDesc,minimo)/arred)*arred;
+  const rm = (c.fin.pisoMercado!==false && c.fin.pisoMercado!=="nao") ? refMercado({sel},q) : null;
+  const pisoM = rm ? rm[0] : 0;
+  let final=Math.ceil(Math.max(precoDesc,minimo,pisoM)/arred)*arred;
   if(q.incluirArt==="sim"){ const a2=artValor(c,final); if(a2!==art){ art=a2; } }
   const custoTotal=custoDireto+custoDireto*nz(f.rateioFixo)/100; // direto + rateio
   const impostos=final*nz(f.impostos)/100;
   const lucro=final-custoTotal-impostos;
   Object.assign(r,{diasTrab,horasEscr,escritorio,marcosQ,marcos,outras,taxasIncl,art,custoDireto,precoCalc,precoDesc,descPct,minimo,final,
-    minimoAplicado: precoDesc<minimo, impostos, rateio:custoDireto*nz(f.rateioFixo)/100, lucro, ajud, pessoas, equipDia, manual});
+    minimoAplicado: precoDesc<minimo && minimo>=pisoM, pisoMercadoAplicado: pisoM>precoDesc && pisoM>minimo, pisoM, impostos, rateio:custoDireto*nz(f.rateioFixo)/100, lucro, ajud, pessoas, equipDia, manual});
   if(!sel.length) r.avisos.push("Nenhum serviço selecionado.");
   if(sel.some(s=>s.def.unidade==="km") && perimetroKm(q).est && nz(q.areaHa)>0) r.avisos.push("Perímetro estimado a partir da área. Informe o perímetro real se tiver (matrícula, CAR, KML).");
   if(horasTrab>0 && !base) r.avisos.push("Coordenada da base não cadastrada — informe os km manualmente.");
@@ -533,6 +545,30 @@ function compute(q,c){
   return r;
 }
 
+
+/* =====================================================================
+   REFERÊNCIAS DE MERCADO (Norte de MG / Sudoeste da BA) — estimativas
+   Base: Portaria INCRA 12/2025, tabela ICISMEP-MG jan/2026 e preços de
+   mercado nacionais 2026, ajustados para o interior (ver Configurações).
+   ===================================================================== */
+function refServico(def,qtd,q){
+  const ha=nz(q.areaHa), urb=q.tipo==="urbano";
+  switch(def.id){
+    case "georef": { if(ha<=0) return null;
+      if(ha<=50) return [5000,12000];
+      if(ha<=200) return [Math.max(5000,ha*80), Math.max(12000,ha*180)];
+      if(ha<=500) return [ha*40, ha*100];
+      return [ha*20, ha*50]; }
+    case "plani_rural": return ha>0? [Math.max(3000,ha*80), Math.max(4500,ha*250)] : null;
+    case "planimetrico": return ha>0? [Math.max(urb?1200:3000,ha*40), Math.max(urb?2500:4000,ha*150)] : null;
+    case "plani_urb": return qtd>0? [1200*qtd, 3500*qtd] : null;
+    default: return null;
+  }
+}
+function refMercado(r,q){
+  let mn=0,mx=0,n=0; for(const s of r.sel){ const x=refServico(s.def,s.qtd,q); if(!x) return null; mn+=x[0]; mx+=x[1]; n++; }
+  return n? [mn,mx] : null;
+}
 /* =====================================================================
    ESTADO E PERSISTÊNCIA
    ===================================================================== */
@@ -678,9 +714,13 @@ function recalc(){
     : "Sem trabalho de campo nos serviços selecionados.";
   // resumo
   $("#tFinal").textContent=brl0(r.final); $("#mFinal").textContent=brl0(r.final);
-  let sub = r.minimoAplicado ? `Valor mínimo ${r.rural?"rural":"urbano"} aplicado (cálculo deu ${brl0(r.precoDesc)})` : `Calculado ${brl0(r.precoDesc)}${r.descPct?` com ${fmt(r.descPct,0)}% de desconto`:""}, arredondado`;
+  let sub = r.pisoMercadoAplicado ? `Piso de mercado regional aplicado (cálculo de custos deu ${brl0(r.precoDesc)})` : r.minimoAplicado ? `Valor mínimo ${r.rural?"rural":"urbano"} aplicado (cálculo deu ${brl0(r.precoDesc)})` : `Calculado ${brl0(r.precoDesc)}${r.descPct?` com ${fmt(r.descPct,0)}% de desconto`:""}, arredondado`;
   if(q.taxasModo==="cliente" && nz(q.taxas)>0) sub+=` · + taxas de terceiros ${brl0(nz(q.taxas))} pagas pelo cliente`;
   $("#tSub").textContent=sub;
+  const rm=refMercado(r,q), tr=$("#tRef");
+  if(rm){ const cls = r.final<rm[0]? ["lo","abaixo do mercado"] : r.final>rm[1]? ["hi","acima do mercado"] : ["ok","dentro do mercado"];
+    tr.style.display="block"; tr.innerHTML=`Mercado regional estimado: <b>${brl0(rm[0])} a ${brl0(rm[1])}</b><span class="tag ${cls[0]}">${cls[1]}</span>`; }
+  else { tr.style.display="none"; }
   $("#kCusto").textContent=brl0(r.custoDireto);
   $("#kLucro").textContent=brl0(r.lucro); $("#kLucro").style.color = r.lucro<0?"var(--danger)":"";
   $("#kDias").textContent=fmt(ce.dias); $("#kEscr").textContent=fmt(r.horasEscr,0)+" h";
@@ -788,6 +828,7 @@ function renderCfg(){
   h+=`</table></div>`;
   h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
    ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
+   <label>Piso de mercado regional<small>não cobrar abaixo da faixa de mercado</small><select data-c="fin.pisoMercado"><option value="sim" ${cfg.fin.pisoMercado!==false&&cfg.fin.pisoMercado!=="nao"?"selected":""}>Sim — usar o piso</option><option value="nao" ${cfg.fin.pisoMercado===false||cfg.fin.pisoMercado==="nao"?"selected":""}>Não — só custos</option></select></label>
    ${field("fin.minimoRural","Mínimo rural","R$")}${field("fin.minimoUrbano","Mínimo urbano","R$")}${field("fin.arredondar","Arredondar para múltiplos de","R$")}</div></div>`;
   h+=`<div class="card"><h2>Catálogo de serviços</h2><p class="hint">Produtividade = quanto rende por dia de campo em terreno fácil (a dificuldade multiplica). Use 0 para serviço sem campo ou com dias fixos.</p><div class="hwrap"><table class="cfg-table"><tr><th>Serviço</th><th>Âmbito</th><th>Unidade</th><th>Produção/dia</th><th>Dias fixos</th><th>Escritório fixo (h)</th><th>Escritório por unidade (h)</th><th>RTK1</th><th>RTK2</th><th>Drone</th><th>Marcos</th><th></th></tr>`;
   c.servicos.forEach((s,i)=>{
@@ -805,6 +846,19 @@ function renderCfg(){
     <tr><td colspan="12" style="padding-bottom:10px"><input data-c="servicos.${i}.desc" type="text" value="${esc(s.desc)}" placeholder="Descrição que aparece na proposta" style="font-size:12.5px;color:#44546b"></td></tr>`;
   });
   h+=`</table></div><div class="actions" style="margin:10px 0 14px"><button class="btn ghost small" id="bAddSvc">+ Adicionar serviço</button></div></div>`;
+  h+=`<div class="card"><h2>Referências de mercado usadas</h2><p class="hint">Valores-padrão e a faixa de “mercado regional” do orçamento foram calibrados com estas fontes (pesquisa de nov/2026). Não há tabela pública de preços praticados por topógrafos no Norte de Minas; onde faltou dado local, a referência foi ajustada para o interior.</p>
+   <table class="cfg-table" style="font-size:12.5px"><tr><th>Item</th><th>Referência</th><th>Fonte</th></tr>
+   <tr><td>Georreferenciamento (público, larga escala)</td><td>R$ 49,83 a 202,87/ha · R$ 747 a 3.043/km de perímetro · rendimento 5 a 0,8 km/dia conforme dificuldade (±10% regional)</td><td>Portaria INCRA nº 12/2025</td></tr>
+   <tr><td>Georreferenciamento (particular)</td><td>R$ 250 a 350/ha (média nacional, áreas pequenas); até 50 ha ≈ R$ 6 mil a 15 mil; áreas médias e grandes R$ 20 a 100/ha</td><td>Aegro 2026; Terra Registros; IB Topografia</td></tr>
+   <tr><td>Levantamento planialtimétrico cadastral (MG)</td><td>R$ 0,61/m² até 1 ha · R$ 0,55/m² acima · planimétrico simples R$ 0,16/m²</td><td>ICISMEP-MG, jan/2026</td></tr>
+   <tr><td>Equipe de topografia (diária)</td><td>R$ 1.075/dia (MG) · R$ 945/dia com transporte (Nordeste)</td><td>ICISMEP-MG jan/2026; ORSE mai/2026</td></tr>
+   <tr><td>Planialtimétrico de lote urbano</td><td>R$ 1.200 a 4.500 por lote</td><td>Mercado nacional 2026</td></tr>
+   <tr><td>Diesel S10</td><td>Montes Claros R$ 6,93 (16/11/2026) · média Brasil R$ 7,29</td><td>Nota Fiscal Mineira / ANP</td></tr>
+   <tr><td>Auxiliar de topografia</td><td>Salário mínimo R$ 1.621 · piso médio da função R$ 2.917/mês</td><td>Decreto 12.797/2025; CAGED</td></tr>
+   <tr><td>Hospedagem</td><td>Hotéis em Taiobeiras e Salinas ≈ R$ 150 a 280 o quarto duplo</td><td>Expedia 2026</td></tr>
+   <tr><td>Faixa regional usada no sistema (georreferenciamento)</td><td>até 50 ha: R$ 5 mil a 12 mil · 50–200 ha: R$ 80 a 180/ha · 200–500 ha: R$ 40 a 100/ha · acima de 500 ha: R$ 20 a 50/ha</td><td>Estimativa SANTEX a partir das fontes acima, reduzida para o interior</td></tr>
+   <tr><td>RTK Emlid Reach RS3 (par base+rover)</td><td>US$ 5.998 (sem impostos de importação)</td><td>Loja Emlid</td></tr>
+   <tr><td>TRT</td><td>R$ 68,17</td><td>Resolução CFT 282/2025</td></tr></table><br></div>`;
   $("#cfgForm").innerHTML=h;
   $("#cfgForm").querySelectorAll("[data-c]").forEach(el=>el.addEventListener("change",()=>{
     const p=el.dataset.c; const cur=getPath(cfg,p);
