@@ -410,7 +410,13 @@ function renderSocios(){
   const el=document.getElementById("fin-socios"); if(!el) return;
   const r=resumo(), mm=mesAMes().filter(m=>m.mes<=hojeStr()), f=fcfg();
   const ret=FIN.retiradas.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||""));
-  el.innerHTML=`<div class="card"><h2>Divisão do lucro realizado</h2>
+  const sAss=Math.round(nz((cfg.financeiro||{}).socioAssina));
+  el.innerHTML=`<div class="card"><h2>Dados dos sócios</h2>
+    <p class="hint">Enquanto a SANTEX não tem CNPJ, o contrato e os recibos saem no nome e CPF do sócio. No contrato assina o responsável técnico escolhido; nos recibos, o sócio indicado abaixo.</p>
+    <div class="hwrap"><table class="hist"><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Profissão</th><th>Telefone</th><th>Endereço</th><th class="n">Participação</th><th></th></tr>
+    ${f.socios.map((x,i)=>`<tr class="click" data-soc="${i}"><td><b>${esc(x.nome)}</b></td><td>${esc(x.cpf||"")||'<span class="neg">falta</span>'}</td><td><small>${esc(x.rg||"")}</small></td><td><small>${esc(x.profissao||"")}</small></td><td><small>${esc(x.telefone||"")}</small></td><td><small>${esc([x.endereco,x.cidade].filter(Boolean).join(", "))||'<span class="neg">falta</span>'}</small></td><td class="num">${fmt(nz(x.pct),0)}%</td><td><button class="btn ghost small">Editar</button></td></tr>`).join("")}</table></div>
+    <div class="row" style="margin-top:10px;max-width:420px"><label>Quem assina os recibos<select id="socAss">${f.socios.map((x,i)=>`<option value="${i}" ${i===sAss?"selected":""}>${esc(x.nome)}</option>`).join("")}</select></label></div></div>
+  <div class="card"><h2>Divisão do lucro realizado</h2>
     <table class="ft"><tr><th>Sócio</th><th class="n">Direito</th><th class="n">Já retirado</th><th class="n">Saldo a retirar</th></tr>${r.socios.map(s=>`<tr><td>${esc(s.nome)} (${fmt(s.pct,0)}%)</td><td class="n">${R(s.direito)}</td><td class="n">${R(s.ret)}</td><td class="n"><b class="${s.saldo<0?"neg":""}">${R(s.saldo)}</b></td></tr>`).join("")}</table>
     <p class="hint" style="margin-top:8px">Lucro realizado = recebido dos clientes − despesas até este mês (${R(r.lucroReal)}).</p></div>
   <div class="card"><h2>Retiradas</h2><div class="actions" style="margin-bottom:12px"><button class="btn" id="rtNova">+ Nova retirada</button></div>
@@ -420,6 +426,14 @@ function renderSocios(){
     ${mm.map(m=>`<tr><td>${mesAno(m.mes)}</td><td class="n">${R(m.partes[0])}</td>${m.extrato.map(e=>`<td class="n">${R(e.ret)}</td><td class="n ${e.saldo<0?"neg":""}">${R(e.saldo)}</td>`).join("")}</tr>`).join("")}</table></div>
     <p class="hint">O saldo é acumulado: o que não é retirado num mês continua no saldo do mês seguinte. Saldo negativo = o sócio retirou mais do que o lucro acumulado até ali.</p></div>`;
   const CR=[{k:"data",label:"Data",type:"date",req:true},{k:"socio",label:"Sócio",type:"select",options:f.socios.map(s=>s.nome)},{k:"valor",label:"Valor (R$)",type:"number",req:true},{k:"obs",label:"Observações"}];
+  const CSOC=[{k:"nome",label:"Nome completo",req:true},{k:"cpf",label:"CPF"},{k:"rg",label:"RG / órgão emissor"},{k:"estadoCivil",label:"Estado civil",type:"select",options:["","Solteiro(a)","Casado(a)","Divorciado(a)","Viúvo(a)","União estável"]},{k:"profissao",label:"Profissão",hint:"ex.: Técnico em Agrimensura"},{k:"registro",label:"Registro profissional",hint:"CFT / CREA nº"},{k:"telefone",label:"Telefone / WhatsApp"},{k:"email",label:"E-mail"},{k:"endereco",label:"Endereço",hint:"rua, número, bairro"},{k:"cidade",label:"Cidade / UF"},{k:"pix",label:"Chave Pix"},{k:"pct",label:"Participação no lucro (%)",type:"number"}];
+  el.querySelectorAll("[data-soc]").forEach(tr=>tr.addEventListener("click",()=>{ const i=+tr.dataset.soc; const atual=f.socios[i];
+    const rtS=((cfg.responsaveis||[]).find(r=>norm(r.nome)===norm(atual.nome)))||{}; abrirForm("Sócio: "+atual.nome,CSOC,Object.assign({profissao:rtS.titulo||"",registro:rtS.registro||""},atual),o=>{ cfg.financeiro=cfg.financeiro||{}; const lista=(cfg.financeiro.socios&&cfg.financeiro.socios.length?cfg.financeiro.socios:f.socios).map(x=>Object.assign({},x));
+      const antigo=lista[i].nome; lista[i]=Object.assign({},lista[i],o); cfg.financeiro.socios=lista;
+      if(antigo&&o.nome&&antigo!==o.nome) FIN.retiradas.filter(r=>r.socio===antigo).forEach(r=>salvar("retiradas",Object.assign({},r,{socio:o.nome}),r.id));
+      const tot=lista.reduce((a,x)=>a+nz(x.pct),0); if(Math.abs(tot-100)>0.01) toast(`Atenção: as participações somam ${fmt(tot,0)}%`);
+      if(typeof saveCfg==="function") saveCfg(); setTimeout(renderSocios,50); }); }));
+  el.querySelector("#socAss").onchange=e=>{ cfg.financeiro=cfg.financeiro||{}; cfg.financeiro.socioAssina=+e.target.value; if(typeof saveCfg==="function") saveCfg(); };
   el.querySelector("#rtNova").onclick=()=>abrirForm("Nova retirada",CR,{data:hojeStr()},o=>{ salvar("retiradas",o); toast("Retirada lançada"); });
   el.querySelectorAll("[data-rt]").forEach(tr=>tr.addEventListener("click",()=>{ const x=FIN.retiradas.find(y=>y.id===tr.dataset.rt); abrirForm("Retirada",CR,x,o=>{ salvar("retiradas",Object.assign({},x,o),x.id); toast("Retirada atualizada"); },()=>{ excluir("retiradas",x.id); toast("Retirada excluída"); }); }));
 }
@@ -598,6 +612,12 @@ function abrirPrestador(id){
   document.querySelectorAll("[data-recpre]").forEach(b=>b.onclick=()=>reciboPrestador(b.dataset.recpre));
 }
 
+/* ---------- sócios: quem assina enquanto não há CNPJ ---------- */
+const empCurta=()=>String(((cfg&&cfg.empresa)||{}).nome||"SANTEX").split(" — ")[0];
+function socioPorNome(n){ const k=norm(n); return fcfg().socios.find(x=>norm(x.nome)===k)||null; }
+function socioAssina(){ const f=fcfg(); return f.socios[Math.round(nz((cfg.financeiro||{}).socioAssina))]||f.socios[0]||{}; }
+const cpfTxt=sc=>sc&&sc.cpf?"CPF "+sc.cpf:"";
+
 /* ---------- documentos em PDF ---------- */
 function extenso(v){
   const U=["","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","quatorze","quinze","dezesseis","dezessete","dezoito","dezenove"];
@@ -652,7 +672,7 @@ function reciboCliente(sid, idx){
   st.y+=2; st.para(`Valor total do serviço: ${R(k.valor)}   ·   Recebido até esta data: ${R(ate)}   ·   Saldo: ${R(Math.max(k.valor-ate,0))}`,{size:9.5});
   st.y+=4; st.para("Para clareza, firmamos o presente recibo, dando plena quitação do valor acima.");
   st.para(`${cidadeEmp()}, ${dataExtenso(r.data)}.`); st.y=Math.max(st.y+22,200);
-  st.assin([e.nome||"SANTEX", e.cnpj?"CNPJ "+e.cnpj:""],st.M,90); st.fim();
+  if(e.cnpj) st.assin([e.nome||"SANTEX","CNPJ "+e.cnpj],st.M,90); else { const sa=socioAssina(); st.assin([sa.nome||e.nome||"SANTEX", [cpfTxt(sa), empCurta()].filter(Boolean).join(" — ")],st.M,90); } st.fim();
   baixarPdf(st.doc,`Recibo ${s.codigo}-${idx+1} - ${s.contratante||""}.pdf`);
 }
 function reciboPrestador(did){
@@ -661,7 +681,7 @@ function reciboPrestador(did){
   const s=FIN.servicos.find(x=>x.id===d.servicoId)||{}; const e=cfg.empresa||{}; const v=nz(d.valor), dias=nz(d.dias);
   const st=pdfDoc("Recibo de pagamento — prestação de serviço",`${s.codigo?"Serviço "+s.codigo+"   ·   ":""}${fmtD(d.data)}`);
   st.box("Valor",R(v));
-  st.para(`Eu, ${p.nome}${p.doc?", CPF "+p.doc:""}, declaro que recebi de ${e.nome||"SANTEX"}${e.cnpj?", CNPJ "+e.cnpj:""}, a importância de ${R(v)} (${extenso(v)}), referente a ${dias?fmt(dias,1)+(dias===1?" diária":" diárias")+" de trabalho":"serviço prestado"} como ${lc1(p.funcao||"auxiliar de campo")}${s.codigo?` no serviço ${s.codigo} — ${s.local||""}${s.cidade?", "+s.cidade:""}${s.uf?"/"+s.uf:""}`:""}.`,{just:true});
+  st.para(`Eu, ${p.nome}${p.doc?", CPF "+p.doc:""}, declaro que recebi de ${e.cnpj?`${e.nome||"SANTEX"}, CNPJ ${e.cnpj}`:(()=>{ const sa=socioAssina(); return `${sa.nome||empCurta()}${sa.cpf?", CPF "+sa.cpf:""}, pela ${empCurta()}`; })()}, a importância de ${R(v)} (${extenso(v)}), referente a ${dias?fmt(dias,1)+(dias===1?" diária":" diárias")+" de trabalho":"serviço prestado"} como ${lc1(p.funcao||"auxiliar de campo")}${s.codigo?` no serviço ${s.codigo} — ${s.local||""}${s.cidade?", "+s.cidade:""}${s.uf?"/"+s.uf:""}`:""}.`,{just:true});
   if(p.pix) st.para("Pagamento via Pix, chave: "+p.pix+".");
   st.y+=4; st.para("Pelo que dou plena e geral quitação do valor acima.");
   st.para(`${cidadeEmp()}, ${dataExtenso(d.data)}.`); st.y=Math.max(st.y+22,200);
@@ -692,7 +712,9 @@ function contratoPdf(sid,o){
   const P=(t)=>st.para(t,{just:true});
   st.h("Das partes");
   P(`CONTRATANTE: ${s.contratante||c.nome||L}, ${pj?"pessoa jurídica inscrita no CNPJ":"inscrito(a) no CPF"} nº ${c.doc||L}, ${pj?"com sede em":"residente em"} ${c.endereco||L}, ${c.cidade||s.cidade||L}/${c.uf||s.uf||"MG"}${c.telefone?", telefone "+c.telefone:""}.`);
-  P(`CONTRATADA: ${e.nome||"SANTEX"}${e.cnpj?", inscrita no CNPJ nº "+e.cnpj:""}, com sede em ${e.endereco?e.endereco+", ":""}${e.cidadeBase||""}, tendo como responsável técnico ${rt.nome||L}, ${lc1(rt.titulo||"")}${rt.registro?", "+rt.registro:""}.`);
+  const scC=socioPorNome(rt.nome)||socioAssina();
+  if(e.cnpj) P(`CONTRATADA: ${e.nome||"SANTEX"}, inscrita no CNPJ nº ${e.cnpj}, com sede em ${e.endereco?e.endereco+", ":""}${e.cidadeBase||""}, tendo como responsável técnico ${rt.nome||L}, ${lc1(rt.titulo||"")}${rt.registro?", "+rt.registro:""}.`);
+  else P(`CONTRATADA: ${scC.nome||L}, ${lc1(scC.profissao||rt.titulo||"")}${scC.estadoCivil?", "+scC.estadoCivil.toLowerCase():""}, inscrito no CPF nº ${scC.cpf||L}${scC.rg?", RG "+scC.rg:""}, residente em ${scC.endereco||L}${scC.cidade?", "+scC.cidade:""}, atuando sob o nome comercial ${e.nome||"SANTEX"}${norm(scC.nome)===norm(rt.nome)?`, e responsável técnico pelos serviços${rt.registro?" ("+rt.registro+")":""}`:`, tendo como responsável técnico ${rt.nome||L}, ${lc1(rt.titulo||"")}${rt.registro?", "+rt.registro:""}`}.`);
   P("As partes acima identificadas celebram o presente contrato, que se regerá pelas cláusulas a seguir.");
   st.h("Cláusula 1ª — Do objeto");
   P(`Prestação de serviços técnicos de ${lc1(s.tipo||"topografia")} no imóvel/local ${s.local||L}, município de ${s.cidade||L}/${s.uf||"MG"}${s.orcamentoNumero?", conforme a proposta nº "+s.orcamentoNumero:""}${s.obs?". Observações: "+s.obs:""}.`);
@@ -720,7 +742,7 @@ function contratoPdf(sid,o){
   if(st.y>225){ st.doc.addPage(); st.y=40; } else st.y+=18;
   const W=st.W,M=st.M;
   st.assin(["CONTRATANTE: "+(s.contratante||c.nome||""), c.doc?(pj?"CNPJ ":"CPF ")+c.doc:""],M,78);
-  st.assin(["CONTRATADA: "+(e.nome||"SANTEX").split(" — ")[0], (rt.nome||"")+(rt.registro?" — "+rt.registro:"")],W-M-78,78);
+  st.assin(e.cnpj?["CONTRATADA: "+empCurta(), (rt.nome||"")+(rt.registro?" — "+rt.registro:"")]:["CONTRATADA: "+(scC.nome||""), [cpfTxt(scC), empCurta()].filter(Boolean).join(" — ")],W-M-78,78);
   st.y+=22; st.assin(["Testemunha 1 — nome:","CPF:"],M,78); st.assin(["Testemunha 2 — nome:","CPF:"],W-M-78,78);
   st.fim(); baixarPdf(st.doc,`Contrato ${s.codigo} - ${s.contratante||""}.pdf`);
 }
