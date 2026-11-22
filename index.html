@@ -168,6 +168,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
         <div class="row">
           <label>Cliente<input data-k="cliente" placeholder="Nome do cliente"></label>
           <label>Telefone / contato<input data-k="contato" placeholder="(00) 00000-0000"></label>
+          <label>Responsável técnico<select data-k="rt" id="rtSel"></select></label>
         </div>
         <div class="row">
           <label>Imóvel / fazenda<input data-k="imovel" placeholder="Fazenda Boa Vista"></label>
@@ -252,7 +253,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
           <label>Descrição das outras despesas<input data-k="outrasDesc" placeholder="opcional"></label>
         </div>
         <div class="row">
-          <label>Emitir TRT
+          <label>Emitir ART/TRT
             <select data-k="incluirArt"><option value="sim">Sim — incluir no preço</option><option value="nao">Não</option></select></label>
           <label>Taxas de terceiros<small>cartório, certidões, INCRA… (R$)</small><input data-k="taxas" type="number" min="0" step="0.01" placeholder="0"></label>
           <label>Essas taxas
@@ -342,7 +343,11 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  versao:7,
+  responsaveis:[
+    {id:"clessiano", nome:"Clessiano Antunes", titulo:"Técnico em Agrimensura", registro:"", doc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
+    {id:"joao", nome:"João Veríssimo", titulo:"Engenheiro Civil", registro:"", doc:"ART (CREA)", faixas:[{ate:15000, valor:108.39},{ate:0, valor:285.59}]}
+  ],
+  versao:8,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -375,7 +380,7 @@ function blankQuote(){
   return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.2",
     servicos:{}, kmAsf:"", kmTerra:"", pedagio:"", viagensExtras:"", ajudantes:"", diasManual:"", modo:"auto",
     marcos:"", confrontantes:"", outras:"", outrasDesc:"", incluirArt:"sim", taxas:"", taxasModo:"cliente",
-    entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[]};
+    rt:"clessiano", entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[]};
 }
 
 /* =====================================================================
@@ -400,6 +405,7 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
   if(c&&c.versao<5){ (c.servicos||[]).forEach(sv=>{ if(sv.id==="drone"){ if(sv.prod===150) sv.prod=250; if(sv.escrUnid===0.05) sv.escrUnid=0.02; sv.semDificuldade=true; } }); c.versao=5; }
   if(c&&c.versao<6){ if(c.equipe&&c.equipe.horaTecnico===90) c.equipe.horaTecnico=120; c.versao=6; }
   if(c&&c.versao<7){ if(c.equipe&&c.equipe.horaTecnico===120) c.equipe.horaTecnico=90; c.versao=7; }
+  if(c&&c.versao<8){ if(c.responsaveis&&c.responsaveis[0]&&c.empresa&&c.empresa.registro&&!c.responsaveis[0].registro) c.responsaveis[0].registro=c.empresa.registro; c.versao=8; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
@@ -433,8 +439,9 @@ const llStr = p=>p.lat.toFixed(6)+","+p.lng.toFixed(6);
    CÁLCULO
    ===================================================================== */
 function equipCustoDia(e){ const v=nz(e.valor), vida=Math.max(nz(e.vidaAnos),0.1), dias=Math.max(nz(e.diasAno),1); return (v/vida + nz(e.manutAno))/dias; }
-function artValor(c, preco){
-  const f=(c.docs.faixas||[]).filter(x=>x && !isNaN(num(x.valor)));
+function getRT(c,q){ const l=c.responsaveis||[]; return l.find(x=>x.id===(q&&q.rt))||l[0]||{nome:"",titulo:"",registro:"",doc:"TRT",faixas:[]}; }
+function artValor(rt, preco){
+  const f=(rt.faixas||[]).filter(x=>x && !isNaN(num(x.valor)));
   for(const x of f){ const ate=nz(x.ate); if(ate>0 && preco<=ate) return nz(x.valor); }
   const ult=f.find(x=>!(nz(x.ate)>0)) || f[f.length-1]; return ult?nz(ult.valor):0;
 }
@@ -534,8 +541,9 @@ function compute(q,c){
   const k = (1+nz(f.rateioFixo)/100)/Math.max(divisor,0.05);
   const semDocs = escolha.total + escritorio + marcos + outras + taxasIncl;
   // ART depende do preço → iteração
-  let art = q.incluirArt==="sim" ? nz((c.docs.faixas[0]||{}).valor) : 0, precoCalc=0;
-  for(let i=0;i<4;i++){ precoCalc=(semDocs+art)*k; if(q.incluirArt==="sim") art=artValor(c,precoCalc); }
+  const rt=getRT(c,q); r.rt=rt;
+  let art = q.incluirArt==="sim" ? nz(((rt.faixas||[])[0]||{}).valor) : 0, precoCalc=0;
+  for(let i=0;i<4;i++){ precoCalc=(semDocs+art)*k; if(q.incluirArt==="sim") art=artValor(rt,precoCalc); }
   precoCalc=(semDocs+art)*k;
   const custoDireto=semDocs+art;
   const descPct=Math.min(Math.max(nz(q.desconto),0),50);
@@ -545,7 +553,7 @@ function compute(q,c){
   const rm = (c.fin.pisoMercado!==false && c.fin.pisoMercado!=="nao") ? refMercado({sel},q) : null;
   const pisoM = rm ? rm[0] : 0;
   let final=Math.ceil(Math.max(precoDesc,minimo,pisoM)/arred)*arred;
-  if(q.incluirArt==="sim"){ const a2=artValor(c,final); if(a2!==art){ art=a2; } }
+  if(q.incluirArt==="sim"){ const a2=artValor(rt,final); if(a2!==art){ art=a2; } }
   const custoTotal=custoDireto+custoDireto*nz(f.rateioFixo)/100; // direto + rateio
   const impostos=final*nz(f.impostos)/100;
   const lucro=final-custoTotal-impostos;
@@ -756,7 +764,7 @@ function recalc(){
   g(`Escritório (${fmt(r.horasEscr,0)} h)`, r.escritorio);
   if(r.marcos>0) g(`Marcos (${r.marcosQ} un.)`, r.marcos);
   g("Documentação", r.art+r.taxasIncl);
-  s(esc(cfg.docs.nomeDoc), r.art);
+  s(esc(r.rt.doc)+" — "+esc(r.rt.nome), r.art);
   s("Taxas de terceiros (incluídas)", r.taxasIncl);
   if(r.outras>0) g("Outras despesas"+(q.outrasDesc?` — ${esc(q.outrasDesc)}`:""), r.outras);
   L.push(`<tr class="tot"><td>Custo direto</td><td>${brl(r.custoDireto)}</td></tr>`);
@@ -820,7 +828,7 @@ function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;
 function renderCfg(){
   const c=cfg;
   let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir base" no mapa do orçamento.</p>
-   <div class="row">${field("empresa.nome","Nome na proposta","","text")}${field("empresa.responsavel","Responsável técnico","","text")}${field("empresa.registro","Registro profissional","CREA/CFT nº","text")}</div>
+   <div class="row">${field("empresa.nome","Nome na proposta","","text")}</div>
    <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
    ${field("combustivel.tipo","Combustível","Gasolina, Diesel S10…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
@@ -834,11 +842,12 @@ function renderCfg(){
   h+=`<div class="card"><h2>Equipamentos</h2><p class="hint">Custo por dia de uso = (valor ÷ vida útil + manutenção anual) ÷ dias de uso por ano.</p><div class="hwrap"><table class="cfg-table"><tr><th>Equipamento</th><th>Valor (R$)</th><th>Vida útil (anos)</th><th>Dias de uso/ano</th><th>Manutenção/ano (R$)</th><th>Custo/dia</th></tr>`;
   c.equipamentos.forEach((e,i)=>{ h+=`<tr><td><input data-c="equipamentos.${i}.nome" type="text" value="${esc(e.nome)}"></td><td><input data-c="equipamentos.${i}.valor" type="number" value="${esc(e.valor)}"></td><td><input data-c="equipamentos.${i}.vidaAnos" type="number" step="0.5" value="${esc(e.vidaAnos)}"></td><td><input data-c="equipamentos.${i}.diasAno" type="number" value="${esc(e.diasAno)}"></td><td><input data-c="equipamentos.${i}.manutAno" type="number" value="${esc(e.manutAno)}"></td><td class="mono">${brl(equipCustoDia(e))}</td></tr>`; });
   h+=`</table></div><br></div>`;
-  h+=`<div class="card"><h2>Materiais e documentação</h2><p class="hint">TRT 2026 (CFT, Resolução 282/2025): valor único de R$ 68,17. Se o conselho criar faixas por valor de contrato, adicione linhas abaixo.</p><div class="row">
-   ${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}${field("docs.nomeDoc","Documento de responsabilidade","","text")}</div>
-   <table class="cfg-table" style="max-width:520px;margin-bottom:14px"><tr><th>Contrato até (R$) — 0 = acima disso</th><th>Valor da taxa (R$)</th></tr>`;
-  c.docs.faixas.forEach((f,i)=>{ h+=`<tr><td><input data-c="docs.faixas.${i}.ate" type="number" value="${esc(f.ate)}"></td><td><input data-c="docs.faixas.${i}.valor" type="number" step="0.01" value="${esc(f.valor)}"></td></tr>`; });
-  h+=`</table></div>`;
+  h+=`<div class="card"><h2>Responsáveis técnicos</h2><p class="hint">Escolhido em cada orçamento. O documento e a taxa mudam conforme o conselho: TRT 2026 (CFT) R$ 68,17 valor único; ART 2026 (CREA) R$ 108,39 até R$ 15 mil de contrato e R$ 285,59 acima.</p><div class="hwrap"><table class="cfg-table"><tr><th>Nome</th><th>Título</th><th>Registro</th><th>Documento</th><th>Taxa até R$ 15 mil</th><th>Taxa acima</th></tr>`;
+  (c.responsaveis||[]).forEach((x,i)=>{ const f0=(x.faixas||[])[0]||{}, f1=(x.faixas||[])[1]||f0;
+    h+=`<tr><td><input data-c="responsaveis.${i}.nome" type="text" value="${esc(x.nome)}"></td><td><input data-c="responsaveis.${i}.titulo" type="text" value="${esc(x.titulo)}"></td><td><input data-c="responsaveis.${i}.registro" type="text" placeholder="CFT/CREA nº" value="${esc(x.registro)}"></td><td><input data-c="responsaveis.${i}.doc" type="text" value="${esc(x.doc)}"></td>
+    <td><input data-rtf="${i}" data-n="0" type="number" step="0.01" value="${esc(f0.valor)}" style="width:90px"></td><td><input data-rtf="${i}" data-n="1" type="number" step="0.01" value="${esc(f1.valor)}" style="width:90px"></td></tr>`; });
+  h+=`</table></div><br></div>`;
+  h+=`<div class="card"><h2>Materiais</h2><div class="row">${field("materiais.custoMarco","Custo por marco","material + implantação, R$")}</div></div>`;
   h+=`<div class="card"><h2>Preço</h2><p class="hint">Preço = custo direto × (1 + rateio) ÷ (1 − impostos − margem). Depois aplica o mínimo e arredonda para cima.</p><div class="row">
    ${field("fin.rateioFixo","Rateio de custos fixos","% sobre o custo direto (aluguel, contador, software…)")}${field("fin.impostos","Impostos","% sobre o preço (Simples, ISS)")}${field("fin.margem","Margem de lucro","% sobre o preço")}
    <label>Piso de mercado regional<small>não cobrar abaixo da faixa de mercado</small><select data-c="fin.pisoMercado"><option value="sim" ${cfg.fin.pisoMercado!==false&&cfg.fin.pisoMercado!=="nao"?"selected":""}>Sim — usar o piso</option><option value="nao" ${cfg.fin.pisoMercado===false||cfg.fin.pisoMercado==="nao"?"selected":""}>Não — só custos</option></select></label>
@@ -882,11 +891,14 @@ function renderCfg(){
   $("#cfgForm").querySelectorAll("[data-eq]").forEach(el=>el.addEventListener("change",()=>{
     const s=cfg.servicos[+el.dataset.eq]; const id=el.dataset.id; s.equip=s.equip.filter(x=>x!==id); if(el.checked) s.equip.push(id); afterCfgEdit(false);
   }));
+  $("#cfgForm").querySelectorAll("[data-rtf]").forEach(el=>el.addEventListener("change",()=>{
+    const x=cfg.responsaveis[+el.dataset.rtf]; const v0=nz($(`#cfgForm [data-rtf="${el.dataset.rtf}"][data-n="0"]`).value), v1=nz($(`#cfgForm [data-rtf="${el.dataset.rtf}"][data-n="1"]`).value);
+    x.faixas = v0===v1 ? [{ate:0,valor:v0}] : [{ate:15000,valor:v0},{ate:0,valor:v1}]; afterCfgEdit(false); }));
   $("#cfgForm").querySelectorAll("[data-mk]").forEach(el=>el.addEventListener("change",()=>{ cfg.servicos[+el.dataset.mk].marcos=el.checked; afterCfgEdit(false); }));
   $("#cfgForm").querySelectorAll("[data-del]").forEach(el=>el.addEventListener("click",()=>{ cfg.servicos.splice(+el.dataset.del,1); afterCfgEdit(true); }));
   $("#bAddSvc").addEventListener("click",()=>{ cfg.servicos.push({id:"s"+Date.now(), nome:"Novo serviço", ambito:"ambos", unidade:"imóvel", prod:0, diasFixos:1, escrFix:4, escrUnid:0, equip:["rtk1"], marcos:false, desc:""}); afterCfgEdit(true); });
 }
-function afterCfgEdit(rerender){
+function afterCfgEdit(rerender){ renderRTSelect();
   $("#hdrSub").textContent="Sistema de Orçamentos";
   if(rerender) renderCfg();
   renderSvcList(); recalc();
@@ -908,7 +920,7 @@ function proposalData(){
   const diasUteis = Math.ceil(r.cen.escolhido.dias) + Math.ceil(r.horasEscr/8);
   const incl=["Deslocamento da equipe e do equipamento até o imóvel","Equipe técnica de campo e equipamentos GNSS RTK"+(r.sel.some(s=>s.def.equip.includes("drone"))?" e drone":""),"Processamento e elaboração das peças técnicas"];
   if(r.marcosQ>0) incl.push(`Fornecimento e implantação de ${r.marcosQ} marcos`);
-  if(q.incluirArt==="sim") incl.push(`Emissão de ${cfg.docs.nomeDoc.replace(/\s*\(.*\)/,"")} do responsável técnico`);
+  if(q.incluirArt==="sim") incl.push(`Emissão de ${(r.rt.doc||"").replace(/\s*\(.*\)/,"")} do responsável técnico`);
   if(q.taxasModo==="incluso" && nz(q.taxas)>0) incl.push("Taxas de terceiros previstas neste orçamento");
   const nao=[];
   if(nz(q.taxas)>0 && q.taxasModo==="cliente") nao.push(`Taxas de cartório, certidões e órgãos públicos (estimadas em ${brl(nz(q.taxas))}), pagas diretamente pelo cliente`);
@@ -929,7 +941,7 @@ function proposalText(){
   t+=`Prazo estimado: ${p.diasUteis} dias úteis após aprovação e acesso ao imóvel.\n`;
   t+=`\n*Incluso:* ${p.incl.join("; ")}.\n*Não incluso:* ${p.nao.join("; ")}.\n`;
   if(q.obs) t+=`\nObs.: ${q.obs}\n`;
-  t+=`\nProposta válida até ${p.validade}.\n${p.e.responsavel}${p.e.registro?" — "+p.e.registro:""}${p.e.telefone?"\n"+p.e.telefone:""}`;
+  t+=`\nProposta válida até ${p.validade}.\nResponsável técnico: ${r.rt.nome} — ${r.rt.titulo}${r.rt.registro?" — "+r.rt.registro:""}${p.e.telefone?"\n"+p.e.telefone:""}`;
   return t;
 }
 function buildPdf(){
@@ -941,7 +953,7 @@ function buildPdf(){
   if(LOGO_PDF){ doc.addImage(LOGO_PDF,"JPEG",M-3,4,68,68*289/900); }
   else { doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(p.e.nome||"",M,15); }
   doc.setTextColor(255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
-  doc.text(["RT: "+(p.e.responsavel||"")+(p.e.registro?" — "+p.e.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  "), cfg.empresa.cidadeBase||""].filter(Boolean),W-M,12,{align:"right"});
+  doc.text(["RT: "+(r.rt.nome||"")+" — "+(r.rt.titulo||"")+(r.rt.registro?" — "+r.rt.registro:""), [p.e.telefone,p.e.email].filter(Boolean).join("  ·  "), cfg.empresa.cidadeBase||""].filter(Boolean),W-M,12,{align:"right"});
   y=42; doc.setTextColor(...ink);
   doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text("PROPOSTA DE PRESTAÇÃO DE SERVIÇOS TOPOGRÁFICOS",M,y);
   doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...muted);
@@ -982,7 +994,7 @@ function buildPdf(){
   if(q.obs){ sec("Observações"); para(q.obs); y+=3; }
   if(y>266){doc.addPage();y=30;} else y=Math.min(Math.max(y+16,250),272);
   doc.setDrawColor(...ink); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
-  doc.setFontSize(9); doc.text([p.e.responsavel||"", "Responsável técnico"+(p.e.registro?" — "+p.e.registro:"")],M,y+5);
+  doc.setFontSize(9); doc.text([r.rt.nome||"", (r.rt.titulo||"Responsável técnico")+(r.rt.registro?" — "+r.rt.registro:"")],M,y+5);
   doc.text(["De acordo — "+(q.cliente||"Cliente"),"Data: ____/____/______"],W-M-75,y+5);
   const np=doc.getNumberOfPages(); for(let i=1;i<=np;i++){ doc.setPage(i); doc.setFillColor(...green); doc.rect(0,290,W,7,"F"); doc.setFontSize(7.5); doc.setTextColor(255); doc.text("SANTEX — Geotecnologia & Engenharia de Precisão",M,294.5); doc.text(`Página ${i} de ${np}`,W-M,294.5,{align:"right"}); }
   return doc;
@@ -1218,7 +1230,8 @@ function renderFuel(){
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
 function tab(t){ setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
-function renderAll(){ fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de Orçamentos"; }
+function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
+function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de Orçamentos"; }
 
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 bindForm();
