@@ -327,7 +327,7 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 const DEFAULT_CFG = {
   empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
   combustivel:{tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
-  veiculo:{kmUrbano:3, consumoAsf:10, consumoTerra:7, manutKm:0.40, deprecKm:0.35, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
+  veiculo:{modelo:"VW Gol G5 Rallye 1.6 2012 (gasolina)", kmUrbano:3, consumoAsf:11.5, consumoTerra:8, manutKm:0.30, deprecKm:0.15, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
   equipe:{horaTecnico:90, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
   equipamentos:[
     {id:"rtk1", nome:"RTK 1 (base)",  valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
@@ -336,7 +336,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  versao:3,
+  versao:4,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -390,6 +390,7 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
     (c.equipamentos||[]).forEach(e=>{ if((e.id==="rtk1"||e.id==="rtk2")&&e.valor===45000) e.valor=30000; if(e.id==="drone"&&e.valor===20000) e.valor=25000; });
     c.versao=2; }
   if(c&&c.versao<3){ const f=c.combustivel||(c.combustivel={}); if(!f.tipo||/diesel/i.test(f.tipo)){ f.tipo="Gasolina comum"; f.preco=7.39; f.atualizadoEm="2026-11-21T22:03:00-03:00"; } c.versao=3; }
+  if(c&&c.versao<4){ const v=c.veiculo||(c.veiculo={}); const ch=(k,o,n)=>{ if(v[k]===o||v[k]===undefined) v[k]=n; }; ch("consumoAsf",10,11.5); ch("consumoTerra",7,8); ch("manutKm",0.4,0.3); ch("deprecKm",0.35,0.15); v.modelo="VW Gol G5 Rallye 1.6 2012 (gasolina)"; c.versao=4; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
@@ -813,8 +814,8 @@ function renderCfg(){
    <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
    ${field("combustivel.tipo","Combustível","Gasolina, Diesel S10…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
-  h+=`<div class="card"><h2>Veículo</h2><div class="row">
-   ${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
+  h+=`<div class="card"><h2>Veículo</h2><p class="hint">Gol G5 Rallye 1.6 2012: consumo de fábrica com gasolina 13,4 km/l na estrada e 9,4 km/l na cidade. Os valores abaixo já descontam cerca de 12–15% pela idade do carro e pela carga de equipamentos; na terra usa-se o consumo de cidade (marchas baixas).</p><div class="row">
+   ${field("veiculo.modelo","Veículo","","text")}${field("veiculo.kmUrbano","Trecho urbano na saída","km tratados como asfalto")}${field("veiculo.consumoAsf","Consumo no asfalto","km/l")}${field("veiculo.consumoTerra","Consumo na terra","km/l")}
    ${field("veiculo.manutKm","Manutenção e pneus","R$/km")}${field("veiculo.deprecKm","Depreciação do carro","R$/km")}${field("veiculo.fatorDesgasteTerra","Desgaste extra na terra","multiplicador")}
    ${field("veiculo.fatorRota","Fator linha reta → estrada","1,3 = 30% a mais")}${field("veiculo.velAsf","Velocidade média asfalto","km/h")}${field("veiculo.velTerra","Velocidade média terra","km/h")}</div></div>`;
   h+=`<div class="card"><h2>Equipe</h2><p class="hint">O valor da sua hora entra como custo (seu pró-labore). O lucro vem por cima, pela margem.</p><div class="row">
