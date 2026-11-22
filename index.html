@@ -973,7 +973,7 @@ function buildPdf(){
   sec("Está incluso"); p.incl.forEach(i=>para("• "+i)); y+=3;
   sec("Não está incluso"); p.nao.forEach(i=>para("• "+i)); y+=3;
   if(q.obs){ sec("Observações"); para(q.obs); y+=3; }
-  if(y>250){doc.addPage();y=30;} else y=Math.max(y+14,255);
+  if(y>266){doc.addPage();y=30;} else y=Math.min(Math.max(y+16,250),272);
   doc.setDrawColor(...ink); doc.line(M,y,M+75,y); doc.line(W-M-75,y,W-M,y);
   doc.setFontSize(9); doc.text([p.e.responsavel||"", "Responsável técnico"+(p.e.registro?" — "+p.e.registro:"")],M,y+5);
   doc.text(["De acordo — "+(q.cliente||"Cliente"),"Data: ____/____/______"],W-M-75,y+5);
