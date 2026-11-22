@@ -199,6 +199,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
     <button data-tab="novo">Novo orçamento</button>
     <button data-tab="hist">Orçamentos</button>
     <button data-tab="servicos">Serviços</button>
+    <button data-tab="cadastros">Cadastros</button>
     <button data-tab="despesas">Despesas</button>
     <button data-tab="socios">Sócios</button>
     <button data-tab="relatorio">Relatório</button>
@@ -210,6 +211,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
 <!-- ================= NOVO ORÇAMENTO ================= -->
 <section class="view on" id="v-painel"><div id="fin-painel"><p class="hint">Carregando…</p></div></section>
 <section class="view" id="v-servicos"><div id="fin-servicos"></div></section>
+<section class="view" id="v-cadastros"><div id="fin-cadastros"></div></section>
 <section class="view" id="v-despesas"><div id="fin-despesas"></div></section>
 <section class="view" id="v-socios"><div id="fin-socios"></div></section>
 <section class="view" id="v-relatorio"><div id="fin-relatorio"></div></section>
@@ -266,6 +268,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
               <option value="4">Muito difícil — mata fechada, alagado, grota</option>
             </select></label>
         </div>
+        <div class="actions" style="margin:-4px 0 10px;align-items:center"><button class="btn ghost small" id="bRelevo" title="Consulta a altitude de vários pontos dentro da área desenhada">⛰ Analisar relevo da área</button><span id="relevoInfo" class="hint" style="flex:1"></span></div>
       </div>
 
       <div class="card">
@@ -288,6 +291,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
         <div class="row">
           <label>Viagens extras<small>assinatura de confrontantes, entrega etc.</small><input data-k="viagensExtras" type="number" min="0" step="1"></label>
           <label>Ajudantes<input data-k="ajudantes" type="number" min="0" step="1"></label>
+          <label>Dividir deslocamento<small>nº de serviços na mesma viagem</small><input data-k="rateioDesloc" type="number" min="1" step="1" placeholder="1"></label>
           <label>Dias de campo (ajuste manual)<small>deixe vazio para calcular</small><input data-k="diasManual" type="number" min="0" step="0.5" placeholder="auto"></label>
         </div>
         <div style="margin-bottom:14px">
@@ -315,6 +319,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
           <label>Essas taxas
             <select data-k="taxasModo"><option value="cliente">Pagas pelo cliente (fora do preço)</option><option value="incluso">Incluídas no preço</option></select></label>
         </div>
+        <div id="taxasBox"></div>
       </div>
 
       <div class="card">
@@ -349,7 +354,9 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
         <div class="actions" style="margin:14px 0 8px">
           <button class="btn" id="bSave">Salvar orçamento</button>
           <button class="btn ghost" id="bPdf">Gerar PDF da proposta</button>
-          <button class="btn ghost" id="bTxt">Texto para WhatsApp</button>
+          <button class="btn ghost" id="bWa">Enviar no WhatsApp</button>
+          <button class="btn ghost" id="bTxt">Texto da proposta</button>
+          <button class="btn ghost small" id="bRev" style="display:none" title="Mantém o número e cria a revisão seguinte; a anterior fica como substituída">Salvar como revisão</button>
           <button class="btn ghost small" id="bNew">Limpar / novo</button>
         </div>
         <div class="hint" id="editing"></div>
@@ -374,7 +381,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
     <button class="btn danger" id="bCfgReset">Restaurar padrões</button>
   </div>
   <div class="card" style="margin-bottom:40px"><h2>Backup dos dados</h2>
-    <p class="hint">Os orçamentos e as configurações ficam salvos só neste aparelho. Exporte um backup de vez em quando (e guarde no Google Drive ou no WhatsApp). Para passar os dados para outro aparelho, exporte aqui e importe lá.</p>
+    <p class="hint">Tudo fica salvo na nuvem (Firebase) e sincronizado entre os aparelhos. O backup é uma cópia extra de segurança com orçamentos, serviços, clientes, prestadores, despesas e retiradas: exporte de vez em quando e guarde no Google Drive.</p>
     <div class="actions" style="margin-bottom:12px">
       <button class="btn" id="bExport">⬇ Exportar backup</button>
       <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Importar backup<input type="file" id="bImport" accept=".json,application/json" hidden></label>
@@ -397,7 +404,8 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
    CONFIGURAÇÃO PADRÃO
    ===================================================================== */
 const DEFAULT_CFG = {
-  empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
+  empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361", cnpj:"", endereco:"", foro:"Águas Vermelhas - MG"},
+  revisaoAnual:2026,
   combustivel:{tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
   veiculo:{modelo:"VW Gol G5 Rallye 1.6 2012 (gasolina)", kmUrbano:3, consumoAsf:11.5, consumoTerra:8, manutKm:0.30, deprecKm:0.15, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
   equipe:{horaTecnico:90, horasConfrontante:1.5, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
@@ -446,7 +454,7 @@ function blankQuote(){
   return {id:null, cliente:"", contato:"", imovel:"", municipio:"", tipo:"rural", coord:"", areaHa:"", perimKm:"", vertices:"", dificuldade:"1.2",
     servicos:{}, kmAsf:"", kmTerra:"", pedagio:"", viagensExtras:"", ajudantes:"", diasManual:"", modo:"auto",
     marcos:"", confrontantes:"", outras:"", outrasDesc:"", incluirArt:"sim", taxas:"", taxasModo:"cliente",
-    rt:"clessiano", entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[]};
+    rt:"clessiano", entrada:"50", parcelas:"1", validade:"15", desconto:"", obs:"", poligono:[], taxasItens:[], rateioDesloc:"", rev:0};
 }
 
 /* =====================================================================
@@ -585,7 +593,8 @@ function compute(q,c){
     }
     const dc=Math.ceil(dias);
     const o={modo,dias,dc,noites,viagens};
-    o.comb=combRT*viagens; o.desg=desgRT*viagens; o.ped=nz(q.pedagio)*viagens;
+    const nR=Math.max(1,Math.round(nz(q.rateioDesloc))||1);
+    o.comb=combRT*viagens/nR; o.desg=desgRT*viagens/nR; o.ped=nz(q.pedagio)*viagens/nR;
     o.tecCampo = (modo==="diario" ? dias*horasDia : dias*horasDia) * nz(c.equipe.horaTecnico);
     o.tecExtras = extras*2*tIda*nz(c.equipe.horaTecnico);
     o.ajud = ajud*dc*nz(c.equipe.diariaAjudante);
@@ -628,6 +637,7 @@ function compute(q,c){
   Object.assign(r,{diasTrab,horasEscr,escritorio,marcosQ,marcos,outras,taxasIncl,art,custoDireto,precoCalc,precoDesc,descPct,minimo,final,
     minimoAplicado: precoDesc<minimo && minimo>=pisoM, pisoMercadoAplicado: pisoM>precoDesc && pisoM>minimo, pisoM, impostos, rateio:custoDireto*nz(f.rateioFixo)/100, lucro, ajud, pessoas, equipDia, manual});
   if(!sel.length) r.avisos.push("Nenhum serviço selecionado.");
+  if(Math.round(nz(q.rateioDesloc))>1) r.avisos.push(`Combustível, desgaste do carro e pedágios divididos entre ${Math.round(nz(q.rateioDesloc))} serviços na mesma viagem.`);
   if(sel.some(s=>s.def.unidade==="km") && perimetroKm(q).est && nz(q.areaHa)>0) r.avisos.push("Perímetro estimado a partir da área. Informe o perímetro real se tiver (matrícula, CAR, KML).");
   if(horasTrab>0 && !base) r.avisos.push("Coordenada da base não cadastrada — informe os km manualmente.");
   if(horasTrab>0 && base && !dest && isNaN(asfIn)) r.avisos.push("Informe a localização do imóvel ou os km da rota.");
@@ -757,9 +767,16 @@ function quoteRecord(){
   return {criadoEm: q.criadoEm || new Date().toISOString(), atualizadoEm:new Date().toISOString(),
     numero: q.numero || gerarNumero(), cliente:q.cliente, imovel:q.imovel, municipio:q.municipio, tipo:q.tipo,
     servicos: r.sel.map(s=>s.def.nome).join("; "), valor:r.final, custoDireto:r.custoDireto, diasEstimados:r.cen.escolhido.dias,
-    status: q.status||"Rascunho", diasReais: q.diasReais||"", q: clone(q)};
+    status: q.status||"Rascunho", diasReais: q.diasReais||"", rev: nz(q.rev), clienteId: q.clienteId||null, q: clone(q)};
 }
-function gerarNumero(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+function gerarNumero(){ const y=new Date().getFullYear(); const n=quotes.map(x=>String(x.numero||"").match(/^(\d+)\/(\d{4})$/)).filter(m=>m&&+m[2]===y).map(m=>+m[1]); return String((n.length?Math.max(...n):0)+1).padStart(3,"0")+"/"+y; }
+const numLabel=(n,rev)=>(n||"")+(nz(rev)>0?` – rev. ${rev}`:"");
+function saveRevision(){
+  if(!q.id){ saveQuote(); return; }
+  const oldId=q.id; const revs=quotes.filter(x=>x.numero===q.numero).map(x=>nz(x.rev));
+  q.rev=Math.max(0,...revs)+1; q.id=null; q.criadoEm=null; q.status="";
+  saveQuote(); updateQuoteField(oldId,{status:"Substituído"});
+}
 async function saveQuote(){
   if(!q.cliente && !q.imovel){ toast("Informe ao menos o cliente ou o imóvel"); return; }
   const rec=quoteRecord(); q.numero=rec.numero; q.criadoEm=rec.criadoEm; rec.q=clone(q);
@@ -768,7 +785,7 @@ async function saveQuote(){
       const ref = q.id ? db.collection("orcamentos").doc(q.id) : db.collection("orcamentos").doc();
       const keep = quotes.find(x=>x.id===q.id); if(keep){ rec.status=keep.status; rec.diasReais=keep.diasReais; }
       q.id=ref.id; rec.q=clone(q); rec.por=(fbUser&&fbUser.email)||"";
-      ref.set(toCloud(rec)).catch(e=>toast("Erro ao salvar na nuvem ("+(e.code||"erro")+")")); toast("Orçamento "+rec.numero+" salvo");
+      ref.set(toCloud(rec)).catch(e=>toast("Erro ao salvar na nuvem ("+(e.code||"erro")+")")); toast("Orçamento "+numLabel(rec.numero,rec.rev)+" salvo");
     }catch(e){ toast(e.code==="quota_exceeded"?"Limite de orçamentos atingido — exclua antigos":"Erro ao salvar ("+(e.code||"erro")+")"); }
   } else {
     if(!q.id) q.id="l"+Date.now(); rec.id=q.id;
@@ -798,10 +815,21 @@ function bindForm(){
   });
   document.querySelectorAll("#modoSeg button").forEach(b=>b.addEventListener("click",()=>{ q.modo=b.dataset.m; onChange(); }));
 }
-function fillForm(){
+function fillForm(){ setTimeout(()=>{ renderTaxas(); if(typeof renderRelevo==="function") renderRelevo(); },0);
   document.querySelectorAll("#form [data-k]").forEach(el=>{ const v=q[el.dataset.k]; el.value = v==null?"":v; });
 }
 let draftT;
+const TAXAS_SUG=["Registro / averbação em cartório","Prenotação / protocolo no cartório","Certidão de inteiro teor da matrícula","Certidão de ônus reais","CCIR (taxa de cadastro)","ITR / certidão negativa","Reconhecimento de firmas","Correios / despachante","Outras taxas"];
+function syncTaxas(){ const it=Array.isArray(q.taxasItens)?q.taxasItens:[]; const el=$('#form [data-k="taxas"]');
+  if(it.length){ q.taxas=String(Math.round(it.reduce((a,t)=>a+nz(t.valor),0)*100)/100); if(el){ el.value=q.taxas; el.readOnly=true; } } else if(el) el.readOnly=false; }
+function renderTaxas(){ const box=$("#taxasBox"); if(!box) return; if(!Array.isArray(q.taxasItens)) q.taxasItens=[]; const it=q.taxasItens;
+  box.innerHTML=`${it.map((t,i)=>`<div class="row"><label>Taxa<input list="dl-taxas" data-ti="${i}" data-tf="desc" value="${esc(t.desc||"")}" placeholder="Escolha ou digite"></label><label>Valor (R$)<input type="number" min="0" step="0.01" data-ti="${i}" data-tf="valor" value="${esc(t.valor||"")}"></label><label style="flex:0 0 auto;justify-content:flex-end"><button class="btn danger small" data-tx="${i}" title="Remover">×</button></label></div>`).join("")}
+  <button class="btn ghost small" id="txAdd">+ Detalhar taxas de terceiros</button>${it.length?' <small class="hint">o total vai para o campo "Taxas de terceiros"</small>':""}
+  <datalist id="dl-taxas">${TAXAS_SUG.map(x=>`<option value="${x}">`).join("")}</datalist>`;
+  box.querySelectorAll("[data-ti]").forEach(inp=>inp.addEventListener("input",()=>{ it[+inp.dataset.ti][inp.dataset.tf]=inp.value; syncTaxas(); onChange(); }));
+  box.querySelectorAll("[data-tx]").forEach(b=>b.addEventListener("click",()=>{ it.splice(+b.dataset.tx,1); syncTaxas(); renderTaxas(); onChange(); }));
+  $("#txAdd").onclick=()=>{ it.push({desc:"",valor:""}); renderTaxas(); const l=box.querySelectorAll('[data-tf="desc"]'); if(l.length) l[l.length-1].focus(); };
+  syncTaxas(); }
 function onChange(){ recalc(); clearTimeout(draftT); draftT=setTimeout(()=>lsSet(LS_DRAFT,q),400); }
 
 function renderSvcList(){
@@ -901,24 +929,25 @@ function recalc(){
   window.__last=r;
 }
 function renderEditing(){
-  $("#editing").textContent = q.id ? `Editando orçamento nº ${q.numero||""} — "Salvar" atualiza o mesmo registro.` : "Orçamento novo, ainda não salvo.";
+  $("#editing").textContent = q.id ? `Editando orçamento nº ${numLabel(q.numero,q.rev)} — "Salvar" atualiza o mesmo registro; "Salvar como revisão" cria a rev. seguinte.` : `Orçamento novo, ainda não salvo${q.rev?" (revisão "+q.rev+" de "+q.numero+")":""}.`;
+  const br=$("#bRev"); if(br) br.style.display=q.id?"":"none";
 }
 
 /* =====================================================================
    RENDER — HISTÓRICO
    ===================================================================== */
-const STATUS=["Rascunho","Enviado","Aprovado","Perdido","Executado"];
+const STATUS=["Rascunho","Enviado","Aprovado","Perdido","Executado","Substituído"];
 function renderHist(){
   const t=$("#histTable");
   if(!quotes.length){ t.innerHTML=`<tr><td style="padding:24px;color:var(--muted)">Nenhum orçamento salvo ainda.</td></tr>`; return; }
-  const ap=quotes.filter(x=>x.status==="Aprovado"||x.status==="Executado"), env=quotes.filter(x=>x.status!=="Rascunho");
+  const ap=quotes.filter(x=>x.status==="Aprovado"||x.status==="Executado"), env=quotes.filter(x=>x.status!=="Rascunho"&&x.status!=="Substituído");
   const taxa = env.length? Math.round(ap.length/env.length*100):0;
   let h=`<tr><th>Nº / data</th><th>Cliente / imóvel</th><th>Serviços</th><th style="text-align:right">Valor</th><th>Status</th><th>Dias est.</th><th>Dias reais</th><th>Diferença</th><th></th></tr>`;
   for(const x of quotes){
     const dr=num(x.diasReais), de=nz(x.diasEstimados);
     const dif = !isNaN(dr)&&de>0 ? Math.round((dr-de)/de*100) : null;
     h+=`<tr data-id="${esc(x.id)}">
-      <td><span class="mono">${esc(x.numero||"")}</span><br><small style="color:var(--muted)">${esc((x.criadoEm||"").slice(0,10).split("-").reverse().join("/"))}</small></td>
+      <td><span class="mono">${esc(numLabel(x.numero,x.rev))}</span><br><small style="color:var(--muted)">${esc((x.criadoEm||"").slice(0,10).split("-").reverse().join("/"))}</small></td>
       <td><b>${esc(x.cliente||"—")}</b><br><small>${esc(x.imovel||"")}${x.municipio?" · "+esc(x.municipio):""}</small></td>
       <td style="max-width:280px"><small>${esc(x.servicos||"")}</small></td>
       <td class="num"><b>${brl0(nz(x.valor))}</b></td>
@@ -934,7 +963,7 @@ function renderHist(){
     const id=tr.dataset.id;
     tr.querySelector(".hs").addEventListener("change",e=>updateQuoteField(id,{status:e.target.value}));
     tr.querySelector(".hd").addEventListener("change",e=>updateQuoteField(id,{diasReais:e.target.value}));
-    tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); if(typeof q.poligono==="string"){ try{ q.poligono=JSON.parse(q.poligono); }catch(e){ q.poligono=[]; } } q.id=id; q.numero=x.numero; q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); setTimeout(()=>{ if(map) map.invalidateSize(); mapReload(true); },50); });
+    tr.querySelector(".ho").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; q=merge(blankQuote(),x.q||{}); if(typeof q.poligono==="string"){ try{ q.poligono=JSON.parse(q.poligono); }catch(e){ q.poligono=[]; } } q.id=id; q.numero=x.numero; q.rev=nz(x.rev); q.criadoEm=x.criadoEm; fillForm(); renderSvcList(); recalc(); renderEditing(); tab("novo"); setTimeout(()=>{ if(map) map.invalidateSize(); mapReload(true); },50); });
     tr.querySelector(".hsv").addEventListener("click",()=>{ const x=quotes.find(z=>z.id===id); if(!x) return; if(x.servicoId&&window._fin&&window._fin.FIN.servicos.some(s=>s.id===x.servicoId)){ tab("servicos"); setTimeout(()=>window.finAbrirServico&&window.finAbrirServico(x.servicoId),50); return; } if(window.finNovoServicoDeOrcamento){ tab("servicos"); window.finNovoServicoDeOrcamento(Object.assign({id},x)); } });
     const bx=tr.querySelector(".hx");
     bx.addEventListener("click",()=>{ if(bx.dataset.c){ deleteQuote(id); } else { bx.dataset.c="1"; bx.textContent="Confirmar?"; setTimeout(()=>{bx.dataset.c="";bx.textContent="Excluir";},3000);} });
@@ -954,7 +983,8 @@ function renderCfg(){
   const c=cfg;
   let h=`<div class="card"><h2>Empresa e base</h2><p class="hint">A base é o ponto fixo de saída do carro. O jeito mais fácil de definir é pelo botão "🏠 Definir base" no mapa do orçamento.</p>
    <div class="row">${field("empresa.nome","Nome na proposta","","text")}</div>
-   <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div></div>`;
+   <div class="row">${field("empresa.telefone","Telefone","","text")}${field("empresa.email","E-mail","","text")}${field("empresa.cidadeBase","Cidade da base","","text")}${field("empresa.baseCoord","Coordenada da base","cole do Google Maps","text")}</div>
+   <div class="row">${field("empresa.cnpj","CNPJ","sai no contrato e nos recibos","text")}${field("empresa.endereco","Endereço da empresa","","text")}${field("empresa.foro","Foro do contrato","comarca","text")}</div></div>`;
   h+=`<div class="card"><h2>Combustível</h2><p class="hint">Preço usado em todos os orçamentos. Atualize no próprio orçamento (campo ⛽) ou aqui.</p><div class="row">
    ${field("combustivel.tipo","Combustível","Gasolina, Diesel S10…","text")}${field("combustivel.preco","Preço","R$/litro")}</div></div>`;
   h+=`<div class="card"><h2>Veículo</h2><p class="hint">Gol G5 Rallye 1.6 2012: consumo de fábrica com gasolina 13,4 km/l na estrada e 9,4 km/l na cidade. Os valores abaixo já descontam cerca de 12–15% pela idade do carro e pela carga de equipamentos; na terra usa-se o consumo de cidade (marchas baixas).</p><div class="row">
@@ -1049,14 +1079,15 @@ function proposalData(){
   const incl=["Deslocamento da equipe e do equipamento até o imóvel","Equipe técnica de campo e equipamentos GNSS RTK"+(r.sel.some(s=>s.def.equip.includes("drone"))?" e drone":""),"Processamento e elaboração das peças técnicas"];
   if(r.marcosQ>0) incl.push(`Fornecimento e implantação de ${r.marcosQ} marcos`);
   if(q.incluirArt==="sim") incl.push(`Emissão de ${(r.rt.doc||"").replace(/\s*\(.*\)/,"")} do responsável técnico`);
-  if(q.taxasModo==="incluso" && nz(q.taxas)>0) incl.push("Taxas de terceiros previstas neste orçamento");
+  const txIt=(q.taxasItens||[]).filter(t=>t.desc&&nz(t.valor)>0); const txDesc=txIt.length?": "+txIt.map(t=>`${t.desc} (${brl(nz(t.valor))})`).join(", "):"";
+  if(q.taxasModo==="incluso" && nz(q.taxas)>0) incl.push("Taxas de terceiros previstas neste orçamento"+txDesc);
   const nao=[];
-  if(nz(q.taxas)>0 && q.taxasModo==="cliente") nao.push(`Taxas de cartório, certidões e órgãos públicos (estimadas em ${brl(nz(q.taxas))}), pagas diretamente pelo cliente`);
+  if(nz(q.taxas)>0 && q.taxasModo==="cliente") nao.push(`Taxas de cartório, certidões e órgãos públicos (estimadas em ${brl(nz(q.taxas))}${txDesc}), pagas diretamente pelo cliente`);
   else nao.push("Taxas de cartório, certidões e órgãos públicos");
   nao.push("Roçada, abertura de picadas ou serviços não descritos nesta proposta");
   const loc = r.dist.dest? `${r.dist.dest.lat.toFixed(6)}, ${r.dist.dest.lng.toFixed(6)}`:"";
   const area = nz(q.areaHa)>0? `${fmt(nz(q.areaHa),2)} ha`:"";
-  return {r,e,numero:q.numero||gerarNumero(),hoje:d(hoje),validade:d(val),cond,diasUteis,incl,nao,loc,area};
+  return {r,e,numero:numLabel(q.numero||gerarNumero(),q.rev),hoje:d(hoje),validade:d(val),cond,diasUteis,incl,nao,loc,area};
 }
 function proposalText(){
   const p=proposalData(), r=p.r;
@@ -1127,10 +1158,51 @@ function buildPdf(){
   const np=doc.getNumberOfPages(); for(let i=1;i<=np;i++){ doc.setPage(i); doc.setFillColor(...green); doc.rect(0,290,W,7,"F"); doc.setFontSize(7.5); doc.setTextColor(255); doc.text("SANTEX — Geotecnologia & Engenharia de Precisão",M,294.5); doc.text(`Página ${i} de ${np}`,W-M,294.5,{align:"right"}); }
   return doc;
 }
+function nomePdfProposta(){ return `Proposta ${numLabel(q.numero||gerarNumero(),q.rev).replace(/\//g,"-")} - ${(q.cliente||"cliente").replace(/[\\/:*?"<>|]/g,"")}.pdf`; }
+async function enviarWhats(){
+  const r=compute(q,cfg); if(!r.sel.length){ toast("Selecione ao menos um serviço"); return; }
+  if(!q.numero) q.numero=gerarNumero();
+  const nome=String(q.cliente||"").trim().split(/\s+/)[0];
+  const msg=`Olá${nome?", "+nome:""}! Segue a proposta nº ${numLabel(q.numero,q.rev)} da ${(cfg.empresa.nome||"SANTEX").split(" — ")[0]} para ${r.sel.map(s=>s.def.nome.toLowerCase().replace(/\b(sigef|incra|reurb|car|mdt|gnss|rtk)\b/gi,m=>m.toUpperCase())).join(", ")}${q.imovel?" — "+q.imovel:""}. Valor total: ${brl(r.final)}. Fico à disposição para qualquer dúvida.`;
+  let blob=null; const name=nomePdfProposta(); try{ if(window.jspdf) blob=buildPdf().output("blob"); }catch(e){}
+  if(blob && navigator.canShare && /Android|iPhone|iPad/i.test(navigator.userAgent)){
+    try{ const f=new File([blob],name,{type:"application/pdf"}); if(navigator.canShare({files:[f]})){ await navigator.share({files:[f],text:msg}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  }
+  if(blob){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); }
+  let d=String(q.contato||"").replace(/\D/g,""); if(d.length>=10&&d.length<=11) d="55"+d; if(d.length<12) d="";
+  window.open("https://wa.me/"+d+"?text="+encodeURIComponent(msg),"_blank","noopener");
+  toast(blob?"PDF baixado — anexe na conversa do WhatsApp":"Abrindo o WhatsApp");
+}
+const RELEVO_CLS=[[3,"plano",1],[8,"suave ondulado",1.2],[20,"ondulado",1.45],[45,"forte ondulado",2.3],[1e9,"montanhoso",4]];
+function renderRelevo(){ const el=$("#relevoInfo"); if(!el) return; const r=q.relevo;
+  if(!r||!r.n){ el.innerHTML=""; return; }
+  const acesso = (typeof ROTA!=="undefined"&&ROTA&&ROTA.offroad>0.3) ? ` · ${fmt(ROTA.offroad,1)} km fora de estrada até a área` : "";
+  el.innerHTML=`Relevo <b>${r.classe}</b>: declividade média ${fmt(r.decl,1)}% (máx. ${fmt(r.dmax,0)}%), altitude ${fmt(r.zmin,0)}–${fmt(r.zmax,0)} m, ${r.n} pontos${acesso}. Sugestão: <b>${({1:"Fácil","1.2":"Normal","1.45":"Médio","2.3":"Difícil","4":"Muito difícil"})[String(r.sug)]}</b>${String(q.dificuldade)===String(r.sug)?" (aplicada)":` <button class="btn small" id="bRelevoUsar">Usar</button>`}. A vegetação e o acesso você confere na imagem de satélite e ajusta para cima se precisar.`;
+  const b=$("#bRelevoUsar"); if(b) b.onclick=()=>{ q.dificuldade=String(r.sug); const s=$('#form [data-k="dificuldade"]'); if(s) s.value=q.dificuldade; onChange(); renderRelevo(); };
+}
+async function analisarRelevo(){
+  const pts=q.poligono||[]; const el=$("#relevoInfo"); if(pts.length<3){ toast("Desenhe a área no mapa primeiro"); return; }
+  el.textContent="Consultando altitudes…";
+  const lats=pts.map(p=>p[0]), lngs=pts.map(p=>p[1]); const la0=Math.min(...lats),la1=Math.max(...lats),lo0=Math.min(...lngs),lo1=Math.max(...lngs);
+  const inside=(la,lo)=>{ let c=false; for(let i=0,j=pts.length-1;i<pts.length;j=i++){ const yi=pts[i][0],xi=pts[i][1],yj=pts[j][0],xj=pts[j][1]; if(((yi>la)!==(yj>la)) && (lo<(xj-xi)*(la-yi)/(yj-yi)+xi)) c=!c; } return c; };
+  let n=16, grid=[]; for(;n>=3;n--){ grid=[]; for(let i=0;i<n;i++) for(let j=0;j<n;j++){ const la=la0+(la1-la0)*(i+0.5)/n, lo=lo0+(lo1-lo0)*(j+0.5)/n; if(inside(la,lo)) grid.push({i,j,la,lo}); } if(grid.length<=100) break; }
+  if(grid.length<4){ el.textContent="Área muito pequena ou estreita para analisar."; return; }
+  try{
+    const url="https://api.open-meteo.com/v1/elevation?latitude="+grid.map(g=>g.la.toFixed(5)).join(",")+"&longitude="+grid.map(g=>g.lo.toFixed(5)).join(",");
+    const res=await fetch(url); if(!res.ok) throw 0; const js=await res.json(); const zz=js.elevation||[]; grid.forEach((g,k)=>g.z=nz(zz[k]));
+  }catch(e){ el.textContent="Não foi possível consultar as altitudes agora (precisa de internet). Tente de novo."; return; }
+  const dy=(la1-la0)/n*110540, dx=(lo1-lo0)/n*111320*Math.cos((la0+la1)/2*Math.PI/180);
+  const ix={}; grid.forEach(g=>ix[g.i+","+g.j]=g); const sl=[];
+  grid.forEach(g=>{ const a=ix[g.i+","+(g.j+1)], b=ix[(g.i+1)+","+g.j]; if(a&&dx>1) sl.push(Math.abs(a.z-g.z)/dx*100); if(b&&dy>1) sl.push(Math.abs(b.z-g.z)/dy*100); });
+  const zs=grid.map(g=>g.z); const decl=sl.length?sl.reduce((a,b)=>a+b,0)/sl.length:0; const dmax=sl.length?Math.max(...sl):0;
+  const cls=RELEVO_CLS.find(c=>decl<c[0]);
+  q.relevo={n:grid.length,decl:Math.round(decl*10)/10,dmax:Math.round(dmax),zmin:Math.min(...zs),zmax:Math.max(...zs),classe:cls[1],sug:cls[2],em:new Date().toISOString()};
+  onChange(); renderRelevo();
+}
 async function doPdf(){
   if(!window.jspdf){ toast("Gerador de PDF não carregou — use o texto da proposta"); openText(); return; }
   if(!compute(q,cfg).sel.length){ toast("Selecione ao menos um serviço"); return; }
-  const doc=buildPdf(); const name=`Proposta ${q.numero||gerarNumero()} - ${(q.cliente||"cliente").replace(/[\\/:*?"<>|]/g,"")}.pdf`;
+  const doc=buildPdf(); const name=nomePdfProposta();
   const blob=doc.output("blob");
   if(!dlCap && window.claude && claude.use){ try{ dlCap=await claude.use("downloads"); }catch(e){} }
   if(dlCap){
@@ -1357,7 +1429,7 @@ function renderFuel(){
 /* =====================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
-function tab(t){ if(["painel","servicos","despesas","socios","relatorio"].includes(t)&&window.finRender) setTimeout(window.finRender,0); if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function tab(t){ if(["painel","servicos","cadastros","despesas","socios","relatorio"].includes(t)&&window.finRender) setTimeout(window.finRender,0); if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
 function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
 function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="Sistema de orçamentos"; }
 
@@ -1366,6 +1438,9 @@ bindForm();
 $("#bSave").addEventListener("click",saveQuote);
 $("#bPdf").addEventListener("click",doPdf);
 $("#bTxt").addEventListener("click",openText);
+$("#bWa").addEventListener("click",enviarWhats);
+$("#bRev").addEventListener("click",saveRevision);
+$("#bRelevo").addEventListener("click",analisarRelevo);
 $("#bNew").addEventListener("click",()=>{ q=blankQuote(); lsSet(LS_DRAFT,q); fillForm(); renderSvcList(); recalc(); renderEditing(); mapReload(false); toast("Formulário limpo"); });
 $("#bCfgSave").addEventListener("click",async()=>{ await saveCfg(); $("#bCfgSave").textContent="Salvar configurações"; });
 $("#bCfgReset").addEventListener("click",function(){ if(this.dataset.c){ const keep=cfg.empresa; cfg=clone(DEFAULT_CFG); cfg.empresa=keep; afterCfgEdit(true); this.dataset.c=""; this.textContent="Restaurar padrões"; toast("Padrões restaurados (dados da empresa mantidos). Salve para confirmar."); } else { this.dataset.c="1"; this.textContent="Confirmar restauração?"; setTimeout(()=>{this.dataset.c="";this.textContent="Restaurar padrões";},3000);} });
@@ -1380,7 +1455,7 @@ initMap();
 function backupInfo(){ const el=$("#bkpInfo"); if(!el) return; let last=null; try{ last=localStorage.getItem("topo_last_backup"); }catch(e){}
   const n=quotes.length; el.innerHTML = `${n} orçamento${n!==1?"s":""} salvo${n!==1?"s":""}${usingDb?" (sincronizados na nuvem)":" neste aparelho"}. ` + (last? `Último backup: ${new Date(last).toLocaleString("pt-BR")}.` : "<b>Nenhum backup feito ainda.</b>"); }
 $("#bExport").addEventListener("click",async()=>{
-  const data={app:"santex-orcamentos", versao:1, exportadoEm:new Date().toISOString(), cfg, quotes, rascunho:q};
+  const data={app:"santex-orcamentos", versao:2, exportadoEm:new Date().toISOString(), cfg, quotes, rascunho:q, sistema:(window.finExportar?window.finExportar():null)};
   const txt=JSON.stringify(data,null,1); const d=new Date(); const p2=n=>String(n).padStart(2,"0");
   const name=`backup-santex-orcamentos-${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}.json`;
   const blob=new Blob([txt],{type:"application/json"});
@@ -1399,7 +1474,8 @@ $("#bImport").addEventListener("change",async e=>{
     const novos=(d.quotes||[]).filter(x=>!quotes.some(y=>y.id===x.id));
     cfg=migrate(merge(DEFAULT_CFG,d.cfg)); quotes=quotes.concat(novos).sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""));
     lsSet(LS_CFG,cfg); lsSet(LS_Q,quotes); renderAll(); drawBase(); backupInfo();
-    toast(`Backup importado: configurações e ${novos.length} orçamento${novos.length!==1?"s":""} novo${novos.length!==1?"s":""}`);
+    const nf = (d.sistema&&window.finImportar) ? window.finImportar(d.sistema) : 0;
+    toast(`Backup importado: configurações, ${novos.length} orçamento${novos.length!==1?"s":""} novo${novos.length!==1?"s":""}${nf?` e ${nf} registro${nf!==1?"s":""} do sistema`:""}`);
   }catch(err){ toast("Arquivo de backup inválido"); }
 });
 backupInfo();
