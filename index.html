@@ -334,7 +334,7 @@ const DEFAULT_CFG = {
   empresa:{nome:"SANTEX — Geotecnologia & Engenharia de Precisão", responsavel:"Clessiano Antunes", registro:"", telefone:"", email:"", cidadeBase:"Águas Vermelhas - MG", baseCoord:"-15.743639, -41.463361"},
   combustivel:{tipo:"Gasolina comum", preco:7.39, atualizadoEm:"2026-11-21T22:03:00-03:00"},
   veiculo:{modelo:"VW Gol G5 Rallye 1.6 2012 (gasolina)", kmUrbano:3, consumoAsf:11.5, consumoTerra:8, manutKm:0.30, deprecKm:0.15, fatorDesgasteTerra:1.5, fatorRota:1.3, velAsf:80, velTerra:35},
-  equipe:{horaTecnico:120, horasConfrontante:1.5, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
+  equipe:{horaTecnico:90, horasConfrontante:1.5, horasDia:9, diariaAjudante:150, alimentacao:60, hospedagem:120, ajudantesPadrao:1},
   equipamentos:[
     {id:"rtk1", nome:"RTK 1 (base)",  valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
     {id:"rtk2", nome:"RTK 2 (rover)", valor:30000, vidaAnos:5, diasAno:150, manutAno:1500},
@@ -342,7 +342,7 @@ const DEFAULT_CFG = {
   ],
   materiais:{custoMarco:45},
   docs:{nomeDoc:"TRT (CFT)", faixas:[{ate:0, valor:68.17}]},
-  versao:6,
+  versao:7,
   fin:{pisoMercado:true, rateioFixo:10, impostos:6, margem:25, minimoRural:3000, minimoUrbano:1200, arredondar:50},
   servicos:[
     {id:"georef", nome:"Georreferenciamento de imóvel rural (SIGEF/INCRA)", ambito:"rural", unidade:"km", prod:5, diasFixos:0.5, escrFix:16, escrUnid:2, equip:["rtk1","rtk2"], marcos:true,
@@ -399,6 +399,7 @@ function migrate(c){ if(c&&!c.versao){ const ch=(o,k,old,nv)=>{ if(o&&o[k]===old
   if(c&&c.versao<4){ const v=c.veiculo||(c.veiculo={}); const ch=(k,o,n)=>{ if(v[k]===o||v[k]===undefined) v[k]=n; }; ch("consumoAsf",10,11.5); ch("consumoTerra",7,8); ch("manutKm",0.4,0.3); ch("deprecKm",0.35,0.15); v.modelo="VW Gol G5 Rallye 1.6 2012 (gasolina)"; c.versao=4; }
   if(c&&c.versao<5){ (c.servicos||[]).forEach(sv=>{ if(sv.id==="drone"){ if(sv.prod===150) sv.prod=250; if(sv.escrUnid===0.05) sv.escrUnid=0.02; sv.semDificuldade=true; } }); c.versao=5; }
   if(c&&c.versao<6){ if(c.equipe&&c.equipe.horaTecnico===90) c.equipe.horaTecnico=120; c.versao=6; }
+  if(c&&c.versao<7){ if(c.equipe&&c.equipe.horaTecnico===120) c.equipe.horaTecnico=90; c.versao=7; }
   if(c&&c.combustivel){ delete c.combustivel.posto; delete c.combustivel.cidade; } if(c&&c.empresa&&!parseCoord(c.empresa.baseCoord)) c.empresa.baseCoord=DEFAULT_CFG.empresa.baseCoord; if(c&&c.empresa&&c.empresa.nome==="Clessiano Antunes — Topografia e Georreferenciamento") c.empresa.nome="SANTEX — Geotecnologia & Engenharia de Precisão"; if(c&&c.docs&&c.docs.nomeDoc==="ART (CREA)"&&c.docs.faixas&&c.docs.faixas.length===2&&c.docs.faixas[0].valor===108.39){ c.docs={nomeDoc:"TRT (CFT)",faixas:[{ate:0,valor:68.17}]}; } return c; }
 function merge(def,obj){ // completa obj com chaves novas do padrão
   if(Array.isArray(def)) return Array.isArray(obj)?obj:clone(def);
