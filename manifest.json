@@ -1,6 +1,6 @@
 {
-  "name": "SANTEX — Orçamentos de topografia",
-  "short_name": "SANTEX Orçamentos",
+  "name": "SANTEX — Gestão",
+  "short_name": "SANTEX Gestão",
   "description": "Orçamentos de georreferenciamento e levantamentos topográficos com mapa, rota e proposta em PDF.",
   "id": "./",
   "start_url": "./",

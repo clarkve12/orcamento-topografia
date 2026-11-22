@@ -1,9 +1,9 @@
-# SANTEX — Sistema de orçamentos
+# SANTEX — Sistema de gestão
 
 Calculadora de orçamentos para serviços de topografia e georreferenciamento (rural e urbano).
 Responsável técnico: Clessiano Antunes (TRT/CFT).
 
-Site: https://clarkve12.github.io/orcamento-topografia/
+Site: https://clarkve12.github.io/santex-gestao/
 
 ## Funções
 - **Mapa com satélite**: desenhar a poligonal da área, importar KML/KMZ (CAR, SIGEF, Google Earth), usar o GPS do celular
@@ -21,3 +21,11 @@ No Chrome (PC ou Android), abra o site e clique em **⬇ Instalar app** no topo,
 - Imagens de satélite: Esri World Imagery
 - Rotas: OSRM (router.project-osrm.org)
 - Busca de lugares: Nominatim / OpenStreetMap
+
+## Módulos
+
+- **Painel**: faturamento, recebimentos, despesas, lucro, alertas, serviços em andamento, indicadores comerciais e revisão anual de valores.
+- **Novo orçamento / Orçamentos**: cálculo com mapa e rota, numeração 001/2026 com revisões, taxas de terceiros detalhadas, divisão do deslocamento, análise de relevo, proposta em PDF e envio pelo WhatsApp.
+- **Serviços**: etapas (campo → escritório → SIGEF → certificado → cartório), parcelas a receber, pagamentos com recibo, prestadores, despesas e contrato em PDF.
+- **Cadastros**: clientes (com histórico) e prestadores (com diárias pagas e recibos).
+- **Despesas, Sócios, Relatório**: compras parceladas no cartão, divisão do lucro e demonstrativo mensal/anual.
