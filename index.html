@@ -131,6 +131,13 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 .vtx.first{background:#fff}
 .basepin{font-size:24px;line-height:24px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sigefbox{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;background:#f5f8fc;border:1px solid var(--line)}
+.sigefbox.ok{background:#e8f5ec;border-color:#7cc49a}.sigefbox.bad{background:#fdecea;border-color:#f3a59c}
+.sigefbox ul{margin:4px 0 0;padding-left:18px}.sigefbox li{margin-top:6px}.sigefbox small,.sigefbox .sgnote{color:var(--muted);font-size:12px}.sigefbox .sgnote{margin-top:6px}
+.pinfo{font-size:12.5px;line-height:1.35}.pinfo h4{margin:0 0 6px;font-size:14px}.pinfo table{border-collapse:collapse;width:100%}
+.pinfo td{padding:3px 0;vertical-align:top;border-top:1px solid #e6ebf2}.pinfo td:first-child{color:#55678a;padding-right:8px;white-space:nowrap}.pinfo td:last-child{word-break:break-word}
+.pinfo .pact{display:flex;gap:6px;margin-top:8px}.pinfo .pact>*{flex:1;text-align:center;text-decoration:none}
+#mInfo.on{background:var(--brand);color:#fff}
 .geo{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:8px}
 .geo div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--muted);font-weight:600}
 .geo b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -243,11 +250,13 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
             <button class="btn ghost small" id="mUndo">↶ Desfazer ponto</button>
             <button class="btn ghost small" id="mClear">Limpar área</button>
             <button class="btn ghost small" id="mGps">📡 Minha posição</button>
+            <button class="btn ghost small" id="mInfo" title="Clique numa parcela do mapa para ver os dados do SIGEF">ⓘ Parcela</button>
             <label class="btn ghost small filebtn">📂 Importar KML/KMZ<input type="file" id="mKml" accept=".kml,.kmz" hidden></label>
             <button class="btn ghost small" id="mBase">🏠 Definir base</button>
           </div>
           <div id="map"></div>
           <div id="mapMsg" class="hint" style="margin:6px 0 0"></div>
+          <div id="sigefBox" style="display:none"></div>
           <div class="geo" id="geoBox"></div>
         </div>
         <div class="row">
@@ -639,6 +648,7 @@ function compute(q,c){
   Object.assign(r,{diasTrab,horasEscr,escritorio,marcosQ,marcos,outras,taxasIncl,art,custoDireto,precoCalc,precoDesc,descPct,minimo,final,
     minimoAplicado: precoDesc<minimo && minimo>=pisoM, pisoMercadoAplicado: pisoM>precoDesc && pisoM>minimo, pisoM, impostos, rateio:custoDireto*nz(f.rateioFixo)/100, lucro, ajud, pessoas, equipDia, manual});
   if(!sel.length) r.avisos.push("Nenhum serviço selecionado.");
+  if(q.sigef && q.sigef.status && q.sigef.status!=="livre" && typeof sigefResumo==="function") r.avisos.push(sigefResumo(q.sigef));
   if(Math.round(nz(q.rateioDesloc))>1) r.avisos.push(`Combustível, desgaste do carro e pedágios divididos entre ${Math.round(nz(q.rateioDesloc))} serviços na mesma viagem.`);
   if(sel.some(s=>s.def.unidade==="km") && perimetroKm(q).est && nz(q.areaHa)>0) r.avisos.push("Perímetro estimado a partir da área. Informe o perímetro real se tiver (matrícula, CAR, KML).");
   if(horasTrab>0 && !base) r.avisos.push("Coordenada da base não cadastrada — informe os km manualmente.");
@@ -950,7 +960,7 @@ function renderHist(){
     const dif = !isNaN(dr)&&de>0 ? Math.round((dr-de)/de*100) : null;
     h+=`<tr data-id="${esc(x.id)}">
       <td><span class="mono">${esc(numLabel(x.numero,x.rev))}</span><br><small style="color:var(--muted)">${esc((x.criadoEm||"").slice(0,10).split("-").reverse().join("/"))}</small></td>
-      <td><b>${esc(x.cliente||"—")}</b><br><small>${esc(x.imovel||"")}${x.municipio?" · "+esc(x.municipio):""}</small></td>
+      <td><b>${esc(x.cliente||"—")}</b><br><small>${esc(x.imovel||"")}${x.municipio?" · "+esc(x.municipio):""}</small>${(()=>{ const sg=x.q&&x.q.sigef; if(!sg||!sg.status||sg.status==="erro") return ""; return sg.status==="livre"?' <span class="pill" title="Nenhuma parcela certificada sobreposta">SIGEF livre</span>':` <span class="pill bad" title="${esc(sigefResumo(sg))}">${sg.status==="certificada"?"SIGEF: já certificada?":"SIGEF: sobreposição"}</span>`; })()}</td>
       <td style="max-width:280px"><small>${esc(x.servicos||"")}</small></td>
       <td class="num"><b>${brl0(nz(x.valor))}</b></td>
       <td><select class="hs">${STATUS.map(s=>`<option ${s===(x.status||"Rascunho")?"selected":""}>${s}</option>`).join("")}</select></td>
@@ -1279,7 +1289,8 @@ function initMap(){
   const lbl=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,crossOrigin:true});
   const roads=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,crossOrigin:true});
   sat.addTo(map); lbl.addTo(map); roads.addTo(map);
-  L.control.layers({"Satélite":sat,"Satélite (Clarity)":clar,"Mapa de ruas":osm},{"Nomes e limites":lbl,"Estradas":roads},{position:"topright"}).addTo(map);
+  sigefWms=L.tileLayer.wms("https://geoportal.incra.gov.br/geoserver/wms",{layers:"geonode:sigef_geo",format:"image/png",transparent:true,version:"1.1.1",opacity:.75,maxZoom:21,attribution:"INCRA/SIGEF"});
+  L.control.layers({"Satélite":sat,"Satélite (Clarity)":clar,"Mapa de ruas":osm},{"Nomes e limites":lbl,"Estradas":roads,"Parcelas SIGEF (INCRA)":sigefWms},{position:"topright"}).addTo(map);
   L.control.scale({imperial:false}).addTo(map);
   vtxLayer=L.layerGroup().addTo(map);
   map.on("click",onMapClick);
@@ -1291,6 +1302,7 @@ function initMap(){
     else { this.dataset.c="1"; this.textContent="Confirmar limpeza?"; setTimeout(()=>{this.dataset.c="";this.textContent="Limpar área";},3000); }
   });
   $("#mGps").addEventListener("click",useGps);
+  $("#mInfo").addEventListener("click",()=>setInfoMode(!infoMode));
   $("#mKml").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importKml(f); e.target.value=""; });
   $("#mBase").addEventListener("click",function(){
     if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a base? Clique de novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
@@ -1306,11 +1318,14 @@ function initMap(){
 function updateBaseBtn(){ const b=$("#mBase"); if(!b) return; b.classList.toggle("on",pickingBase); b.textContent = pickingBase? "Cancelar" : (parseCoord(cfg.empresa.baseCoord)? "🏠 Base definida" : "🏠 Definir base"); }
 function setDrawing(on){ drawing=on; const b=$("#mDraw"); if(!b) return; b.classList.toggle("on",on); b.textContent=on? "✔ Concluir área" : (q.poligono.length? "✏️ Editar / Continuar área":"✏️ Desenhar área");
   if(map) $("#map").classList.toggle("picking",on||pickingBase);
+  if(on&&infoMode) setInfoMode(false);
+  if(!on) sigefSchedule();
   if(on){ pickingBase=false; updateBaseBtn(); mapMsg("Clique no mapa para marcar cada vértice da área. Arraste os pontos amarelos para ajustar. Clique em <b>✔ Concluir</b> quando terminar."); }
   else if(!pickingBase) mapMsg(q.poligono.length>=3? "Área definida. Arraste os vértices para ajustar, se precisar.":""); }
 function toggleDraw(){ setDrawing(!drawing); }
 
 function onMapClick(e){
+  if(infoMode){ sigefInfo(e.latlng); return; }
   const ll=[+e.latlng.lat.toFixed(7), +e.latlng.lng.toFixed(7)];
   if(pickingBase){ setBase(ll); return; }
   if(drawing){ q.poligono.push(ll); polyChanged(); }
@@ -1350,7 +1365,7 @@ function polyChanged(fromDrag){
     ["areaHa","perimKm","vertices","coord"].forEach(k=>{ const el=$(`#form [data-k=${k}]`); if(el) el.value=q[k]; });
   }
   if(fromDrag) drawPoly();
-  onChange(); scheduleRoute();
+  onChange(); scheduleRoute(); sigefSchedule();
 }
 function renderGeo(){
   const g=$("#geoBox"); if(!g) return; const pts=q.poligono||[];
@@ -1363,8 +1378,102 @@ function mapReload(fit){
   const pts=q.poligono||[], d=parseCoord(q.coord), b=parseCoord(cfg.empresa.baseCoord);
   if(fit){ if(pts.length>=2) map.fitBounds(L.latLngBounds(pts).pad(0.25)); else if(d) map.setView([d.lat,d.lng],14); else if(b) map.setView([b.lat,b.lng],12); }
   if(!pts.length && !d) setDrawing(true);
+  sigefKey=""; sigefClear(); sigefBox(null); if(pts.length>=3) sigefSchedule();
   scheduleRoute();
 }
+
+
+/* ---------- SIGEF (INCRA): parcelas certificadas, sobreposição e consulta ---------- */
+const SIGEF_WFS="https://geoportal.incra.gov.br/geoserver/wfs";
+let sigefWms=null, sigefLayer=null, sigefHi=null, sigefT=null, sigefKey="", sigefSeq=0, infoMode=false;
+const sgRings=g=>g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[];
+function sgInRing(x,y,r){ let c=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) c=!c; } return c; }
+function sgInPolys(x,y,ps){ for(const p of ps){ if(sgInRing(x,y,p[0])){ let hole=false; for(let h=1;h<p.length;h++) if(sgInRing(x,y,p[h])){ hole=true; break; } if(!hole) return true; } } return false; }
+function sgSegX(a,b,c,d){ const o=(p,q2,r)=>(q2[0]-p[0])*(r[1]-p[1])-(q2[1]-p[1])*(r[0]-p[0]); return (o(a,b,c)>0)!==(o(a,b,d)>0)&&(o(c,d,a)>0)!==(o(c,d,b)>0); }
+function sgTouches(mine,ps){ for(const p of ps) for(const r of p) for(let i=0;i<mine.length;i++){ const a=mine[i], b=mine[(i+1)%mine.length]; for(let j=0;j<r.length-1;j++) if(sgSegX(a,b,r[j],r[j+1])) return true; } return false; }
+const sgHa=m2=>{ const ha=m2/10000; return (ha<0.01?"<0,01":fmt(ha,ha<10?2:1))+" ha"; };
+function sigefBox(h,kind){ const b=$("#sigefBox"); if(!b) return; if(!h){ b.style.display="none"; b.innerHTML=""; return; } b.style.display="block"; b.className="sigefbox "+(kind||""); b.innerHTML=h; }
+function sigefClear(){ if(sigefLayer&&map){ map.removeLayer(sigefLayer); } sigefLayer=null; }
+function sigefSchedule(){ clearTimeout(sigefT); sigefT=setTimeout(sigefCheck,1200); }
+function sigefResumo(s){ // texto curto para avisos e lista de orçamentos
+  if(!s||!s.status||s.status==="erro") return "";
+  if(s.status==="livre") return "SIGEF: nenhuma parcela certificada sobreposta.";
+  if(s.status==="certificada") return `SIGEF: a área parece já estar certificada (${s.parcelas[0].nome||"sem nome"}, ${fmt(s.parcelas[0].ha||0,2)} ha). Confira antes de orçar georreferenciamento.`;
+  if(s.status==="sobrepoe") return `SIGEF: a área sobrepõe ${s.n} parcela${s.n>1?"s":""} certificada${s.n>1?"s":""} (≈ ${fmt(s.haComum,2)} ha em comum).`;
+  return `SIGEF: a área encosta na divisa de ${s.n} parcela${s.n>1?"s":""} certificada${s.n>1?"s":""}.`;
+}
+function sigefCheck(){
+  const pts=q.poligono||[];
+  if(!map||pts.length<3){ if(pts.length<3){ sigefKey=""; sigefClear(); sigefBox(null); if(q.sigef){ q.sigef=null; onChange(); } } return; }
+  const mine=pts.map(p=>[p[1],p[0]]), key=JSON.stringify(mine); if(key===sigefKey) return; sigefKey=key;
+  if(!navigator.onLine){ sigefClear(); sigefBox("🛰️ <b>SIGEF:</b> sem internet — a verificação de parcelas certificadas é feita quando a conexão voltar."); sigefKey=""; return; }
+  const xs=mine.map(p=>p[0]), ys=mine.map(p=>p[1]); const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys), my=++sigefSeq;
+  sigefBox("🛰️ <b>SIGEF:</b> verificando parcelas certificadas na área…");
+  const url=SIGEF_WFS+"?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode:sigef_geo&maxFeatures=300&outputFormat=application/json&srsName=EPSG:4326&bbox="+[x0,y0,x1,y1].map(v=>v.toFixed(7)).join(",");
+  fetch(url).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }).then(fc=>{
+    if(my!==sigefSeq) return;
+    const myArea=geoAreaM2(pts), N=90, dx=(x1-x0)/N, dy=(y1-y0)/N; const grid=[];
+    for(let i=0;i<N;i++) for(let j=0;j<N;j++){ const x=x0+(i+.5)*dx, y=y0+(j+.5)*dy; if(sgInRing(x,y,mine)) grid.push([x,y]); }
+    const cell=grid.length?myArea/grid.length:0, hits=[];
+    (fc.features||[]).forEach(f=>{ const ps=sgRings(f.geometry||{}); if(!ps.length) return;
+      let n=0; grid.forEach(p=>{ if(sgInPolys(p[0],p[1],ps)) n++; });
+      const inside=n>0||sgInPolys(mine[0][0],mine[0][1],ps), edge=!inside&&sgTouches(mine,ps);
+      if(inside||edge) hits.push({f,ov:n*cell,edge}); });
+    sigefClear();
+    const em=new Date().toISOString();
+    if(!hits.length){ q.sigef={status:"livre",n:0,haComum:0,parcelas:[],em}; onChange();
+      sigefBox("✅ <b>SIGEF:</b> nenhuma parcela certificada sobreposta a esta área (consulta ao GeoPortal do INCRA).","ok"); return; }
+    hits.sort((a,b)=>b.ov-a.ov);
+    sigefLayer=L.geoJSON({type:"FeatureCollection",features:hits.map(h=>h.f)},{style:{color:"#ff3b30",weight:2.5,fillColor:"#ff3b30",fillOpacity:.18,dashArray:"5 4"},interactive:false}).addTo(map);
+    const over=hits.filter(h=>!h.edge), tot=over.reduce((s,h)=>s+h.ov,0);
+    const p0=over.length?(over[0].f.properties||{}):null, ha0=p0&&p0.area_hectares!=null?+p0.area_hectares:0;
+    const certificada = over.length && myArea>0 && over[0].ov/myArea>=0.8 && ha0>0 && Math.abs(ha0*10000-myArea)/myArea<=0.25;
+    q.sigef={status:certificada?"certificada":over.length?"sobrepoe":"divisa",n:over.length||hits.length,haComum:Math.round(tot/100)/100,em,
+      parcelas:hits.slice(0,10).map(h=>{ const p=h.f.properties||{}; return {nome:String(p.nome_area||"").trim(),ha:p.area_hectares!=null?+p.area_hectares:null,codigo:p.parcela_codigo||"",matricula:p.registro_matricula||"",sncr:p.codigo_imovel||"",situacao:p.situacao_informada||p.status||"",natureza:p.natureza||"",comumHa:Math.round(h.ov/100)/100,divisa:!!h.edge}; })};
+    onChange();
+    const head = certificada ? `⚠️ <b>SIGEF: esta área parece já estar certificada</b> — coincide em ≈ ${fmt(over[0].ov/myArea*100,0)}% com a parcela abaixo. Confira antes de orçar o georreferenciamento.`
+      : over.length ? `⚠️ <b>SIGEF: sobrepõe ${over.length} parcela${over.length>1?"s":""} certificada${over.length>1?"s":""}</b> (≈ ${sgHa(tot)} em comum)`
+      : `⚠️ <b>SIGEF: encosta na divisa de ${hits.length} parcela${hits.length>1?"s":""} certificada${hits.length>1?"s":""}</b>`;
+    const li=hits.slice(0,8).map(h=>{ const p=h.f.properties||{};
+      return `<li><b>${esc(String(p.nome_area||"Sem nome").trim())}</b> · ${p.area_hectares!=null?fmt(+p.area_hectares,2)+" ha":""}${h.edge?" · só a divisa":" · ≈ "+sgHa(h.ov)+" sobrepostos"}
+        <br><small>${esc(p.natureza||"")} · ${esc(p.situacao_informada||p.status||"")}${p.registro_matricula?" · matrícula "+esc(p.registro_matricula):""}${p.registro_cns?" · CNS "+esc(p.registro_cns):""}${p.codigo_imovel?" · SNCR "+esc(p.codigo_imovel):""}<br>Parcela ${esc(p.parcela_codigo||"")}</small></li>`; }).join("");
+    sigefBox(head+`<ul>${li}</ul>`+(hits.length>8?`<div>… e mais ${hits.length-8}.</div>`:"")+
+      `<div class="sgnote">As parcelas aparecem tracejadas em vermelho no mapa. Ative “Parcelas SIGEF (INCRA)” no seletor de camadas para ver todas da região, ou use <b>ⓘ Parcela</b> e clique numa parcela para ver os dados. Sobreposição estimada; confira no SIGEF.</div>`,"bad");
+  }).catch(e=>{ if(my!==sigefSeq) return; sigefKey=""; sigefClear();
+    sigefBox(`🛰️ <b>SIGEF:</b> não foi possível consultar o GeoPortal do INCRA agora (${esc(e.message||"erro")}). Ative a camada “Parcelas SIGEF (INCRA)” para conferir visualmente.`); });
+}
+const sgData=s=>{ if(!s) return ""; const d=new Date(s); return isNaN(d)?esc(s):d.toLocaleDateString("pt-BR"); };
+const munCache={};
+function sgMunicipio(id){ if(!id) return Promise.resolve(""); if(munCache[id]) return Promise.resolve(munCache[id]);
+  return fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios/"+id).then(r=>r.json()).then(m=>{ const uf=m&&m.microrregiao&&m.microrregiao.mesorregiao&&m.microrregiao.mesorregiao.UF?m.microrregiao.mesorregiao.UF.sigla:""; const n=m&&m.nome?m.nome+(uf?" – "+uf:""):String(id); munCache[id]=n; return n; }).catch(()=>String(id)); }
+function setInfoMode(on){ infoMode=on; const b=$("#mInfo"); if(b){ b.classList.toggle("on",on); b.textContent=on?"✕ Sair da consulta":"ⓘ Parcela"; }
+  if(on){ setDrawing(false); pickingBase=false; updateBaseBtn(); if(sigefWms&&!map.hasLayer(sigefWms)) sigefWms.addTo(map); mapMsg("ⓘ <b>Clique numa parcela</b> para ver os dados do SIGEF (denominação, matrícula, SNCR, RT, datas)."); }
+  else { if(sigefHi){ map.removeLayer(sigefHi); sigefHi=null; } map.closePopup(); mapMsg(""); }
+  $("#map").classList.toggle("picking",on||drawing||pickingBase); }
+function sigefInfo(latlng){
+  if(!navigator.onLine){ toast("Sem internet: a consulta ao SIGEF precisa de conexão"); return; }
+  const lon=latlng.lng, lat=latlng.lat, d=0.00002;
+  const pop=L.popup({maxWidth:320,minWidth:250}).setLatLng(latlng).setContent('<div class="pinfo">Consultando o SIGEF…</div>').openOn(map);
+  const url=SIGEF_WFS+"?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode:sigef_geo&maxFeatures=20&outputFormat=application/json&srsName=EPSG:4326&bbox="+[lon-d,lat-d,lon+d,lat+d].map(v=>v.toFixed(7)).join(",");
+  fetch(url).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }).then(fc=>{
+    const fs=(fc.features||[]).filter(f=>sgInPolys(lon,lat,sgRings(f.geometry||{})));
+    if(sigefHi){ map.removeLayer(sigefHi); sigefHi=null; }
+    if(!fs.length){ pop.setContent('<div class="pinfo">Nenhuma parcela certificada no SIGEF neste ponto.</div>'); return; }
+    const f=fs[0], a=f.properties||{};
+    sigefHi=L.geoJSON(f,{style:{color:"#ffd21f",weight:3,fillColor:"#ffd21f",fillOpacity:.12},interactive:false}).addTo(map);
+    sgMunicipio(a.municipio_id).then(mun=>{
+      const rows=[["Denominação",esc(String(a.nome_area||"").trim())],["Status",esc(a.status||"")],["Natureza",esc(a.natureza||"")],["Situação",esc(a.situacao_informada||"")],
+        ["Área",a.area_hectares!=null?fmt(+a.area_hectares,4)+" ha":""],["Município",esc(mun)],["Código da parcela",`<span class="mono" style="font-size:11px">${esc(a.parcela_codigo||"")}</span>`],
+        ["Código do imóvel (SNCR)",esc(a.codigo_imovel||"")],["Matrícula",esc(a.registro_matricula||"")],["Transcrição",esc(a.transcricao||"")],["CNS do cartório",esc(a.registro_cns||"")],
+        ["Data do registro",sgData(a.data_registro)],["Submissão",sgData(a.data_submissao)],["Aprovação",sgData(a.data_aprovacao)],["RT (credenciamento)",esc(a.rt||"")],["Tipo de envio",esc(a.tipo_envio||"")]].filter(r=>r[1]);
+      pop.setContent(`<div class="pinfo"><h4>${esc(String(a.nome_area||"Parcela SIGEF").trim())}</h4><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>`+
+        (fs.length>1?`<div style="margin-top:6px;color:var(--danger)">Há ${fs.length} parcelas sobrepostas neste ponto; mostrando a primeira.</div>`:"")+
+        `<div class="pact"><button class="btn ghost small" id="pCopy">Copiar código</button><a class="btn ghost small" href="https://sigef.incra.gov.br/consultar/parcelas/" target="_blank" rel="noopener">Consultar no SIGEF</a></div></div>`);
+      const b=document.getElementById("pCopy"); if(b) b.onclick=()=>{ const c=a.parcela_codigo||""; (navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast("Código da parcela copiado"),()=>prompt("Código da parcela:",c)); };
+    });
+  }).catch(e=>pop.setContent(`<div class="pinfo">Não foi possível consultar o SIGEF agora (${esc(e.message||"erro")}).</div>`));
+}
+window.addEventListener("online",()=>{ sigefKey=""; sigefSchedule(); });
 
 /* ---------- busca, GPS, KML ---------- */
 async function searchPlace(t){
