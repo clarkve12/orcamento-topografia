@@ -126,6 +126,16 @@ table.hist input{width:72px;padding:4px 6px;font-size:13px}
 .maptools .filebtn{display:inline-block;flex-direction:row;font-size:13px;color:var(--brand);cursor:pointer}
 #map{height:430px;border-radius:10px;border:1px solid var(--line);z-index:1}
 @media(max-width:600px){#map{height:340px}}
+.mapwrap{position:relative}
+#bFs{position:absolute;z-index:500;top:58px;right:10px;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:2px solid rgba(0,0,0,.2);background:#fff;color:#002955;cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.3)}
+#bFs svg{width:22px;height:22px}
+body.fs{overflow:hidden}
+body.fs .mapbox{position:fixed;inset:0;z-index:900;margin:0;background:var(--bg,#eef3f8);display:flex;flex-direction:column;padding:8px;gap:6px}
+body.fs .mapbox .maptools{margin:0}
+body.fs .mapwrap{flex:1;min-height:0}
+body.fs #map{height:100%;border-radius:8px}
+body.fs #mapMsg,body.fs #sigefBox,body.fs #geoBox{margin:0;max-height:30vh;overflow:auto}
+body.fs #sigefBox:empty{display:none}
 #map.picking{cursor:crosshair}
 .vtx{background:#ffd34d;border:2px solid #10233f;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
 .vtx.first{background:#fff}
@@ -254,7 +264,8 @@ tr.click{cursor:pointer} tr.click:hover td{background:#f2f7fc}
             <label class="btn ghost small filebtn">📂 Importar KML/KMZ<input type="file" id="mKml" accept=".kml,.kmz" hidden></label>
             <button class="btn ghost small" id="mBase">🏠 Definir base</button>
           </div>
-          <div id="map"></div>
+          <div class="mapwrap"><div id="map"></div>
+            <button id="bFs" type="button" aria-label="Tela cheia" title="Tela cheia"><svg id="icFs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
           <div id="mapMsg" class="hint" style="margin:6px 0 0"></div>
           <div id="sigefBox" style="display:none"></div>
           <div class="geo" id="geoBox"></div>
@@ -1303,6 +1314,7 @@ function initMap(){
   });
   $("#mGps").addEventListener("click",useGps);
   $("#mInfo").addEventListener("click",()=>setInfoMode(!infoMode));
+  const bfs=$("#bFs"); if(bfs){ bfs.addEventListener("click",e=>{ e.stopPropagation(); setFs(!document.body.classList.contains("fs")); }); L.DomEvent.disableClickPropagation(bfs); }
   $("#mKml").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importKml(f); e.target.value=""; });
   $("#mBase").addEventListener("click",function(){
     if(parseCoord(cfg.empresa.baseCoord) && !this.dataset.c && !pickingBase){ this.dataset.c="1"; this.textContent="Trocar a base? Clique de novo"; setTimeout(()=>{this.dataset.c="";updateBaseBtn();},3500); return; }
@@ -1475,6 +1487,19 @@ function sigefInfo(latlng){
 }
 window.addEventListener("online",()=>{ sigefKey=""; sigefSchedule(); });
 
+/* ---------- tela cheia do mapa ---------- */
+const IC_FS_IN='<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', IC_FS_OUT='<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>';
+function setFs(on){
+  document.body.classList.toggle("fs",on); const ic=$("#icFs"); if(ic) ic.innerHTML=on?IC_FS_OUT:IC_FS_IN;
+  const b=$("#bFs"); if(b){ b.setAttribute("aria-label",on?"Sair da tela cheia":"Tela cheia"); b.title=on?"Sair da tela cheia (Esc)":"Tela cheia"; }
+  try{ const de=document.documentElement;
+    if(on && !document.fullscreenElement && de.requestFullscreen){ const pr=de.requestFullscreen({navigationUI:"hide"}); if(pr&&pr.catch) pr.catch(()=>{}); }
+    if(!on && document.fullscreenElement && document.exitFullscreen){ const px=document.exitFullscreen(); if(px&&px.catch) px.catch(()=>{}); } }catch(e){}
+  setTimeout(()=>{ if(map) map.invalidateSize(); },250);
+}
+document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement && document.body.classList.contains("fs")) setFs(false); setTimeout(()=>{ if(map) map.invalidateSize(); },250); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && document.body.classList.contains("fs") && !document.fullscreenElement) setFs(false); });
+
 /* ---------- busca, GPS, KML ---------- */
 async function searchPlace(t){
   if(!t||!map) return; const c=parseCoord(t); if(c){ map.setView([c.lat,c.lng],16); return; }
@@ -1565,7 +1590,7 @@ function renderFuel(){
 /* =====================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ===================================================================== */
-function tab(t){ if(["painel","servicos","cadastros","despesas","socios","relatorio"].includes(t)&&window.finRender) setTimeout(window.finRender,0); if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
+function tab(t){ if(document.body.classList.contains("fs")) setFs(false); if(["painel","servicos","cadastros","despesas","socios","relatorio"].includes(t)&&window.finRender) setTimeout(window.finRender,0); if(t==="cfg"&&typeof backupInfo==="function") setTimeout(backupInfo,0); setTimeout(()=>{ if(typeof map!=="undefined"&&map) map.invalidateSize(); },60); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t)); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t)); }
 function renderRTSelect(){ const sel=$("#rtSel"); if(!sel) return; sel.innerHTML=(cfg.responsaveis||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nome)} — ${esc(x.titulo)}</option>`).join(""); sel.value=q.rt||((cfg.responsaveis||[])[0]||{}).id||""; }
 function renderAll(){ renderRTSelect(); fillForm(); renderSvcList(); renderCfg(); renderHist(); recalc(); renderEditing(); $("#hdrSub").textContent="SISTEMA DE GESTÃO"; }
 
